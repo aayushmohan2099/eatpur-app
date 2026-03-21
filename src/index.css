@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "Hughes Rough";
+  src: url("/hughes-rough/Hughes-Rough.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme {
+  --color-eatpur-dark: #040704;
+  --color-eatpur-green-dark: #0b140b;
+  --color-eatpur-yellow: #ffd54a;
+  --color-eatpur-gold: #ffc933;
+  --color-eatpur-green-light: #6faf3a;
+  --color-eatpur-text: rgba(230, 216, 168, 0.6);
+  --color-eatpur-text-light: #e6d8a8;
+
+  --font-display: "Hughes Rough", sans-serif;
+  --font-sans: "Inter", "SF Pro Display", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-eatpur-dark);
+    color: var(--color-eatpur-text);
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+    color: var(--color-eatpur-yellow);
+    font-weight: 400; /* rough fonts look better lighter */
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+  }
+}
+
+/* Utilities for scrollbar hiding if needed */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
