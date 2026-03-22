@@ -60,3 +60,18 @@
 .font-display {
   font-family: var(--font-display);
 }
+
+.btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #0b140b;
+  border: 1px solid #2a3f2a;
+  color: #e6d8a8;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  background: #ffc933;
+  color: #040704;
+}
