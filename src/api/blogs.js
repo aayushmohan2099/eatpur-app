@@ -21,6 +21,12 @@ export const getBlogById = (id) => {
   return API.get(`/blogs/${id}/`);
 };
 
+export const reactToBlog = (id, reaction_type) =>
+  API.post(`/blogs/${id}/react/`, { reaction_type });
+
+export const commentOnBlog = (id, data) =>
+  API.post(`/blogs/${id}/comment/`, data);
+
 const fixUrlsDeep = (data) => {
   if (typeof data === "string") {
     return data.replace(

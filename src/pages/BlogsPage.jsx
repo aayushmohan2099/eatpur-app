@@ -25,13 +25,20 @@ export default function BlogsPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-eatpur-dark px-6 py-20">
+    <div className="min-h-screen bg-[#040704]/10 px-6 py-20">
       {/* HEADER */}
       <div className="text-center mb-16 max-w-2xl mx-auto">
         <h1 className="text-5xl font-bold text-eatpur-gold mb-4">Our Blogs</h1>
         <p className="text-eatpur-text-light text-lg">
           Insights, recipes & stories around millet lifestyle.
         </p>
+        <br></br>
+        <button
+          onClick={() => navigate("/")}
+          className="mb-6 px-4 py-2 rounded-lg border border-eatpur-gold text-eatpur-gold hover:bg-eatpur-gold hover:text-black transition"
+        >
+          ← Back to Homepage
+        </button>
       </div>
 
       <motion.div
@@ -82,9 +89,7 @@ export default function BlogsPage() {
         {blogs.map((blog, idx) => (
           <motion.div
             key={blog.id || idx}
-            onClick={() =>
-              navigate(`/preview-blog/${blog.id}`)
-            }
+            onClick={() => navigate(`/preview-blog/${blog.id}`)}
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.05 }}

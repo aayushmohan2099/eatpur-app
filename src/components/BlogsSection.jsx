@@ -1,9 +1,12 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { getBlogs } from "../api/blogs";
 
 export default function BlogsSection() {
   const { scrollYProgress } = useScroll();
   const navigate = useNavigate();
+  const [blogs, setBlogs] = useState([]);
 
   // Active from 65% to 85%
   const opacity = useTransform(
@@ -17,23 +20,26 @@ export default function BlogsSection() {
     [50, 0, 0, -50],
   );
 
-  const blogs = [
-    {
-      title: "The Ancient Grain for Modern Life",
-      desc: "Why millet is making a massive comeback.",
-      time: "4 min read",
-    },
-    {
-      title: "5 Quick Millet Recipes",
-      desc: "Easy, healthy meals for busy professionals.",
-      time: "6 min read",
-    },
-    {
-      title: "Sustainable Eating",
-      desc: "How EatPur millets support earth-friendly agriculture.",
-      time: "5 min read",
-    },
-  ];
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        const res = await getBlogs();
+        const data = res.data.results || res.data;
+
+        // ✅ sort by likes_count (desc)
+        const sorted = [...data].sort(
+          (a, b) => (b.likes_count || 0) - (a.likes_count || 0),
+        );
+
+        // ✅ take top 3
+        setBlogs(sorted.slice(0, 3));
+      } catch (err) {
+        console.error("Error fetching blogs", err);
+      }
+    };
+
+    fetchBlogs();
+  }, []);
 
   return (
     <motion.section
@@ -60,18 +66,16 @@ export default function BlogsSection() {
             <div className="absolute inset-0 bg-gradient-to-b from-eatpur-gold/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
             <div className="text-eatpur-green-light text-xs font-semibold uppercase tracking-wider mb-2">
-              {blog.time}
+              {blog.read_time || "5 min read"}
             </div>
+
             <h3 className="text-2xl text-[#E6D8A8] font-bold mb-3 group-hover:text-eatpur-yellow transition-colors duration-300">
               {blog.title}
             </h3>
-            <p className="text-eatpur-text text-sm leading-relaxed">
-              {blog.desc}
-            </p>
 
-            <div className="mt-6 flex items-center text-eatpur-gold text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-2 group-hover:translate-y-0">
-              Read Article <span className="ml-2">→</span>
-            </div>
+            <p className="text-eatpur-text text-sm leading-relaxed">
+              {blog.description || blog.content?.slice(0, 100)}
+            </p>
           </motion.div>
         ))}
       </div>
@@ -85,15 +89,20 @@ export default function BlogsSection() {
       >
         <button
           onClick={() => navigate("/blogs")}
-          className="group relative px-8 py-3 rounded-full border border-eatpur-gold/60 text-eatpur-gold font-medium tracking-wide overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-[0_0_25px_rgba(255,201,51,0.25)]"
+          className="group relative px-8 py-3 rounded-full border border-eatpur-gold bg-eatpur-gold text-black font-medium tracking-wide overflow-hidden transition-all duration-500 hover:scale-[1.06] hover:shadow-[0_10px_40px_rgba(255,201,51,0.35)] active:scale-95"
         >
-          {/* Glow background */}
-          <span className="absolute inset-0 bg-eatpur-gold/10 opacity-0 group-hover:opacity-100 transition duration-300"></span>
+          {/* 🌟 Glow background (soft spread) */}
+          <span className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition duration-500 blur-xl"></span>
 
-          {/* Text */}
+          {/* ✨ Shimmer sweep */}
+          <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-700">
+            <span className="absolute top-0 left-[-100%] w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent group-hover:left-[100%] transition-all duration-1000"></span>
+          </span>
+
+          {/* TEXT */}
           <span className="relative z-10 flex items-center gap-2">
             See All Blogs
-            <span className="transform transition-transform duration-300 group-hover:translate-x-1">
+            <span className="transition-all duration-300 group-hover:translate-x-2 group-hover:scale-110">
               →
             </span>
           </span>

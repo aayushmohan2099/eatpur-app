@@ -75,3 +75,43 @@
   background: #ffc933;
   color: #040704;
 }
+
+/* ===== VIDEO BACKGROUND ===== */
+.video-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.video-el {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+
+  /* 🔥 BLUR */
+  filter: brightness(0.6);
+  transform: scale(1.05); /* prevent blur edges */
+}
+
+/* 🔥 BLACK OVERLAY (95% transparent = very subtle) */
+.video-overlay {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(2px);
+  background: rgba(0, 0, 0, 0.5); /* tweakable */
+}
+
+.video-el {
+  animation: slowZoom 20s ease-in-out infinite alternate;
+}
+
+@keyframes slowZoom {
+  from { transform: scale(1.05); }
+  to { transform: scale(1.15); }
+}
+
+.relative {
+  position: relative;
+  z-index: 1;
+}

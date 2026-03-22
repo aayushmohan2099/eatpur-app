@@ -9,24 +9,30 @@ import FooterCTA from "./components/FooterCTA";
 
 export default function App() {
   return (
-    // The main container provides the physical scroll height (500vh gives a smooth long scroll)
-    <div className="relative w-full h-[500vh] bg-eatpur-dark">
-      <Navbar />
+    <div className="relative">
 
-      {/* The sticky canvas background runs the image sequence */}
-      <CanvasSequence />
+      {/* 🎥 VIDEO BACKGROUND */}
+      <div className="video-bg">
+        <video autoPlay loop muted playsInline className="video-el">
+          <source src="/defBg/milletBg.mp4" type="video/mp4" />
+        </video>
 
-      {/* Overlay Sections that fade in/out based on global scroll progress */}
+        <div className="video-overlay"></div>
+      </div>
 
-      <HeroSection />
+      {/* 🌿 MAIN CONTENT */}
+      <div className="relative w-full h-[500vh] bg-eatpur-dark/40">
+        <Navbar />
 
-      <ProductsSection />
+        <CanvasSequence />
 
-      <BenefitsSection />
+        <HeroSection />
+        <ProductsSection />
+        <BenefitsSection />
+        <BlogsSection />
+        <FooterCTA />
+      </div>
 
-      <BlogsSection />
-
-      <FooterCTA />
     </div>
   );
 }

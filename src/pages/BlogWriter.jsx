@@ -236,7 +236,7 @@ export default function BlogWriter() {
   if (!editor) return null;
 
   return (
-    <div className="min-h-screen bg-eatpur-dark px-6 py-20">
+    <div className="min-h-screen bg-[#040704]/10 px-6 py-20">
       <div className="max-w-5xl mx-auto">
         {/* TITLE */}
         <input
