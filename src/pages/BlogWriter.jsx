@@ -18,6 +18,8 @@ export default function BlogWriter() {
   const [coverImage, setCoverImage] = useState(null);
 
   const { state } = useLocation();
+  const [charCount, setCharCount] = useState(0);
+  const MAX_CHARS = 5000;
 
   const editor = useEditor({
     extensions: [
@@ -30,6 +32,10 @@ export default function BlogWriter() {
       }),
     ],
     content: "<p>Start writing your story...</p>",
+    onUpdate: ({ editor }) => {
+      const text = editor.getText();
+      setCharCount(text.length);
+    },
   });
 
   useEffect(() => {
@@ -173,6 +179,12 @@ export default function BlogWriter() {
 
   // ✅ Publish Modal trigger
   const handlePublish = async () => {
+    const text = editor.getText();
+
+    if (text.length > MAX_CHARS) {
+      alert("More than 5000 characters not allowed ❌");
+      return;
+    }
     try {
       const json = editor.getJSON();
 
@@ -318,6 +330,14 @@ export default function BlogWriter() {
           <EditorContent editor={editor} />
         </div>
 
+        <div
+          className={`text-right text-sm mt-2 ${
+            charCount > MAX_CHARS ? "text-red-400" : "text-gray-400"
+          }`}
+        >
+          {charCount} / 5000
+        </div>
+
         {/* COVER IMAGE UPLOAD */}
         <div className="mt-10">
           <h3 className="text-eatpur-gold mb-3">Cover Image</h3>
@@ -418,18 +438,33 @@ export default function BlogWriter() {
         </div>
 
         {/* ACTIONS */}
-        <div className="flex gap-4 mt-10">
-          <button onClick={handlePreview} className="btn">
-            Preview
-          </button>
+        <div className="flex flex-col items-center gap-2 mt-10">
+          {/* ⚠️ Warning */}
+          {charCount > MAX_CHARS && (
+            <div className="text-red-400 text-sm font-medium">
+              ⚠️ Content exceeds 5000 characters. Please reduce it.
+            </div>
+          )}
 
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            onClick={handlePublish}
-            className="px-8 py-3 rounded-full border border-eatpur-gold text-eatpur-gold hover:bg-eatpur-gold hover:text-black transition"
-          >
-            Publish
-          </motion.button>
+          {/* Buttons */}
+          <div className="flex gap-4">
+            <button onClick={handlePreview} className="btn">
+              Preview
+            </button>
+
+            <motion.button
+              whileHover={charCount > MAX_CHARS ? {} : { scale: 1.05 }}
+              onClick={handlePublish}
+              disabled={charCount > MAX_CHARS}
+              className={`px-8 py-3 rounded-full border transition ${
+                charCount > MAX_CHARS
+                  ? "border-gray-600 text-gray-500 cursor-not-allowed"
+                  : "border-eatpur-gold text-eatpur-gold hover:bg-eatpur-gold hover:text-black"
+              }`}
+            >
+              Publish
+            </motion.button>
+          </div>
         </div>
       </div>
       <style>

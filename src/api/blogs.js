@@ -1,10 +1,10 @@
 // src/api/blogs.js
 import axios from "axios";
-
+const BASE_URL = "https://eatpur.in";
 const API = axios.create({
-  baseURL: "http://66.116.207.88:2203/api",
+  baseURL: "https://eatpur.in/api",
   headers: {
-    "X-API-KEY": "EATPURx220326", 
+    "X-API-KEY": "EATPURx220326",
   },
 });
 
@@ -29,10 +29,9 @@ export const commentOnBlog = (id, data) =>
 
 const fixUrlsDeep = (data) => {
   if (typeof data === "string") {
-    return data.replace(
-      "http://66.116.207.88/media/",
-      "http://66.116.207.88:2203/media/"
-    );
+    return data
+      .replace("http://66.116.207.88", BASE_URL)
+      .replace("http://eatpur.in", BASE_URL);
   }
 
   if (Array.isArray(data)) {
