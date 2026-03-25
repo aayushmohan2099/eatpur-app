@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import Navbar from "./components/Navbar";
-import CanvasSequence from "./components/CanvasSequence";
+import FloatingMenu from "./components/FloatingMenu";
 import HeroSection from "./components/HeroSection";
 import ProductsSection from "./components/ProductsSection";
 import BenefitsSection from "./components/BenefitsSection";
@@ -8,9 +8,10 @@ import BlogsSection from "./components/BlogsSection";
 import FooterCTA from "./components/FooterCTA";
 
 export default function App() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <div className="relative">
-
       {/* 🎥 VIDEO BACKGROUND */}
       <div className="video-bg">
         <video autoPlay loop muted playsInline className="video-el">
@@ -23,13 +24,13 @@ export default function App() {
       {/* 🌿 MAIN CONTENT */}
       <div className="relative w-full h-[500vh] bg-eatpur-dark/40">
         <Navbar />
-        <HeroSection />
+        <FloatingMenu menuOpen={menuOpen} />
+        <HeroSection setMenuOpen={setMenuOpen} />
         <ProductsSection />
         <BenefitsSection />
         <BlogsSection />
         <FooterCTA />
       </div>
-
     </div>
   );
 }
