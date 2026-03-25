@@ -23,9 +23,6 @@ export default function App() {
       {/* 🌿 MAIN CONTENT */}
       <div className="relative w-full h-[500vh] bg-eatpur-dark/40">
         <Navbar />
-
-        <CanvasSequence />
-
         <HeroSection />
         <ProductsSection />
         <BenefitsSection />

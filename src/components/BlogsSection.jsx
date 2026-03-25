@@ -46,6 +46,17 @@ export default function BlogsSection() {
       style={{ opacity, y }}
       className="fixed inset-0 flex flex-col items-center justify-center p-6 z-20 pointer-events-none"
     >
+      <div className="absolute inset-0 flex items-center justify-center will-change-transform">
+        <div
+          className="
+      w-[120vw] h-[120vw]
+      max-w-[1200px] max-h-[1200px]
+      bg-[radial-gradient(circle,rgba(0,0,0,0.9)_0%,rgba(0,0,0,0.7)_30%,rgba(0,0,0,0.4)_60%,transparent_80%)]
+      blur-2xl
+    "
+        />
+      </div>
+
       <div className="text-center mb-12 max-w-2xl bg-[#040704]/40 p-6 rounded-2xl backdrop-blur-md">
         <h2 className="text-4xl md:text-5xl font-bold text-eatpur-gold tracking-tight mb-4 drop-shadow-md">
           Trending Blogs

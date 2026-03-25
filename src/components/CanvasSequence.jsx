@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useScroll, useTransform, useMotionValueEvent } from "framer-motion";
 
-const FRAME_COUNT = 374;
+const FRAME_COUNT = 480;
 
 // Helper to pad the frame index (e.g., 1 -> '0001')
 const currentFrame = (index) =>
