@@ -1,16 +1,14 @@
-// src/pages/PreviewBlog.jsx
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getBlogById, reactToBlog, commentOnBlog } from "../api/blogs";
-import { useNavigate } from "react-router-dom";
 
 export default function PreviewBlog() {
   const { state } = useLocation();
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
   const [likes, setLikes] = useState(0);
   const [dislikes, setDislikes] = useState(0);
@@ -19,10 +17,8 @@ export default function PreviewBlog() {
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState("");
 
-  // ✅ FETCH MODE (when ID exists)
   useEffect(() => {
     if (!id) return;
-
     const fetchBlog = async () => {
       try {
         setLoading(true);
@@ -34,19 +30,16 @@ export default function PreviewBlog() {
         setLoading(false);
       }
     };
-
     fetchBlog();
   }, [id]);
 
   useEffect(() => {
     if (!blog) return;
-
     setLikes(blog.likes_count || 0);
     setDislikes(blog.dislikes_count || 0);
     setComments(blog.comments || []);
   }, [blog]);
 
-  // ✅ Decide source
   const title = id ? blog?.title : state?.title;
   const coverImage = id ? blog?.cover_image : state?.coverImage;
   const content = id ? null : state?.content;
@@ -55,35 +48,18 @@ export default function PreviewBlog() {
   const handleReaction = async (type) => {
     try {
       await reactToBlog(id, type);
-
-      if (type === "like") {
-        setLikes((prev) => prev + 1);
-      } else {
-        setDislikes((prev) => prev + 1);
-      }
+      if (type === "like") setLikes((prev) => prev + 1);
+      else setDislikes((prev) => prev + 1);
     } catch (err) {
       console.error(err);
     }
   };
 
   const handleComment = async () => {
-    if (!name.trim()) {
-      alert("Name is required");
-      return;
-    }
-
-    if (!commentText.trim()) {
-      alert("Comment cannot be empty");
-      return;
-    }
-
+    if (!name.trim()) return alert("Name is required");
+    if (!commentText.trim()) return alert("Comment cannot be empty");
     try {
-      const res = await commentOnBlog(id, {
-        name,
-        email,
-        content: commentText, // ✅ CORRECT FIELD
-      });
-
+      const res = await commentOnBlog(id, { name, email, content: commentText });
       setComments((prev) => [res.data, ...prev]);
       setCommentText("");
     } catch (err) {
@@ -92,173 +68,121 @@ export default function PreviewBlog() {
   };
 
   return (
-    <div className="min-h-screen bg-[#040704]/10 px-6 py-20">
-      <div className="max-w-3xl mx-auto">
+    <div className="w-full min-h-screen pt-24 pb-32 px-6 relative z-10">
+      <div className="max-w-4xl mx-auto glass-card p-8 md:p-12 rounded-3xl">
         {!id && (
           <button
             onClick={() => navigate("/write-blog")}
-            className="mb-6 px-4 py-2 rounded-lg border border-eatpur-gold text-eatpur-gold hover:bg-eatpur-gold hover:text-black transition"
+            className="btn-ghost mb-8 text-sm px-4 py-2"
           >
             ← Back to Editor
           </button>
         )}
-        {loading && (
-          <div className="text-center text-eatpur-text-light">
-            Loading blog...
+        {loading && <div className="text-center text-eatpur-text">Loading blog...</div>}
+
+        {coverImage && (
+          <div className="w-full h-[40vh] md:h-[50vh] rounded-2xl overflow-hidden mb-10 relative shadow-[0_0_30px_rgba(4,7,4,0.5)]">
+            <img src={coverImage} className="w-full h-full object-cover" alt="Cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-eatpur-dark to-transparent opacity-80" />
           </div>
         )}
 
-        {/* COVER */}
-        {coverImage && (
-          <img
-            src={coverImage}
-            className="rounded-2xl mb-6 w-full object-cover"
-          />
-        )}
+        <h1 className="text-4xl md:text-5xl font-display text-gradient-gold mb-12">{title}</h1>
 
-        {/* TITLE */}
-        <h1 className="text-4xl text-eatpur-gold mb-6">{title}</h1>
-
-        {/* ========================= */}
-        {/* ✅ PREVIEW MODE (HTML) */}
-        {/* ========================= */}
         {!id && content && (
           <div
-            className="prose max-w-none text-eatpur-text-light"
+            className="prose prose-invert prose-lg max-w-none text-eatpur-white-warm"
             dangerouslySetInnerHTML={{ __html: content }}
           />
         )}
 
-        {/* ========================= */}
-        {/* ✅ FETCH MODE (BLOCKS) */}
-        {/* ========================= */}
         {id && blocks && (
-          <div className="space-y-6">
+          <div className="space-y-8 text-eatpur-white-warm prose prose-invert prose-lg max-w-none">
             {blocks
               .sort((a, b) => a.order - b.order)
               .map((block, idx) => {
-                // TEXT BLOCK
                 if (block.type === "text") {
                   try {
                     const parsed = JSON.parse(block.content);
-
-                    return (
-                      <div
-                        key={idx}
-                        className="prose max-w-none text-eatpur-text-light"
-                        dangerouslySetInnerHTML={{
-                          __html: renderTipTapJSON(parsed),
-                        }}
-                      />
-                    );
-                  } catch {
-                    return null;
-                  }
+                    return <div key={idx} dangerouslySetInnerHTML={{ __html: renderTipTapJSON(parsed) }} />;
+                  } catch { return null; }
                 }
-
-                // IMAGE BLOCK
                 if (block.type === "image") {
-                  return (
-                    <img
-                      key={idx}
-                      src={block.image}
-                      className="rounded-xl w-full"
-                    />
-                  );
+                  return <img key={idx} src={block.image} className="rounded-2xl w-full shadow-lg border border-eatpur-gold/10" alt="Blog block" />;
                 }
-
                 return null;
               })}
           </div>
         )}
 
-        {/* ================= REACTIONS + COMMENT INPUT ================= */}
-        <div className="mt-12 border-t border-[#2A3F2A] pt-6">
-          {/* TOP ROW */}
-          <div className="flex flex-wrap gap-4 items-center">
-            {/* COMMENT INPUT */}
-            <input
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              placeholder="Write a comment..."
-              className="flex-1 px-4 py-2 rounded-full bg-[#0B140B] border border-[#2A3F2A] text-white"
-            />
-
-            {/* POST */}
-            <button
-              onClick={handleComment}
-              disabled={!name.trim()}
-              className="px-5 py-2 rounded-full bg-eatpur-gold text-black hover:scale-105 transition"
-            >
-              Post
-            </button>
-
-            {/* LIKE */}
+        {/* Reactions & Comments */}
+        <div className="mt-16 pt-12 border-t border-eatpur-gold/10">
+          <div className="flex flex-wrap gap-4 items-center mb-8">
             <button
               onClick={() => handleReaction("like")}
-              className="px-4 py-2 rounded-full border border-green-400 text-green-400 hover:bg-green-400 hover:text-black transition"
+              className="flex items-center gap-2 px-6 py-3 rounded-full border border-eatpur-gold/30 hover:bg-eatpur-gold/10 text-eatpur-gold transition-colors"
             >
               👍 {likes}
             </button>
-
-            {/* DISLIKE */}
             <button
               onClick={() => handleReaction("dislike")}
-              className="px-4 py-2 rounded-full border border-red-400 text-red-400 hover:bg-red-400 hover:text-black transition"
+              className="flex items-center gap-2 px-6 py-3 rounded-full border border-red-500/30 hover:bg-red-500/10 text-red-400 transition-colors"
             >
               👎 {dislikes}
             </button>
           </div>
 
-          {/* NAME + EMAIL */}
-          <div className="flex gap-3 mt-4">
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Your Name (required)"
-              className="flex-1 px-4 py-2 rounded-lg bg-[#0B140B] border border-[#2A3F2A] text-white"
-            />
-
-            <input
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email (optional)"
-              className="flex-1 px-4 py-2 rounded-lg bg-[#0B140B] border border-[#2A3F2A] text-white"
-            />
-          </div>
-        </div>
-
-        {/* ================= COMMENTS LIST ================= */}
-        <div className="mt-10">
-          <h3 className="text-eatpur-gold text-xl mb-4">Comments</h3>
-
-          {comments.length === 0 && (
-            <p className="text-eatpur-text-light">No comments yet.</p>
-          )}
-
-          <div className="space-y-4">
-            {comments.map((c, i) => (
-              <div
-                key={i}
-                className="p-4 rounded-xl bg-[#0B140B]/70 border border-[#2A3F2A]"
+          <div className="bg-eatpur-dark/50 p-6 rounded-2xl border border-eatpur-gold/10 mb-10">
+            <h3 className="text-xl font-display text-eatpur-yellow mb-6">Leave a Comment</h3>
+            <div className="flex flex-col md:flex-row gap-4 mb-4">
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Your Name *"
+                className="flex-1 px-4 py-3 rounded-xl bg-eatpur-dark border border-eatpur-gold/20 text-eatpur-white-warm focus:outline-none focus:border-eatpur-gold transition-colors"
+              />
+              <input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email (optional)"
+                className="flex-1 px-4 py-3 rounded-xl bg-eatpur-dark border border-eatpur-gold/20 text-eatpur-white-warm focus:outline-none focus:border-eatpur-gold transition-colors"
+              />
+            </div>
+            <div className="flex flex-col md:flex-row gap-4 items-start">
+              <textarea
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                placeholder="Write your comment here..."
+                className="flex-1 w-full px-4 py-3 rounded-xl bg-eatpur-dark border border-eatpur-gold/20 text-eatpur-white-warm focus:outline-none focus:border-eatpur-gold transition-colors resize-none h-24"
+              />
+              <button
+                onClick={handleComment}
+                disabled={!name.trim() || !commentText.trim()}
+                className="btn-primary py-3 px-8 self-end md:self-stretch disabled:opacity-50 disabled:cursor-not-allowed hidden md:block" // Hidden on mobile, added below
               >
-                {/* NAME */}
-                <p className="text-eatpur-gold font-semibold">
-                  {c.name || "Anonymous"}
-                </p>
+                Post
+              </button>
+            </div>
+            <button
+              onClick={handleComment}
+              disabled={!name.trim() || !commentText.trim()}
+              className="btn-primary py-3 px-8 w-full mt-4 md:hidden disabled:opacity-50 disabled:cursor-not-allowed" // Mobile specific
+            >
+              Post
+            </button>
+          </div>
 
-                {/* EMAIL */}
-                {c.email && <p className="text-xs text-gray-500">{c.email}</p>}
-
-                {/* CONTENT */}
-                <p className="text-eatpur-text-light mt-2 text-sm">
-                  {c.content}
-                </p>
-
-                {/* DATE */}
-                <span className="text-xs text-gray-500">
-                  {new Date(c.created_at).toLocaleString()}
-                </span>
+          <h3 className="text-2xl font-display text-eatpur-yellow mb-8">Comments ({comments.length})</h3>
+          {comments.length === 0 && <p className="text-eatpur-text">No comments yet. Be the first!</p>}
+          <div className="space-y-6">
+            {comments.map((c, i) => (
+              <div key={i} className="p-6 rounded-2xl bg-eatpur-dark/30 border border-eatpur-gold/10">
+                <div className="flex items-baseline gap-4 mb-2">
+                  <h4 className="text-eatpur-white-warm font-semibold text-lg">{c.name || "Anonymous"}</h4>
+                  <span className="text-sm text-eatpur-text/60">{new Date(c.created_at).toLocaleString()}</span>
+                </div>
+                {c.email && <p className="text-xs text-eatpur-text/40 mb-3">{c.email}</p>}
+                <p className="text-eatpur-text leading-relaxed">{c.content}</p>
               </div>
             ))}
           </div>
@@ -268,36 +192,22 @@ export default function PreviewBlog() {
   );
 }
 
-/* ✅ Convert TipTap JSON → HTML */
 function renderTipTapJSON(node) {
   if (!node) return "";
-
-  if (node.type === "doc") {
-    return node.content.map(renderTipTapJSON).join("");
-  }
-
+  if (node.type === "doc") return node.content.map(renderTipTapJSON).join("");
   if (node.type === "paragraph") {
     const align = node.attrs?.textAlign || "left";
-
-    const content =
-      node.content?.map((child) => renderTipTapJSON(child)).join("") || "";
-
-    return `<p style="text-align:${align}">${content}</p>`;
+    const content = node.content?.map((child) => renderTipTapJSON(child)).join("") || "<br/>";
+    return `<p style="text-align:${align}; margin-bottom: 1rem; color: rgba(230, 216, 168, 0.8)">${content}</p>`;
   }
-
   if (node.type === "heading") {
     const level = node.attrs?.level || 1;
     const align = node.attrs?.textAlign || "left";
-
-    const content =
-      node.content?.map((child) => renderTipTapJSON(child)).join("") || "";
-
-    return `<h${level} style="text-align:${align}">${content}</h${level}>`;
+    const content = node.content?.map((child) => renderTipTapJSON(child)).join("") || "";
+    return `<h${level} style="text-align:${align}; font-family: 'Inter', sans-serif; font-weight: bold; color: #FFF3B0; margin-top: 2rem; margin-bottom: 1rem;">${content}</h${level}>`;
   }
-
   if (node.type === "text") {
     let text = node.text || "";
-
     if (node.marks) {
       node.marks.forEach((mark) => {
         if (mark.type === "bold") text = `<strong>${text}</strong>`;
@@ -307,9 +217,7 @@ function renderTipTapJSON(node) {
         }
       });
     }
-
     return text;
   }
-
   return "";
 }
