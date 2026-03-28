@@ -11,10 +11,12 @@ import {
 import { FaCartShopping, FaBars, FaXmark } from "react-icons/fa6";
 import { useCart } from "../context/CartContext";
 import ThreeLogo from "./ThreeLogo";
+import Chatbot from "./Chatbot";
 
 export default function Navbar() {
   const { state, dispatch } = useCart();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   const location = useLocation();
 
   const [isPastHero, setIsPastHero] = useState(false);
@@ -221,6 +223,8 @@ export default function Navbar() {
 
       {/* 3D LOGO: Independent Floating Container */}
       <motion.div
+        layout
+        layoutId="main-logo"
         className="fixed z-50 overflow-hidden"
         initial={false}
         animate={isHeroVisible ? "hero" : "corner"}
@@ -241,22 +245,25 @@ export default function Navbar() {
           },
         }}
         transition={{
-          type: "spring",
-          stiffness: 80,
-          damping: 20,
-          mass: 1,
+          layout: {
+            type: "spring",
+            stiffness: 60,
+            damping: 28,
+            mass: 1.2
+          }
         }}
         style={{
           pointerEvents: isHeroVisible ? "none" : "auto",
+          willChange: "transform",
         }}
       >
         <ThreeLogo
           isHeroVisible={isHeroVisible}
           isCorner={!isHeroVisible}
           onClick={() => {
-            // In corner state, clicking toggles mobile menu
+            // In corner state, clicking opens chatbot
             if (!isHeroVisible) {
-              setIsMobileMenuOpen((prev) => !prev);
+              setIsChatbotOpen((prev) => !prev);
             }
           }}
         />
@@ -293,6 +300,8 @@ export default function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <Chatbot isOpen={isChatbotOpen} onClose={() => setIsChatbotOpen(false)} />
     </>
   );
 }
