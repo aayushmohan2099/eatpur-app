@@ -50,33 +50,6 @@ const products = [
   },
 ];
 
-const trendingBlogs = [
-  {
-    id: 1,
-    title: "The Ancient Supergrain Revival",
-    author: "Lovelesh",
-    date: "Oct 12, 2024",
-    likes: 230,
-    readTime: "5 min",
-  },
-  {
-    id: 2,
-    title: "Why Millets > Rice for Weight Loss",
-    author: "Sunita",
-    date: "Oct 05, 2024",
-    likes: 185,
-    readTime: "6 min",
-  },
-  {
-    id: 3,
-    title: "A Complete Guide to Sprouting at Home",
-    author: "Ankit",
-    date: "Sep 29, 2024",
-    likes: 312,
-    readTime: "8 min",
-  },
-];
-
 export default function HomePage() {
   const { scrollYProgress } = useScroll();
   const { dispatch } = useCart();
@@ -128,12 +101,13 @@ export default function HomePage() {
         className="h-screen w-full flex flex-col items-center justify-center text-center px-6 fixed top-0 left-0 pointer-events-none"
         style={{ opacity: heroOpacity, y: heroY }}
       >
-        <div className="pointer-events-auto flex flex-col items-center justify-center translate-y-[180px] md:translate-y-[220px]">
+        <div className="pointer-events-auto flex flex-col items-center justify-center translate-y-[200px] md:translate-y-[240px]">
           <motion.p
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", delay: 0.4 }}
             className="text-lg md:text-6xl font-bold text-eatpur-gold tracking-tight leading-tight max-w-2xl mx-auto mb-10 mt-28 md:mt-32"
+            style={{ fontFamily: "var(--font-hughes)" }}
           >
             Coming Soon....
           </motion.p>
@@ -152,7 +126,10 @@ export default function HomePage() {
           transition={{ duration: 0.8 }}
           className="text-center mb-16"
         >
-          <h2 className="text-4xl md:text-5xl font-display text-gradient-gold mb-4">
+          <h2
+            className="text-4xl md:text-5xl font-display text-gradient-gold mb-4 leading-[1.3] py-2"
+            style={{ fontFamily: "var(--font-hughes)" }}
+          >
             Why Choose Millets?
           </h2>
           <p className="text-eatpur-text text-lg">
@@ -216,7 +193,10 @@ export default function HomePage() {
       <section className="min-h-screen w-full bg-eatpur-dark py-24 px-6 z-10 relative">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-display text-gradient-gold mb-4">
+            <h2
+              className="text-4xl md:text-5xl font-display text-gradient-gold mb-4 leading-[1.3] py-2"
+              style={{ fontFamily: "var(--font-hughes)" }}
+            >
               Featured Products
             </h2>
             <p className="text-eatpur-text text-lg">
@@ -254,7 +234,10 @@ export default function HomePage() {
                   </button>
                 </div>
                 <div className="p-6 flex flex-col flex-1">
-                  <h3 className="text-xl font-bold text-eatpur-white-warm mb-1">
+                  <h3
+                    className="text-xl font-bold text-eatpur-white-warm mb-1"
+                    style={{ fontFamily: "var(--font-hughes)" }}
+                  >
                     {product.name}
                   </h3>
                   <p className="text-eatpur-text text-sm mb-4 line-clamp-2">
@@ -284,7 +267,10 @@ export default function HomePage() {
       <section className="py-24 px-6 bg-eatpur-green-dark/40 z-10 relative">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-display text-gradient-gold mb-4 leading-normal">
+            <h2
+              className="text-4xl md:text-5xl font-display text-gradient-gold mb-4 leading-[1.3] py-2"
+              style={{ fontFamily: "var(--font-hughes)" }}
+            >
               Blogs
             </h2>
             <p className="text-eatpur-text text-lg">
@@ -309,10 +295,16 @@ export default function HomePage() {
                     <FaHeart size={12} /> {blog.likes_count || 0}
                   </span>
                 </div>
-                <h3 className="text-2xl font-bold text-eatpur-white-warm mb-4 line-clamp-2">
+                <h3
+                  className="text-2xl font-bold text-eatpur-white-warm mb-4 line-clamp-2"
+                  style={{ fontFamily: "var(--font-hughes)" }}
+                >
                   {blog.title}
                 </h3>
-                <div className="mt-auto text-sm text-eatpur-text/80 pt-4 border-t border-eatpur-gold/10 flex justify-between">
+                <div
+                  className="mt-auto text-sm text-eatpur-text/80 pt-4 border-t border-eatpur-gold/10 flex justify-between"
+                  style={{ fontFamily: "var(--font-hughes)" }}
+                >
                   <span>By {blog.author}</span>
                   <span>{"5 min"}</span>
                 </div>
@@ -337,15 +329,14 @@ export default function HomePage() {
           viewport={{ once: true }}
           className="relative z-10"
         >
-          <h2 className="text-5xl md:text-7xl font-display text-gradient-gold mb-6">
-            Pure food. Honest living.
+          <h2
+            className="text-4xl md:text-5xl font-display text-gradient-gold mb-4 leading-[1.3] py-2"
+            style={{ fontFamily: "var(--font-hughes)" }}
+          >
+            Pure food. Healthy Life.
           </h2>
-          <p className="text-xl md:text-2xl text-eatpur-text-light mb-4">
-            EatPur. Rooted in tradition, crafted for modern wellness.
-          </p>
           <p className="text-eatpur-text mb-10 max-w-xl mx-auto">
-            From farm to table, bringing you clean, wholesome millet nutrition
-            every day.
+            EatPur, rooted in tradition, crafted for modern wellness.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

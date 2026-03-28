@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Hughes";
+  src: url("/fonts/Hughes-Rough.otf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
   --color-eatpur-dark: #040704;
   --color-eatpur-green-dark: #0b140b;
@@ -14,6 +22,7 @@
   --color-eatpur-white-warm: #fff8e1;
 
   --font-sans: "Inter", "SF Pro Display", "SF Pro Text", ui-sans-serif, system-ui, sans-serif;
+  --font-hughes: "Hughes", "Inter", sans-serif;
 }
 
 @layer base {

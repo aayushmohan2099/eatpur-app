@@ -59,7 +59,11 @@ export default function PreviewBlog() {
     if (!name.trim()) return alert("Name is required");
     if (!commentText.trim()) return alert("Comment cannot be empty");
     try {
-      const res = await commentOnBlog(id, { name, email, content: commentText });
+      const res = await commentOnBlog(id, {
+        name,
+        email,
+        content: commentText,
+      });
       setComments((prev) => [res.data, ...prev]);
       setCommentText("");
     } catch (err) {
@@ -68,7 +72,7 @@ export default function PreviewBlog() {
   };
 
   return (
-    <div className="w-full min-h-screen pt-24 pb-32 px-6 relative z-10">
+    <div className="w-full min-h-screen top-5 pt-24 pb-32 px-6 relative z-10">
       <div className="max-w-4xl mx-auto glass-card p-8 md:p-12 rounded-3xl">
         {!id && (
           <button
@@ -78,16 +82,29 @@ export default function PreviewBlog() {
             ← Back to Editor
           </button>
         )}
-        {loading && <div className="text-center text-eatpur-text">Loading blog...</div>}
+        {loading && (
+          <div
+            className="text-center text-eatpur-text"
+            style={{ fontFamily: "var(--font-hughes)" }}
+          >
+            Loading blog...
+          </div>
+        )}
 
         {coverImage && (
           <div className="w-full h-[40vh] md:h-[50vh] rounded-2xl overflow-hidden mb-10 relative shadow-[0_0_30px_rgba(4,7,4,0.5)]">
-            <img src={coverImage} className="w-full h-full object-cover" alt="Cover" />
+            <img
+              src={coverImage}
+              className="w-full h-full object-cover"
+              alt="Cover"
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-eatpur-dark to-transparent opacity-80" />
           </div>
         )}
 
-        <h1 className="text-4xl md:text-5xl font-display text-gradient-gold mb-12">{title}</h1>
+        <h1 className="text-4xl md:text-5xl font-display text-gradient-gold mb-12">
+          {title}
+        </h1>
 
         {!id && content && (
           <div
@@ -104,11 +121,27 @@ export default function PreviewBlog() {
                 if (block.type === "text") {
                   try {
                     const parsed = JSON.parse(block.content);
-                    return <div key={idx} dangerouslySetInnerHTML={{ __html: renderTipTapJSON(parsed) }} />;
-                  } catch { return null; }
+                    return (
+                      <div
+                        key={idx}
+                        dangerouslySetInnerHTML={{
+                          __html: renderTipTapJSON(parsed),
+                        }}
+                      />
+                    );
+                  } catch {
+                    return null;
+                  }
                 }
                 if (block.type === "image") {
-                  return <img key={idx} src={block.image} className="rounded-2xl w-full shadow-lg border border-eatpur-gold/10" alt="Blog block" />;
+                  return (
+                    <img
+                      key={idx}
+                      src={block.image}
+                      className="rounded-2xl w-full shadow-lg border border-eatpur-gold/10"
+                      alt="Blog block"
+                    />
+                  );
                 }
                 return null;
               })}
@@ -133,7 +166,12 @@ export default function PreviewBlog() {
           </div>
 
           <div className="bg-eatpur-dark/50 p-6 rounded-2xl border border-eatpur-gold/10 mb-10">
-            <h3 className="text-xl font-display text-eatpur-yellow mb-6">Leave a Comment</h3>
+            <h3
+              className="text-xl font-display text-eatpur-yellow mb-6"
+              style={{ fontFamily: "var(--font-hughes)" }}
+            >
+              Leave a Comment
+            </h3>
             <div className="flex flex-col md:flex-row gap-4 mb-4">
               <input
                 value={name}
@@ -172,16 +210,32 @@ export default function PreviewBlog() {
             </button>
           </div>
 
-          <h3 className="text-2xl font-display text-eatpur-yellow mb-8">Comments ({comments.length})</h3>
-          {comments.length === 0 && <p className="text-eatpur-text">No comments yet. Be the first!</p>}
+          <h3
+            className="text-2xl font-display text-eatpur-yellow mb-8"
+            style={{ fontFamily: "var(--font-hughes)" }}
+          >
+            Comments ({comments.length})
+          </h3>
+          {comments.length === 0 && (
+            <p className="text-eatpur-text">No comments yet. Be the first!</p>
+          )}
           <div className="space-y-6">
             {comments.map((c, i) => (
-              <div key={i} className="p-6 rounded-2xl bg-eatpur-dark/30 border border-eatpur-gold/10">
+              <div
+                key={i}
+                className="p-6 rounded-2xl bg-eatpur-dark/30 border border-eatpur-gold/10"
+              >
                 <div className="flex items-baseline gap-4 mb-2">
-                  <h4 className="text-eatpur-white-warm font-semibold text-lg">{c.name || "Anonymous"}</h4>
-                  <span className="text-sm text-eatpur-text/60">{new Date(c.created_at).toLocaleString()}</span>
+                  <h4 className="text-eatpur-white-warm font-semibold text-lg">
+                    {c.name || "Anonymous"}
+                  </h4>
+                  <span className="text-sm text-eatpur-text/60">
+                    {new Date(c.created_at).toLocaleString()}
+                  </span>
                 </div>
-                {c.email && <p className="text-xs text-eatpur-text/40 mb-3">{c.email}</p>}
+                {c.email && (
+                  <p className="text-xs text-eatpur-text/40 mb-3">{c.email}</p>
+                )}
                 <p className="text-eatpur-text leading-relaxed">{c.content}</p>
               </div>
             ))}
@@ -197,13 +251,15 @@ function renderTipTapJSON(node) {
   if (node.type === "doc") return node.content.map(renderTipTapJSON).join("");
   if (node.type === "paragraph") {
     const align = node.attrs?.textAlign || "left";
-    const content = node.content?.map((child) => renderTipTapJSON(child)).join("") || "<br/>";
+    const content =
+      node.content?.map((child) => renderTipTapJSON(child)).join("") || "<br/>";
     return `<p style="text-align:${align}; margin-bottom: 1rem; color: rgba(230, 216, 168, 0.8)">${content}</p>`;
   }
   if (node.type === "heading") {
     const level = node.attrs?.level || 1;
     const align = node.attrs?.textAlign || "left";
-    const content = node.content?.map((child) => renderTipTapJSON(child)).join("") || "";
+    const content =
+      node.content?.map((child) => renderTipTapJSON(child)).join("") || "";
     return `<h${level} style="text-align:${align}; font-family: 'Inter', sans-serif; font-weight: bold; color: #FFF3B0; margin-top: 2rem; margin-bottom: 1rem;">${content}</h${level}>`;
   }
   if (node.type === "text") {

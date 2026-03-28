@@ -24,11 +24,16 @@ export default function BlogsPage() {
   }, []);
 
   return (
-    <div className="w-full min-h-screen pt-24 pb-32 px-6 relative z-10">
+    <div className="w-full min-h-screen top-5 pt-24 pb-32 px-6 relative z-10">
       {/* HEADER */}
       <div className="max-w-7xl mx-auto rounded-[2rem] overflow-hidden mb-16 relative bg-eatpur-green-dark p-12 md:p-20 text-center flex flex-col items-center justify-center shadow-[0_0_40px_rgba(4,7,4,0.5)] border border-eatpur-gold/10">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,201,51,0.1)_0%,transparent_70%)] pointer-events-none" />
-        <h1 className="text-5xl md:text-6xl font-display text-gradient-gold mb-4 relative z-10">Our Blogs</h1>
+        <h1
+          className="text-5xl md:text-6xl font-display text-gradient-gold mb-4 relative z-10 leading-[1.3] py-2"
+          style={{ fontFamily: "var(--font-hughes)" }}
+        >
+          Our Blogs
+        </h1>
         <p className="text-xl text-eatpur-text relative z-10 mb-8">
           Insights, recipes & stories around millet lifestyle.
         </p>
@@ -44,7 +49,10 @@ export default function BlogsPage() {
 
           <div className="relative flex flex-col md:flex-row items-center justify-between gap-6">
             <div>
-              <h2 className="text-2xl md:text-3xl text-gradient-gold font-bold mb-2">
+              <h2
+                className="text-2xl md:text-3xl text-gradient-gold font-bold mb-2 leading-[1] py-2"
+                style={{ fontFamily: "var(--font-hughes)" }}
+              >
                 Write your own Blog ✍️
               </h2>
               <p className="text-eatpur-text text-sm md:text-base">
@@ -58,6 +66,7 @@ export default function BlogsPage() {
             <button
               onClick={() => navigate("/write-blog")}
               className="btn-primary flex-shrink-0"
+              style={{ fontFamily: "var(--font-hughes)" }}
             >
               Start Writing →
             </button>
@@ -67,9 +76,7 @@ export default function BlogsPage() {
 
       {/* LOADING */}
       {loading && (
-        <div className="text-center text-eatpur-text">
-          Loading blogs...
-        </div>
+        <div className="text-center text-eatpur-text">Loading blogs...</div>
       )}
 
       {/* BLOG GRID */}
@@ -85,7 +92,10 @@ export default function BlogsPage() {
             className="glass-card rounded-2xl p-6 flex flex-col glow-hover cursor-pointer"
           >
             {/* TITLE */}
-            <h2 className="text-2xl text-eatpur-white-warm font-bold mb-3 group-hover:text-eatpur-yellow transition-colors">
+            <h2
+              className="text-2xl text-eatpur-white-warm font-bold mb-3 group-hover:text-eatpur-yellow transition-colors"
+              style={{ fontFamily: "var(--font-hughes)" }}
+            >
               {blog.title}
             </h2>
 
@@ -100,7 +110,10 @@ export default function BlogsPage() {
                 {blog.read_time || "5 min read"}
               </span>
 
-              <span className="text-eatpur-gold opacity-0 group-hover:opacity-100 transition-opacity">
+              <span
+                className="text-eatpur-gold opacity-0 group-hover:opacity-100 transition-opacity"
+                style={{ fontFamily: "var(--font-hughes)" }}
+              >
                 Read →
               </span>
             </div>

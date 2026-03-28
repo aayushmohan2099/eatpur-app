@@ -10,7 +10,8 @@ import {
 } from "framer-motion";
 import { FaCartShopping, FaBars, FaXmark } from "react-icons/fa6";
 import { useCart } from "../context/CartContext";
-import ThreeLogo from "./ThreeLogo";
+import HeroLogo from "./HeroLogo";
+import CornerLogo from "./CornerLogo";
 import Chatbot from "./Chatbot";
 
 export default function Navbar() {
@@ -22,15 +23,8 @@ export default function Navbar() {
   const [isPastHero, setIsPastHero] = useState(false);
 
   const isHome = location.pathname === "/";
-  const [isHeroVisible, setIsHeroVisible] = useState(isHome);
+  const [isHeroVisible, setIsHeroVisible] = useState(false);
 
-  useEffect(() => {
-    setIsHeroVisible(isHome);
-  }, [isHome]);
-
-  const isCorner = isHome
-    ? isPastHero // scroll decides on homepage
-    : true; // ALWAYS corner on other pages
   const [isMobile, setIsMobile] = useState(false);
 
   const { scrollYProgress } = useScroll();
@@ -67,9 +61,11 @@ export default function Navbar() {
     { label: "Contact", path: "/contact" },
   ];
 
-  // Screen resize listener for responsive logo size values
+  // Screen resize listener for responsive logo size
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -82,8 +78,12 @@ export default function Navbar() {
       return;
     }
 
-    // Default to true when entering homepage
-    setIsHeroVisible(true);
+    // Only set true IF hero actually exists
+    const heroEl = document.getElementById("hero-section");
+    if (!heroEl) {
+      setIsHeroVisible(false);
+      return;
+    }
 
     const checkAndObserve = () => {
       const heroEl = document.getElementById("hero-section");
@@ -113,7 +113,6 @@ export default function Navbar() {
   }, [location.pathname]);
 
   const logoSize = isMobile ? 950 : 1100;
-  const halfSize = logoSize / 2;
 
   // Staggered reveal for desktop links on load
   const containerVariants = {
@@ -132,13 +131,21 @@ export default function Navbar() {
   return (
     <>
       <motion.nav
-        className="fixed top-0 left-0 w-full z-[60] flex items-center justify-between px-6 h-11 md:h-12 transition-all"
+        className="
+          fixed top-5 left-1/2 -translate-x-1/2
+          w-[95%] max-w-7xl z-[60]
+          flex items-center justify-between 
+          px-6 h-16 md:h-20
+          transition-all
+          rounded-2xl
+          border border-eatpur-gold/10
+        "
         style={{
           backgroundColor: useTransform(
             navBgOpacity,
-            (v) => `rgba(4, 7, 4, ${v})`,
+            (v) => `rgba(4, 7, 4, ${v * 0.9})`,
           ),
-          backdropFilter: useTransform(navBlur, (v) => `blur(${v}px)`),
+          backdropFilter: useTransform(navBlur, (v) => `blur(${v + 10}px)`),
           borderBottom: useTransform(
             navBorderOpacity,
             (v) => `1px solid rgba(255, 201, 51, ${v})`,
@@ -221,53 +228,18 @@ export default function Navbar() {
         </motion.div>
       </motion.nav>
 
-      {/* 3D LOGO: Independent Floating Container */}
-      <motion.div
-        layout
-        layoutId="main-logo"
-        className="fixed z-50 overflow-hidden"
-        initial={false}
-        animate={isHeroVisible ? "hero" : "corner"}
-        variants={{
-          hero: {
-            width: logoSize,
-            height: logoSize,
-            bottom: `calc(50dvh - ${halfSize}px)`,
-            right: `calc(50vw - ${halfSize}px)`,
-            borderRadius: "0%",
-          },
-          corner: {
-            width: 300,
-            height: 300,
-            bottom: 0,
-            right: 0,
-            borderRadius: "50%",
-          },
-        }}
-        transition={{
-          layout: {
-            type: "spring",
-            stiffness: 60,
-            damping: 28,
-            mass: 1.2
-          }
-        }}
-        style={{
-          pointerEvents: isHeroVisible ? "none" : "auto",
-          willChange: "transform",
-        }}
-      >
-        <ThreeLogo
-          isHeroVisible={isHeroVisible}
-          isCorner={!isHeroVisible}
-          onClick={() => {
-            // In corner state, clicking opens chatbot
-            if (!isHeroVisible) {
-              setIsChatbotOpen((prev) => !prev);
-            }
-          }}
-        />
-      </motion.div>
+      {/* 3D LOGO: AnimatePresence swap between HeroLogo and CornerLogo */}
+      <AnimatePresence mode="wait">
+        {isHeroVisible && isHome ? (
+          <HeroLogo key="hero" logoSize={logoSize} />
+        ) : (
+          <CornerLogo
+            key="corner"
+            onChatbotToggle={() => setIsChatbotOpen((prev) => !prev)}
+            isMobile={isMobile}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Mobile Floating Menu Overlay */}
       <AnimatePresence>
@@ -279,7 +251,10 @@ export default function Navbar() {
             className="fixed inset-0 z-40 flex items-center justify-center p-6 bg-eatpur-dark/95 backdrop-blur-xl"
           >
             <div className="flex flex-col items-center gap-8 w-full max-w-sm mt-12">
-              <div className="text-eatpur-gold font-display text-4xl mb-4">
+              <div
+                className="text-eatpur-gold font-display text-4xl mb-4"
+                style={{ fontFamily: "var(--font-hughes)" }}
+              >
                 EatPur
               </div>
               {navItems.map((item, idx) => (

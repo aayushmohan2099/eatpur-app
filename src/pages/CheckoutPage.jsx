@@ -42,7 +42,10 @@ export default function CheckoutPage() {
               <FaCheck size={48} />
             </motion.div>
           </div>
-          <h2 className="text-3xl font-display text-gradient-gold mb-4">
+          <h2
+            className="text-3xl font-display text-gradient-gold mb-4"
+            style={{ fontFamily: "var(--font-hughes)" }}
+          >
             Order Successful!
           </h2>
           <p className="text-eatpur-text mb-8">
@@ -59,7 +62,10 @@ export default function CheckoutPage() {
   return (
     <div className="w-full min-h-screen pt-24 pb-32 px-6 relative z-10">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-display text-gradient-gold mb-10 text-center">
+        <h1
+          className="text-4xl font-display text-gradient-gold mb-10 text-center leading-[1] py-2"
+          style={{ fontFamily: "var(--font-hughes)" }}
+        >
           Checkout
         </h1>
 
