@@ -1,21 +1,33 @@
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-import MainLayout from './layout/MainLayout';
-import HomePage from './pages/HomePage';
-import BlogsPage from './pages/BlogsPage';
-import BlogWriter from './pages/BlogWriter';
-import PreviewBlog from './pages/PreviewBlog';
-import AboutPage from './pages/AboutPage';
-import ContactPage from './pages/ContactPage';
-import ProductsPage from './pages/ProductsPage';
-import CheckoutPage from './pages/CheckoutPage';
+import React from "react";
+import { Routes, Route } from "react-router-dom";
+import MainLayout from "./layout/MainLayout";
+import HomePage from "./pages/HomePage";
+import BlogsPage from "./pages/BlogsPage";
+import BlogWriter from "./pages/BlogWriter";
+import PreviewBlog from "./pages/PreviewBlog";
+import AboutPage from "./pages/AboutPage";
+import ContactPage from "./pages/ContactPage";
+import ProductsPage from "./pages/ProductsPage";
+import CheckoutPage from "./pages/CheckoutPage";
+
+// Login now
+import LoginPage from "./pages/LoginPage";
+import Dashboard from "./pages/User/Dashboard";
 
 // Placeholders for now
 // const ProductsPage = () => <div className="pt-32 text-center text-eatpur-yellow">Products Page</div>;
 // const CheckoutPage = () => <div className="pt-32 text-center text-eatpur-yellow">Checkout Page</div>;
-const RecipesPage = () => <div className="pt-32 text-center text-eatpur-yellow">Recipes Page</div>;
-const RecipeDetailPage = () => <div className="pt-32 text-center text-eatpur-yellow">Recipe Detail Page</div>;
-const PublishRecipePage = () => <div className="pt-32 text-center text-eatpur-yellow">Publish Recipe Page</div>;
+const RecipesPage = () => (
+  <div className="pt-32 text-center text-eatpur-yellow">Recipes Page</div>
+);
+const RecipeDetailPage = () => (
+  <div className="pt-32 text-center text-eatpur-yellow">Recipe Detail Page</div>
+);
+const PublishRecipePage = () => (
+  <div className="pt-32 text-center text-eatpur-yellow">
+    Publish Recipe Page
+  </div>
+);
 // const AboutPage = () => <div className="pt-32 text-center text-eatpur-yellow">About Page</div>;
 // const ContactPage = () => <div className="pt-32 text-center text-eatpur-yellow">Contact Page</div>;
 
@@ -36,10 +48,14 @@ export default function AppRoutes() {
         {/* Existing Blogs functionally untouched */}
         <Route path="/blogs" element={<BlogsPage />} />
         <Route path="/blogs/:id" element={<PreviewBlog />} />
-        
+
         {/* Authoring tools */}
         <Route path="/write-blog" element={<BlogWriter />} />
         <Route path="/preview-blog" element={<PreviewBlog />} />
+
+        {/* Login */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/user/dashboard" element={<Dashboard />} />
       </Route>
     </Routes>
   );

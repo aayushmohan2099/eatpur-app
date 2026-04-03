@@ -212,10 +212,10 @@ export default function Navbar() {
           </button>
 
           <NavLink
-            to="/products"
+            to="/login"
             className="hidden md:flex align-center bg-gradient-gold text-eatpur-dark font-semibold px-4 py-1.5 rounded-full text-sm hover:scale-105 transition-transform shadow-[0_0_10px_rgba(255,201,51,0.2)]"
           >
-            Explore Products
+            Login
           </NavLink>
 
           {/* Mobile Menu Toggle (Burger) */}
