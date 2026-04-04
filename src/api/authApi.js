@@ -1,7 +1,7 @@
 import { apiFetch } from "./client";
 
 export const getCaptcha = () => {
-  return apiFetch("/auth/captcha/");
+  return apiFetch("/global/captcha/");
 };
 
 export const loginUser = (data) => {
@@ -11,6 +11,27 @@ export const loginUser = (data) => {
   });
 };
 
-export const getMe = (token) => {
+export const registerUser = (data) => {
+  return apiFetch("/auth/register/", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+};
+
+export const refreshToken = (refresh) => {
+  return apiFetch("/auth/refresh/", {
+    method: "POST",
+    body: JSON.stringify({ refresh }),
+  });
+};
+
+export const getMe = () => {
   return apiFetch("/auth/me/");
+};
+
+export const logoutUser = (refresh) => {
+  return apiFetch("/auth/logout/", {
+    method: "POST",
+    body: JSON.stringify({ refresh }),
+  });
 };

@@ -8,11 +8,12 @@ import {
   useSpring,
   useMotionValueEvent,
 } from "framer-motion";
-import { FaCartShopping, FaBars, FaXmark } from "react-icons/fa6";
+import { FaCartShopping, FaBars, FaXmark, FaCircleUser } from "react-icons/fa6";
 import { useCart } from "../context/CartContext";
 import HeroLogo from "./HeroLogo";
 import CornerLogo from "./CornerLogo";
 import Chatbot from "./Chatbot";
+import { getMe, logoutUser } from "../api/authApi";
 
 export default function Navbar() {
   const { state, dispatch } = useCart();
@@ -26,6 +27,11 @@ export default function Navbar() {
   const [isHeroVisible, setIsHeroVisible] = useState(false);
 
   const [isMobile, setIsMobile] = useState(false);
+
+  const [user, setUser] = useState(null);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+
+  const [loadingUser, setLoadingUser] = useState(true);
 
   const { scrollYProgress } = useScroll();
   useMotionValueEvent(scrollYProgress, "change", (v) => {
@@ -41,6 +47,40 @@ export default function Navbar() {
     }
   }, [isPastHero, location.pathname]);
   const { scrollY } = useScroll();
+
+  useEffect(() => {
+    const token = localStorage.getItem("access");
+
+    // ❌ no token → don't even call API
+    if (!token) {
+      setUser(null);
+      setLoadingUser(false);
+      return;
+    }
+
+    const fetchUser = async () => {
+      try {
+        const res = await getMe();
+        setUser(res);
+      } catch {
+        setUser(null);
+      } finally {
+        setLoadingUser(false);
+      }
+    };
+
+    fetchUser();
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (!e.target.closest(".user-menu")) {
+        setIsUserMenuOpen(false);
+      }
+    };
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
+  }, []);
 
   // Background transition from transparent to blurred dark
   const navBgOpacity = useTransform(scrollY, [0, 50], [0, 0.82]);
@@ -211,12 +251,69 @@ export default function Navbar() {
             )}
           </button>
 
-          <NavLink
-            to="/login"
-            className="hidden md:flex align-center bg-gradient-gold text-eatpur-dark font-semibold px-4 py-1.5 rounded-full text-sm hover:scale-105 transition-transform shadow-[0_0_10px_rgba(255,201,51,0.2)]"
-          >
-            Login
-          </NavLink>
+          <div className="relative user-menu">
+            <button
+              onClick={() => setIsUserMenuOpen((prev) => !prev)}
+              className="p-2 text-eatpur-text hover:text-eatpur-yellow transition"
+            >
+              <FaCircleUser size={22} />
+            </button>
+
+            <AnimatePresence>
+              {isUserMenuOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="absolute right-0 mt-3 w-44 bg-eatpur-dark border border-eatpur-gold/20 rounded-xl shadow-lg p-2 z-50"
+                >
+                  {loadingUser ? null : !user ? (
+                    <NavLink
+                      to="/login"
+                      className="block px-3 py-2 text-sm text-eatpur-text hover:text-eatpur-yellow"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      Login
+                    </NavLink>
+                  ) : (
+                    <>
+                      <div className="px-3 py-2 text-xs text-gray-400">
+                        {user.username}
+                      </div>
+
+                      <NavLink
+                        to="/user/dashboard"
+                        className="block px-3 py-2 text-sm hover:text-eatpur-yellow"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        Profile
+                      </NavLink>
+
+                      <button
+                        onClick={async () => {
+                          const refresh = localStorage.getItem("refresh");
+                          await logoutUser(refresh);
+
+                          localStorage.removeItem("access");
+                          localStorage.removeItem("refresh");
+
+                          // 🔥 CRITICAL ORDER
+                          setUser(null); // 1. clear state
+                          setLoadingUser(false);
+                          setIsUserMenuOpen(false); // 2. close dropdown
+
+                          window.location.href = "/login";
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm text-red-400 hover:text-red-300"
+                      >
+                        Logout
+                      </button>
+                    </>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
           {/* Mobile Menu Toggle (Burger) */}
           <button
