@@ -1,97 +1,112 @@
 @import "tailwindcss";
 
-@font-face {
-  font-family: "Hughes";
-  src: url("/fonts/Hughes-Rough.otf") format("truetype");
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
 @theme {
-  --color-eatpur-dark: #040704;
-  --color-eatpur-green-dark: #0b140b;
-  --color-eatpur-yellow: #ffd54a;
-  --color-eatpur-gold: #ffc933;
-  --color-eatpur-gold-light: #ffe07a;
-  --color-eatpur-gold-dark: #e6a800;
-  --color-eatpur-yellow-light: #fff3b0;
-  --color-eatpur-green-light: #6faf3a;
-  --color-eatpur-text: rgba(230, 216, 168, 0.6);
-  --color-eatpur-text-light: #e6d8a8;
-  --color-eatpur-white-warm: #fff8e1;
+  --color-eatpur-dark: #2E2E2E;
+  /* Dark Olive/Brown for text */
+  --color-eatpur-green-dark: #6B8E23;
+  /* Rich Green */
+  --color-eatpur-yellow: #C2A878;
+  /* Muted Gold/Brownish */
+  --color-eatpur-gold: #B69E66;
+  --color-eatpur-gold-light: #CBB98E;
+  --color-eatpur-gold-dark: #A18D55;
+  --color-eatpur-yellow-light: #E0D4BA;
+  --color-eatpur-green-light: #A8C686;
+  /* Pista Green */
+  --color-eatpur-text: #4A4A4A;
+  /* Soft dark text */
+  --color-eatpur-text-light: #6E6E6E;
+  --color-eatpur-white-warm: #F4F8F2;
+  /* Cream/Off-white */
 
-  --font-sans: "Inter", "SF Pro Display", "SF Pro Text", ui-sans-serif, system-ui, sans-serif;
-  --font-hughes: "Hughes", "Inter", sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Playfair Display", serif;
+  --font-serif: "Playfair Display", serif;
 }
 
 @layer base {
   body {
-    background-color: var(--color-eatpur-dark);
-    color: var(--color-eatpur-text);
+    background-color: var(--color-eatpur-white-warm);
+    color: var(--color-eatpur-dark);
     font-family: var(--font-sans);
     overflow-x: hidden;
     margin: 0;
     padding: 0;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Soft global vignette and base46 SVG noise */
+    background-image:
+      radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.03) 100%),
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+    background-size: cover, 200px 200px;
+    background-attachment: fixed, fixed;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-sans);
-    color: var(--color-eatpur-yellow);
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    line-height: 1.1;
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+    color: var(--color-eatpur-dark);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
   }
 }
 
 @layer utilities {
   .text-gradient-gold {
-    background: linear-gradient(to right, var(--color-eatpur-yellow-light), var(--color-eatpur-gold), var(--color-eatpur-gold-dark));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--color-eatpur-dark);
+    /* Removed gold gradient, kept dark olive for elegance */
   }
-  
+
   .bg-gradient-gold {
-    background: linear-gradient(to right, var(--color-eatpur-gold), var(--color-eatpur-gold-light));
+    background: var(--color-eatpur-green-dark);
+  }
+
+  .vintage-card {
+    background: #FFFFFF;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.03);
   }
 
   .glass-card {
-    background: rgba(11, 20, 11, 0.6);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 201, 51, 0.15);
+    /* Overriding old glass-card to be vintage-card so existing components work */
+    background: #FFFFFF;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.03);
   }
 
   .glass-nav {
-    background: rgba(4, 7, 4, 0.75);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(255, 201, 51, 0.1);
+    background: rgba(244, 248, 242, 0.9);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   }
 
   .glass-modal {
-    background: rgba(11, 20, 11, 0.85);
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
-    border: 1px solid rgba(255, 201, 51, 0.2);
+    background: #FAFCFA;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
   }
 
   .glow-hover {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  
+
   .glow-hover:hover {
-    box-shadow: 0 0 20px rgba(255, 201, 51, 0.15);
-    border-color: rgba(255, 201, 51, 0.3);
-    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
   }
 
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
   .hide-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -100,29 +115,56 @@
 
 /* Base Buttons */
 .btn-primary {
-  background: linear-gradient(to right, var(--color-eatpur-gold), var(--color-eatpur-gold-light));
-  color: var(--color-eatpur-dark);
-  font-weight: 600;
-  padding: 0.75rem 1.5rem;
-  border-radius: 9999px;
-  box-shadow: 0 0 15px rgba(255, 201, 51, 0.2);
+  background: var(--color-eatpur-green-dark);
+  color: #FFFFFF;
+  font-weight: 500;
+  font-family: var(--font-display);
+  padding: 0.75rem 2rem;
+  border-radius: 4px;
+  box-shadow: 0 4px 10px rgba(107, 142, 35, 0.2);
   transition: all 0.3s ease;
+  letter-spacing: 0.05em;
 }
+
 .btn-primary:hover {
-  box-shadow: 0 0 25px rgba(255, 201, 51, 0.4);
-  transform: scale(1.05);
+  background: #55721c;
+  box-shadow: 0 6px 15px rgba(107, 142, 35, 0.3);
+  transform: translateY(-1px);
 }
 
 .btn-ghost {
-  border: 1px solid rgba(255, 201, 51, 0.3);
-  color: var(--color-eatpur-white-warm);
-  font-weight: 600;
-  padding: 0.75rem 1.5rem;
-  border-radius: 9999px;
+  border: 1px solid var(--color-eatpur-dark);
+  color: var(--color-eatpur-dark);
+  font-weight: 500;
+  font-family: var(--font-display);
+  padding: 0.75rem 2rem;
+  border-radius: 4px;
   transition: all 0.3s ease;
+  background: transparent;
+  letter-spacing: 0.05em;
 }
+
 .btn-ghost:hover {
-  border-color: var(--color-eatpur-gold);
-  background-color: rgba(255, 201, 51, 0.1);
-  box-shadow: 0 0 15px rgba(255, 201, 51, 0.2);
+  background-color: var(--color-eatpur-dark);
+  color: #FFFFFF;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-container {
+  display: flex;
+  width: max-content;
+  animation: marquee 15s linear infinite;
+}
+
+.marquee-container:active {
+  animation-play-state: paused;
 }

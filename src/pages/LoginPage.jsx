@@ -119,163 +119,185 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0b1f0f] to-black text-white px-4">
-      <div className="w-full max-w-5xl bg-[#0f1f14] rounded-3xl overflow-hidden shadow-2xl grid md:grid-cols-2">
+    <div className="min-h-screen flex items-center justify-center bg-eatpur-white-warm text-eatpur-dark px-4 pt-24 pb-12 relative z-10 transition-colors">
+      <div className="w-full max-w-5xl vintage-card bg-white rounded-2xl overflow-hidden shadow-sm border border-black/5 grid md:grid-cols-2">
         {/* LEFT PANEL */}
-        <div className="hidden md:flex flex-col justify-center p-10 bg-gradient-to-br from-green-700 to-green-900">
+        <div className="hidden md:flex flex-col justify-center p-12 bg-eatpur-green-dark relative overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(255,255,255,0.05)_0%,transparent_70%)] pointer-events-none" />
           {isLogin ? (
-            <>
-              <h1 className="text-4xl font-bold text-white mb-4">
+            <div className="relative z-10">
+              <h1 className="text-4xl font-display text-white mb-6 tracking-wide drop-shadow-sm">
                 Welcome Back 👋
               </h1>
-              <p className="text-white/80">
+              <p className="text-white/80 font-serif italic text-lg leading-relaxed">
                 Login to continue your EatPur journey. Fresh meals. Clean
                 lifestyle. Premium experience.
               </p>
-            </>
+            </div>
           ) : (
-            <>
-              <h1 className="text-4xl font-bold text-white mb-4">
+            <div className="relative z-10">
+              <h1 className="text-3xl font-display text-white mb-6 tracking-wide drop-shadow-sm">
                 Create Your Account 🚀
               </h1>
 
-              <ul className="text-white/80 space-y-2 text-sm">
-                <li>• Username must be unique</li>
-                <li>• Enter a valid email (example@gmail.com)</li>
-                <li>• Mobile must be exactly 10 digits</li>
-                <li>• Password must include:</li>
-                <li className="ml-4">- 8+ characters</li>
-                <li className="ml-4">- 1 uppercase letter</li>
-                <li className="ml-4">- 1 number</li>
-                <li className="ml-4">- 1 special character</li>
-                <li>• Confirm password must match</li>
-                <li>• Complete CAPTCHA to verify</li>
+              <ul className="text-white/80 space-y-3 font-serif text-[15px]">
+                <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-white opacity-70"></span> Username must be unique</li>
+                <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-white opacity-70"></span> Enter a valid email (example@gmail.com)</li>
+                <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-white opacity-70"></span> Mobile must be exactly 10 digits</li>
+                <li className="flex items-start gap-2">
+                  <span className="w-1 h-1 rounded-full bg-white opacity-70 mt-2"></span> 
+                  <div>
+                    Password must include:
+                    <ul className="ml-4 mt-1 space-y-1 text-white/70 italic text-sm">
+                      <li>- 8+ characters</li>
+                      <li>- 1 uppercase letter</li>
+                      <li>- 1 number</li>
+                      <li>- 1 special character</li>
+                    </ul>
+                  </div>
+                </li>
+                <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-white opacity-70"></span> Confirm password must match</li>
+                <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-white opacity-70"></span> Complete CAPTCHA to verify</li>
               </ul>
-            </>
+            </div>
           )}
         </div>
 
         {/* RIGHT PANEL */}
-        <div className="p-8 md:p-10 bg-[#0b1a10]">
+        <div className="p-8 md:p-12 bg-white flex flex-col justify-center">
           {/* Toggle */}
-          <div className="flex mb-6 bg-black/30 rounded-xl overflow-hidden">
+          <div className="flex mb-8 bg-eatpur-white-warm p-1 rounded-xl overflow-hidden border border-black/5 shadow-inner">
             <button
               onClick={() => setIsLogin(true)}
-              className={`w-1/2 py-2 text-sm ${
-                isLogin ? "bg-yellow-400 text-black" : "text-gray-400"
+              className={`w-1/2 py-2.5 text-sm font-medium rounded-lg transition-all ${
+                isLogin ? "bg-white text-eatpur-green-dark shadow-sm border border-black/5" : "text-eatpur-text-light hover:text-eatpur-dark"
               }`}
             >
               Sign In
             </button>
             <button
               onClick={() => setIsLogin(false)}
-              className={`w-1/2 py-2 text-sm ${
-                !isLogin ? "bg-yellow-400 text-black" : "text-gray-400"
+              className={`w-1/2 py-2.5 text-sm font-medium rounded-lg transition-all ${
+                !isLogin ? "bg-white text-eatpur-green-dark shadow-sm border border-black/5" : "text-eatpur-text-light hover:text-eatpur-dark"
               }`}
             >
               Register
             </button>
           </div>
 
-          <h2 className="text-2xl font-semibold mb-6">
+          <h2 className="text-3xl font-display text-eatpur-dark mb-8 text-center tracking-tight">
             {isLogin ? "Welcome Back" : "Create Account"}
           </h2>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <input
-              type="text"
-              placeholder="Username"
-              className="w-full p-3 rounded-lg bg-black border border-white/10 focus:border-yellow-400 outline-none"
-              onChange={(e) => setForm({ ...form, username: e.target.value })}
-            />
-            {errors.username && (
-              <p className="text-red-400 text-xs">{errors.username}</p>
-            )}
+          <form onSubmit={handleSubmit} className="space-y-5 font-sans">
+            <div>
+              <input
+                type="text"
+                placeholder="Username"
+                className="w-full p-3.5 rounded-xl bg-eatpur-white-warm border border-black/10 focus:border-eatpur-green-dark outline-none text-eatpur-dark placeholder:text-eatpur-text-light shadow-inner font-serif transition-colors"
+                onChange={(e) => setForm({ ...form, username: e.target.value })}
+              />
+              {errors.username && (
+                <p className="text-red-500 text-xs mt-1.5 ml-1 font-medium">{errors.username}</p>
+              )}
+            </div>
 
             {!isLogin && (
               <>
-                <input
-                  type="text"
-                  placeholder="Mobile Number"
-                  value={form.mobile}
-                  maxLength={10}
-                  className="w-full p-3 rounded-lg bg-black border border-white/10"
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, "");
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Mobile Number"
+                    value={form.mobile}
+                    maxLength={10}
+                    className="w-full p-3.5 rounded-xl bg-eatpur-white-warm border border-black/10 focus:border-eatpur-green-dark outline-none text-eatpur-dark placeholder:text-eatpur-text-light shadow-inner font-serif transition-colors"
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, "");
 
-                    setForm({ ...form, mobile: value });
-                  }}
-                />
-                {errors.mobile && (
-                  <p className="text-red-400 text-xs">{errors.mobile}</p>
-                )}
-                <input
-                  type="email"
-                  placeholder="Email"
-                  className="w-full p-3 rounded-lg bg-black border border-white/10 focus:border-yellow-400 outline-none"
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                />
-                <input
-                  type="password"
-                  placeholder="Confirm Password"
-                  className="w-full p-3 rounded-lg bg-black border border-white/10"
-                  onChange={(e) =>
-                    setForm({ ...form, password_confirm: e.target.value })
-                  }
-                />
-                {errors.password_confirm && (
-                  <p className="text-red-400 text-xs">
-                    {errors.password_confirm}
-                  </p>
-                )}
+                      setForm({ ...form, mobile: value });
+                    }}
+                  />
+                  {errors.mobile && (
+                    <p className="text-red-500 text-xs mt-1.5 ml-1 font-medium">{errors.mobile}</p>
+                  )}
+                </div>
+                <div>
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    className="w-full p-3.5 rounded-xl bg-eatpur-white-warm border border-black/10 focus:border-eatpur-green-dark outline-none text-eatpur-dark placeholder:text-eatpur-text-light shadow-inner font-serif transition-colors"
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <input
+                    type="password"
+                    placeholder="Confirm Password"
+                    className="w-full p-3.5 rounded-xl bg-eatpur-white-warm border border-black/10 focus:border-eatpur-green-dark outline-none text-eatpur-dark placeholder:text-eatpur-text-light shadow-inner font-serif transition-colors"
+                    onChange={(e) =>
+                      setForm({ ...form, password_confirm: e.target.value })
+                    }
+                  />
+                  {errors.password_confirm && (
+                    <p className="text-red-500 text-xs mt-1.5 ml-1 font-medium">
+                      {errors.password_confirm}
+                    </p>
+                  )}
+                </div>
               </>
             )}
 
-            <input
-              type="password"
-              placeholder="Password"
-              className="w-full p-3 rounded-lg bg-black border border-white/10 focus:border-yellow-400 outline-none"
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-            />
-            {errors.password && (
-              <p className="text-red-400 text-xs">{errors.password}</p>
-            )}
+            <div>
+              <input
+                type="password"
+                placeholder="Password"
+                className="w-full p-3.5 rounded-xl bg-eatpur-white-warm border border-black/10 focus:border-eatpur-green-dark outline-none text-eatpur-dark placeholder:text-eatpur-text-light shadow-inner font-serif transition-colors"
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+              />
+              {errors.password && (
+                <p className="text-red-500 text-xs mt-1.5 ml-1 font-medium">{errors.password}</p>
+              )}
+            </div>
 
             {/* CAPTCHA */}
             {captcha && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between bg-eatpur-white-warm p-2 rounded-xl border border-black/5 shadow-inner">
                   <img
                     src={captcha.captcha_image}
                     alt="captcha"
-                    className="h-12 rounded"
+                    className="h-10 rounded bg-white mix-blend-multiply"
                   />
                   <button
                     type="button"
                     onClick={fetchCaptcha}
-                    className="text-xs text-yellow-400"
+                    className="text-xs font-semibold text-eatpur-green-dark hover:text-eatpur-dark transition-colors px-3 py-1 bg-white border border-black/5 rounded shadow-sm mr-1"
                   >
                     Refresh
                   </button>
                 </div>
 
-                <input
-                  type="text"
-                  placeholder="Enter CAPTCHA"
-                  className="w-full p-3 rounded-lg bg-black border border-white/10 focus:border-yellow-400 outline-none"
-                  onChange={(e) =>
-                    setForm({ ...form, captcha_answer: e.target.value })
-                  }
-                />
-                {errors.captcha && (
-                  <p className="text-red-400 text-xs">{errors.captcha}</p>
-                )}
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Enter CAPTCHA"
+                    className="w-full p-3.5 rounded-xl bg-eatpur-white-warm border border-black/10 focus:border-eatpur-green-dark outline-none text-eatpur-dark placeholder:text-eatpur-text-light shadow-inner font-serif transition-colors text-center font-medium tracking-widest text-lg uppercase"
+                    onChange={(e) =>
+                      setForm({ ...form, captcha_answer: e.target.value })
+                    }
+                  />
+                  {errors.captcha && (
+                    <p className="text-red-500 text-xs mt-1.5 ml-1 font-medium text-center">{errors.captcha}</p>
+                  )}
+                </div>
               </div>
             )}
 
-            <button className="w-full bg-yellow-400 text-black py-3 rounded-lg font-semibold hover:scale-[1.02] transition">
-              {isLogin ? "Sign In" : "Register & Login"}
-            </button>
+            <div className="pt-4">
+              <button className="btn-primary w-full py-3.5 text-base tracking-wide font-medium shadow-md">
+                {isLogin ? "Sign In" : "Register & Login"}
+              </button>
+            </div>
           </form>
         </div>
       </div>

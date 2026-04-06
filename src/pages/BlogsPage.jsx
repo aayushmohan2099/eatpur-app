@@ -24,59 +24,57 @@ export default function BlogsPage() {
   }, []);
 
   return (
-    <div className="w-full min-h-screen top-5 pt-24 pb-32 px-6 relative z-10">
-      {/* HEADER */}
-      <div className="max-w-7xl mx-auto rounded-[2rem] overflow-hidden mb-16 relative bg-eatpur-green-dark p-12 md:p-20 text-center flex flex-col items-center justify-center shadow-[0_0_40px_rgba(4,7,4,0.5)] border border-eatpur-gold/10">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,201,51,0.1)_0%,transparent_70%)] pointer-events-none" />
-        <h1
-          className="text-5xl md:text-6xl font-display text-gradient-gold mb-4 relative z-10 leading-[1.3] py-2"
-          style={{ fontFamily: "var(--font-hughes)" }}
+    <div className="w-full min-h-screen px-6 relative z-10">
+      {/* Hero Section */}
+      <section className="pt-16 pb-16 px-6 relative flex flex-col items-center justify-center text-center">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#A8C686]/20 to-transparent pointer-events-none -z-10" />
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
         >
-          Our Blogs
-        </h1>
-        <p className="text-xl text-eatpur-text relative z-10 mb-8">
-          Insights, recipes & stories around millet lifestyle.
-        </p>
-      </div>
+          <img src="/icons/flourish-top.png" alt="" className="h-6 mx-auto mb-4 opacity-50" onError={(e) => e.target.style.display = 'none'} />
+          <h1 className="text-6xl md:text-8xl font-serif text-[#2E2410] mb-6 leading-[1.1] tracking-tight">
+            Our Blogs
+          </h1>
+          <p className="text-xl md:text-2xl font-serif italic text-[#5C4F3A] max-w-2xl mx-auto">
+            Insights, recipes & stories around millet lifestyle.
+          </p>
+        </motion.div>
+      </section>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="max-w-4xl mx-auto mb-16"
       >
-        <div className="glass-card rounded-3xl p-8 relative overflow-hidden">
-          <div className="absolute inset-0 bg-eatpur-gold/5 blur-2xl pointer-events-none"></div>
+        <div className="vintage-card bg-white p-8 border border-black/5 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
+          <div className="absolute inset-0 bg-gradient-to-br from-eatpur-green-light/10 to-transparent pointer-events-none"></div>
 
-          <div className="relative flex flex-col md:flex-row items-center justify-between gap-6">
-            <div>
-              <h2
-                className="text-2xl md:text-3xl text-gradient-gold font-bold mb-2 leading-[1] py-2"
-                style={{ fontFamily: "var(--font-hughes)" }}
-              >
-                Write your own Blog ✍️
-              </h2>
-              <p className="text-eatpur-text text-sm md:text-base">
-                Share your ideas, recipes, or stories with the world.
-                <span className="text-eatpur-green-light font-medium ml-1">
-                  No signup required.
-                </span>
-              </p>
-            </div>
-
-            <button
-              onClick={() => navigate("/write-blog")}
-              className="btn-primary flex-shrink-0"
-              style={{ fontFamily: "var(--font-hughes)" }}
-            >
-              Start Writing →
-            </button>
+          <div className="relative z-10">
+            <h2 className="text-2xl md:text-3xl text-eatpur-dark font-display font-medium mb-2 leading-[1] py-2">
+              Write your own Blog ✍️
+            </h2>
+            <p className="text-eatpur-text text-sm md:text-base">
+              Share your ideas, recipes, or stories with the world.
+              <span className="text-eatpur-green-dark font-medium ml-1">
+                No signup required.
+              </span>
+            </p>
           </div>
+
+          <button
+            onClick={() => navigate("/write-blog")}
+            className="btn-primary flex-shrink-0 relative z-10 font-medium"
+          >
+            Start Writing →
+          </button>
         </div>
       </motion.div>
 
       {/* LOADING */}
       {loading && (
-        <div className="text-center text-eatpur-text">Loading blogs...</div>
+        <div className="text-center text-eatpur-text font-serif italic">Loading stories...</div>
       )}
 
       {/* BLOG GRID */}
@@ -85,36 +83,29 @@ export default function BlogsPage() {
           <motion.div
             key={blog.id || idx}
             onClick={() => navigate(`/preview-blog/${blog.id}`)}
-            initial={{ opacity: 0, y: 40 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.05 }}
-            whileHover={{ y: -6, scale: 1.02 }}
-            className="glass-card rounded-2xl p-6 flex flex-col glow-hover cursor-pointer"
+            className="vintage-card bg-white p-6 flex flex-col cursor-pointer border border-black/5 hover:-translate-y-1 transition-transform group"
           >
             {/* TITLE */}
-            <h2
-              className="text-2xl text-eatpur-white-warm font-bold mb-3 group-hover:text-eatpur-yellow transition-colors"
-              style={{ fontFamily: "var(--font-hughes)" }}
-            >
+            <h2 className="text-2xl text-eatpur-dark font-display font-medium mb-3 group-hover:text-eatpur-green-dark transition-colors">
               {blog.title}
             </h2>
 
             {/* DESCRIPTION */}
-            <p className="text-eatpur-text text-sm leading-relaxed line-clamp-3 mb-6">
+            <p className="text-eatpur-text text-sm leading-relaxed line-clamp-3 mb-6 font-serif">
               {blog.description || blog.content?.slice(0, 120)}
             </p>
 
             {/* FOOTER */}
-            <div className="mt-auto pt-4 border-t border-eatpur-gold/10 flex items-center justify-between text-sm">
-              <span className="text-eatpur-green-light">
+            <div className="mt-auto pt-4 border-t border-black/5 flex items-center justify-between text-xs tracking-widest uppercase font-semibold text-eatpur-text-light">
+              <span className="text-eatpur-green-dark">
                 {blog.read_time || "5 min read"}
               </span>
 
-              <span
-                className="text-eatpur-gold opacity-0 group-hover:opacity-100 transition-opacity"
-                style={{ fontFamily: "var(--font-hughes)" }}
-              >
-                Read →
+              <span className="text-eatpur-dark opacity-0 group-hover:opacity-100 transition-opacity">
+                Read Story →
               </span>
             </div>
           </motion.div>
@@ -123,8 +114,8 @@ export default function BlogsPage() {
 
       {/* EMPTY STATE */}
       {!loading && blogs.length === 0 && (
-        <div className="text-center text-eatpur-text mt-20">
-          No blogs found.
+        <div className="text-center text-eatpur-text font-serif italic mt-20">
+          No stories found organically.
         </div>
       )}
     </div>

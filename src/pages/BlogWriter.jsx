@@ -162,13 +162,13 @@ export default function BlogWriter() {
   if (!editor) return null;
 
   return (
-    <div className="w-full min-h-screen top-5 pt-24 pb-32 px-6 relative z-10">
-      <div className="max-w-4xl mx-auto glass-card p-8 md:p-12 rounded-3xl">
+    <div className="w-full min-h-screen top-5 pt-24 pb-32 px-6 relative z-10 bg-eatpur-white-warm">
+      <div className="max-w-4xl mx-auto vintage-card p-8 md:p-12 rounded-2xl bg-white border border-black/5 shadow-sm">
         <input
-          placeholder="Blog Title..."
+          placeholder="Your Story Title..."
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full text-4xl md:text-5xl font-display bg-transparent border-b border-eatpur-gold/20 pb-4 text-gradient-gold focus:outline-none focus:border-eatpur-gold transition-colors mb-8"
+          className="w-full text-4xl md:text-5xl font-display bg-transparent border-b border-black/10 pb-4 text-eatpur-dark focus:outline-none focus:border-eatpur-green-dark transition-colors mb-8 placeholder:text-eatpur-text-light"
         />
 
         <div className="flex flex-wrap gap-2 mb-8">
@@ -176,16 +176,16 @@ export default function BlogWriter() {
             <button
               key={action}
               onClick={() => editor.chain().focus()[`toggle${action}`]().run()}
-              className={`px-4 py-2 rounded-lg text-sm transition-colors ${editor.isActive(action.toLowerCase()) ? "bg-eatpur-gold text-eatpur-dark font-bold" : "bg-eatpur-dark/50 border border-eatpur-gold/20 text-eatpur-text hover:text-eatpur-yellow"}`}
+              className={`px-4 py-2 rounded-lg text-sm transition-colors border ${editor.isActive(action.toLowerCase()) ? "bg-eatpur-green-dark text-white border-eatpur-green-dark" : "bg-white border-black/10 text-eatpur-dark hover:border-eatpur-green-dark hover:text-eatpur-green-dark"}`}
             >
               {action}
             </button>
           ))}
           <button
-            onClick={() => editor.chain().focus().setColor("#FFC933").run()}
-            className="px-4 py-2 rounded-lg text-sm bg-eatpur-dark/50 border border-eatpur-gold text-eatpur-gold font-bold hover:bg-eatpur-gold hover:text-eatpur-dark transition-colors"
+            onClick={() => editor.chain().focus().setColor("#2E2E2E").run()}
+            className="px-4 py-2 rounded-lg text-sm bg-white border border-black/10 text-eatpur-dark hover:border-black/30 transition-colors"
           >
-            Gold Text
+            Dark Text
           </button>
           {["Left", "Center", "Right"].map((align) => (
             <button
@@ -193,36 +193,36 @@ export default function BlogWriter() {
               onClick={() =>
                 editor.chain().focus().setTextAlign(align.toLowerCase()).run()
               }
-              className={`px-4 py-2 rounded-lg text-sm transition-colors ${editor.isActive({ textAlign: align.toLowerCase() }) ? "bg-eatpur-gold text-eatpur-dark font-bold" : "bg-eatpur-dark/50 border border-eatpur-gold/20 text-eatpur-text hover:text-eatpur-yellow"}`}
+              className={`px-4 py-2 rounded-lg text-sm transition-colors border ${editor.isActive({ textAlign: align.toLowerCase() }) ? "bg-eatpur-green-dark text-white border-eatpur-green-dark" : "bg-white border-black/10 text-eatpur-dark hover:border-eatpur-green-dark hover:text-eatpur-green-dark"}`}
             >
               {align}
             </button>
           ))}
         </div>
 
-        <div className="relative rounded-2xl border border-eatpur-gold/15 bg-eatpur-dark/40 backdrop-blur-sm p-6 min-h-[400px] focus-within:border-eatpur-gold/40 transition-colors shadow-[inset_0_0_20px_rgba(4,7,4,0.5)]">
+        <div className="relative rounded-xl border border-black/10 bg-eatpur-white-warm p-6 min-h-[400px] focus-within:border-eatpur-green-dark/50 transition-colors shadow-inner font-serif text-lg">
           <EditorContent
             editor={editor}
-            className="prose prose-invert max-w-none text-eatpur-white-warm outline-none"
+            className="prose max-w-none text-eatpur-dark outline-none opacity-90"
           />
         </div>
 
         <div
-          className={`text-right text-sm mt-2 ${charCount > MAX_CHARS ? "text-red-400" : "text-eatpur-text/60"}`}
+          className={`text-right text-sm mt-2 ${charCount > MAX_CHARS ? "text-red-500 font-medium" : "text-eatpur-text-light"}`}
         >
           {charCount} / {MAX_CHARS}
         </div>
 
         <div className="mt-12">
-          <h3 className="text-xl font-display text-eatpur-gold mb-4">
+          <h3 className="text-xl font-display text-eatpur-dark mb-4">
             Cover Image
           </h3>
-          <label className="cursor-pointer block w-full border-2 border-dashed border-eatpur-gold/30 rounded-2xl h-48 bg-eatpur-dark/30 hover:bg-eatpur-gold/5 transition-colors overflow-hidden group">
+          <label className="cursor-pointer block w-full border border-dashed border-black/20 rounded-xl h-48 bg-eatpur-white-warm hover:bg-eatpur-green-light/10 transition-colors overflow-hidden group">
             {coverImage ? (
               <div className="relative w-full h-full">
                 <img
                   src={coverImage}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover mix-blend-multiply"
                   alt="Cover"
                 />
                 <button
@@ -230,15 +230,15 @@ export default function BlogWriter() {
                     e.preventDefault();
                     setCoverImage(null);
                   }}
-                  className="absolute top-4 right-4 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 transition-colors"
+                  className="absolute top-4 right-4 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 transition-colors shadow-md"
                 >
                   ✕
                 </button>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center w-full h-full text-eatpur-text group-hover:text-eatpur-yellow transition-colors">
-                <span className="text-4xl mb-2">+</span>
-                <span>Select Cover Image</span>
+              <div className="flex flex-col items-center justify-center w-full h-full text-eatpur-text-light group-hover:text-eatpur-green-dark transition-colors">
+                <span className="text-4xl mb-2 font-light">+</span>
+                <span className="font-medium">Select Cover Image</span>
               </div>
             )}
             <input
@@ -257,8 +257,8 @@ export default function BlogWriter() {
         </div>
 
         <div className="mt-8">
-          <label className="inline-flex cursor-pointer px-6 py-3 rounded-full border border-eatpur-gold/30 bg-eatpur-dark/50 text-eatpur-gold items-center gap-2 hover:bg-eatpur-gold hover:text-eatpur-dark transition-colors font-medium">
-            <span className="text-xl">+</span> Add Content Images
+          <label className="inline-flex cursor-pointer px-6 py-2 rounded-full border border-eatpur-green-dark/30 bg-white text-eatpur-green-dark items-center gap-2 hover:bg-eatpur-green-light/20 transition-colors font-medium shadow-sm">
+            <span className="text-xl leading-none">+</span> Add Content Images
             <input
               type="file"
               multiple
@@ -274,7 +274,7 @@ export default function BlogWriter() {
             {images.map((img, i) => (
               <div
                 key={i}
-                className="relative group rounded-xl overflow-hidden h-32 border border-eatpur-gold/20"
+                className="relative group rounded-xl overflow-hidden h-32 border border-black/10 shadow-sm"
               >
                 <img
                   src={img.url}
@@ -283,13 +283,13 @@ export default function BlogWriter() {
                 />
                 <button
                   onClick={() => insertImage(img)}
-                  className="absolute inset-0 bg-eatpur-dark/70 text-eatpur-yellow opacity-0 group-hover:opacity-100 transition-opacity font-bold flex items-center justify-center"
+                  className="absolute inset-0 bg-white/90 text-eatpur-green-dark opacity-0 group-hover:opacity-100 transition-opacity font-medium flex items-center justify-center"
                 >
-                  Insert into post
+                  Insert
                 </button>
                 <button
                   onClick={() => removeImage(img)}
-                  className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
                 >
                   ✕
                 </button>
@@ -298,25 +298,23 @@ export default function BlogWriter() {
           </div>
         )}
 
-        <div className="flex flex-col items-end gap-4 mt-12 pt-8 border-t border-eatpur-gold/10">
+        <div className="flex flex-col items-end gap-4 mt-12 pt-8 border-t border-black/5">
           {charCount > MAX_CHARS && (
-            <div className="text-red-400 text-sm">
-              Content exceeds maximum characters.
+            <div className="text-red-500 text-sm font-medium">
+              Content exceeds maximum character limit.
             </div>
           )}
           <div className="flex flex-col sm:flex-row gap-4 w-full justify-end">
             <button
               onClick={handlePreview}
-              className="btn-ghost w-full sm:w-auto"
-              style={{ fontFamily: "var(--font-hughes)" }}
+              className="btn-ghost w-full sm:w-auto font-medium"
             >
               Preview Post
             </button>
             <button
               onClick={handlePublish}
               disabled={charCount > MAX_CHARS}
-              className={`btn-primary w-full sm:w-auto ${charCount > MAX_CHARS ? "opacity-50 cursor-not-allowed" : ""}`}
-              style={{ fontFamily: "var(--font-hughes)" }}
+              className={`btn-primary w-full sm:w-auto font-medium ${charCount > MAX_CHARS ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               Publish Post
             </button>

@@ -12,12 +12,12 @@ const RECIPES = [
 
 export default function RecipesPage() {
   return (
-    <div className="w-full min-h-screen pt-24 pb-32 px-6 relative z-10">
-      <div className="max-w-7xl mx-auto rounded-[2rem] overflow-hidden mb-16 relative bg-eatpur-green-dark p-12 md:p-20 text-center flex flex-col items-center justify-center shadow-[0_0_40px_rgba(4,7,4,0.5)] border border-eatpur-gold/10">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(111,175,58,0.1)_0%,transparent_70%)] pointer-events-none" />
-        <h1 className="text-5xl md:text-6xl font-display text-gradient-gold mb-4 relative z-10">Recipes</h1>
-        <p className="text-xl text-eatpur-text relative z-10 mb-8">Discover healthy millet recipes from our community.</p>
-        <Link to="/recipes/new" className="btn-primary relative z-10">Publish Your Recipe</Link>
+    <div className="w-full min-h-screen pt-24 pb-32 px-6 relative z-10 bg-eatpur-white-warm">
+      <div className="max-w-7xl mx-auto rounded-[1rem] overflow-hidden mb-16 relative bg-white p-12 md:p-16 text-center flex flex-col items-center justify-center border border-black/5 shadow-sm">
+        <div className="absolute inset-0 bg-gradient-to-br from-eatpur-green-light/10 to-transparent pointer-events-none" />
+        <h1 className="text-4xl md:text-6xl font-display text-eatpur-dark mb-4 relative z-10 tracking-tight">Recipes</h1>
+        <p className="text-lg md:text-xl text-eatpur-text font-serif italic relative z-10 mb-8">Discover healthy millet recipes from our community.</p>
+        <Link to="/recipes/new" className="btn-primary relative z-10 font-medium tracking-wide">Publish Your Recipe</Link>
       </div>
 
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -28,36 +28,36 @@ export default function RecipesPage() {
             viewport={{ once: true, margin: "-50px" }}
             transition={{ delay: i * 0.1 }}
             key={recipe.id}
-            className="glass-card rounded-2xl overflow-hidden flex flex-col group glow-hover"
+            className="vintage-card bg-white border border-black/5 rounded-2xl overflow-hidden flex flex-col group hover:-translate-y-1 transition-transform shadow-sm"
           >
-            <Link to={`/recipes/${recipe.id}`} className="block h-48 overflow-hidden relative">
+            <Link to={`/recipes/${recipe.id}`} className="block h-48 overflow-hidden relative border-b border-black/5">
               <motion.img 
                 whileHover={{ scale: 1.05 }}
-                transition={{ duration: 0.4 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
                 src={recipe.image} 
                 alt={recipe.title} 
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover mix-blend-multiply"
                 loading="lazy"
               />
             </Link>
             <div className="p-6 flex flex-col flex-1">
               <Link to={`/recipes/${recipe.id}`} className="block">
-                <h3 className="text-xl font-bold text-eatpur-white-warm mb-2 group-hover:text-eatpur-yellow transition-colors">{recipe.title}</h3>
+                <h3 className="text-xl font-display font-medium text-eatpur-dark mb-2 group-hover:text-eatpur-green-dark transition-colors">{recipe.title}</h3>
               </Link>
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-6 h-6 rounded-full bg-eatpur-gold flex items-center justify-center text-eatpur-dark font-bold text-xs">
+                <div className="w-6 h-6 rounded-full bg-eatpur-white-warm flex items-center justify-center text-eatpur-green-dark font-medium font-display text-xs border border-black/5 shadow-inner">
                   {recipe.author.charAt(0)}
                 </div>
-                <span className="text-sm text-eatpur-text-light">{recipe.author}</span>
+                <span className="text-sm font-serif italic text-eatpur-text-light">{recipe.author}</span>
               </div>
-              <div className="mt-auto pt-4 border-t border-eatpur-gold/10 flex items-center justify-between text-xs text-eatpur-text/80">
+              <div className="mt-auto pt-4 border-t border-black/5 flex items-center justify-between text-[11px] font-sans tracking-widest uppercase font-semibold text-eatpur-text/60">
                 <div className="flex gap-4">
-                  <span className="flex items-center gap-1"><FaClock /> {recipe.time}</span>
-                  <span className="flex items-center gap-1"><FaUsers /> {recipe.servings}</span>
+                  <span className="flex items-center gap-1.5"><FaClock className="text-eatpur-green-dark/70" /> {recipe.time}</span>
+                  <span className="flex items-center gap-1.5"><FaUsers className="text-eatpur-green-dark/70" /> {recipe.servings}</span>
                 </div>
                 <div className="flex gap-3">
-                  <span className="flex items-center gap-1 hover:text-red-400 transition-colors cursor-pointer"><FaHeart /> {recipe.likes}</span>
-                  <span className="flex items-center gap-1"><FaComment /> {recipe.comments}</span>
+                  <span className="flex items-center gap-1 hover:text-red-500 transition-colors cursor-pointer"><FaHeart className="text-red-400/70" /> {recipe.likes}</span>
+                  <span className="flex items-center gap-1"><FaComment className="text-eatpur-text-light" /> {recipe.comments}</span>
                 </div>
               </div>
             </div>

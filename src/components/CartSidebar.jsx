@@ -22,7 +22,7 @@ export default function CartSidebar() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-eatpur-dark/70 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
             onClick={() => dispatch({ type: "TOGGLE_CART", payload: false })}
           />
 
@@ -32,12 +32,11 @@ export default function CartSidebar() {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 h-full w-full max-w-md bg-eatpur-dark/95 backdrop-blur-[30px] border-l border-eatpur-gold/20 z-9999 flex flex-col shadow-2xl"
+            className="fixed top-0 right-0 h-full w-full max-w-md bg-eatpur-white-warm backdrop-blur-[30px] border-l border-black/5 z-[9999] flex flex-col shadow-2xl"
           >
-            <div className="p-6 flex items-center justify-between border-b border-eatpur-gold/10">
+            <div className="p-6 flex items-center justify-between border-b border-black/5 bg-white">
               <h2
-                className="text-2xl text-eatpur-yellow font-bold"
-                style={{ fontFamily: "var(--font-hughes)" }}
+                className="text-3xl text-eatpur-dark font-display tracking-tight"
               >
                 Your Cart
               </h2>
@@ -45,32 +44,32 @@ export default function CartSidebar() {
                 onClick={() =>
                   dispatch({ type: "TOGGLE_CART", payload: false })
                 }
-                className="p-2 text-eatpur-text hover:text-eatpur-yellow transition-colors"
+                className="p-2 text-eatpur-text-light hover:text-eatpur-dark transition-colors bg-white rounded-full border border-black/5 shadow-sm"
               >
-                <FaXmark size={24} />
+                <FaXmark size={18} />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-6 hide-scrollbar">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 hide-scrollbar font-sans">
               {state.items.length === 0 ? (
-                <div className="text-center text-eatpur-text py-10">
+                <div className="text-center text-eatpur-text py-10 font-serif italic text-lg">
                   Your cart is empty.
                 </div>
               ) : (
                 state.items.map((item) => (
-                  <div key={item.id} className="flex gap-4 items-center">
+                  <div key={item.id} className="flex gap-4 items-center bg-white p-3 rounded-xl border border-black/5 shadow-sm">
                     <img
                       src={item.image || "/placeholder.png"}
                       alt={item.name}
-                      className="w-20 h-20 object-cover rounded-lg border border-eatpur-gold/10"
+                      className="w-20 h-20 object-cover rounded-lg border border-black/5 mix-blend-multiply"
                     />
                     <div className="flex-1">
-                      <h3 className="text-eatpur-white-warm font-semibold">
+                      <h3 className="text-eatpur-dark font-display font-medium text-lg leading-tight mb-1">
                         {item.name}
                       </h3>
-                      <p className="text-eatpur-gold text-sm">₹{item.price}</p>
+                      <p className="text-eatpur-green-dark font-serif font-semibold">₹{item.price}</p>
 
-                      <div className="flex items-center gap-3 mt-2">
+                      <div className="flex items-center gap-3 mt-3">
                         <button
                           onClick={() =>
                             dispatch({
@@ -81,11 +80,11 @@ export default function CartSidebar() {
                               },
                             })
                           }
-                          className="w-8 h-8 rounded-full bg-eatpur-green-dark border border-eatpur-gold/20 flex items-center justify-center text-eatpur-text hover:text-eatpur-yellow hover:border-eatpur-gold transition-colors"
+                          className="w-7 h-7 rounded-full bg-eatpur-white-warm border border-black/10 flex items-center justify-center text-eatpur-dark hover:border-eatpur-green-dark hover:text-eatpur-green-dark shadow-inner transition-colors"
                         >
-                          <FaMinus size={12} />
+                          <FaMinus size={10} />
                         </button>
-                        <span className="text-eatpur-white-warm">
+                        <span className="text-eatpur-dark font-medium w-4 text-center">
                           {item.quantity}
                         </span>
                         <button
@@ -98,9 +97,9 @@ export default function CartSidebar() {
                               },
                             })
                           }
-                          className="w-8 h-8 rounded-full bg-eatpur-green-dark border border-eatpur-gold/20 flex items-center justify-center text-eatpur-text hover:text-eatpur-yellow hover:border-eatpur-gold transition-colors"
+                          className="w-7 h-7 rounded-full bg-eatpur-white-warm border border-black/10 flex items-center justify-center text-eatpur-dark hover:border-eatpur-green-dark hover:text-eatpur-green-dark shadow-inner transition-colors"
                         >
-                          <FaPlus size={12} />
+                          <FaPlus size={10} />
                         </button>
                       </div>
                     </div>
@@ -111,9 +110,9 @@ export default function CartSidebar() {
                           payload: { id: item.id },
                         })
                       }
-                      className="p-2 text-red-400/70 hover:text-red-400 transition-colors"
+                      className="p-2.5 text-red-500 bg-red-50 rounded-lg hover:bg-red-100 transition-colors border border-red-100 mr-1"
                     >
-                      <FaTrash />
+                      <FaTrash size={14} />
                     </button>
                   </div>
                 ))
@@ -121,10 +120,10 @@ export default function CartSidebar() {
             </div>
 
             {state.items.length > 0 && (
-              <div className="p-6 border-t border-eatpur-gold/10 bg-eatpur-green-dark/50">
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-eatpur-text">Subtotal</span>
-                  <span className="text-xl text-eatpur-yellow font-bold">
+              <div className="p-6 border-t border-black/5 bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.03)]">
+                <div className="flex justify-between items-center mb-6">
+                  <span className="text-eatpur-dark font-serif italic text-lg">Subtotal</span>
+                  <span className="text-2xl text-eatpur-green-dark font-serif font-semibold">
                     ₹{subtotal.toFixed(2)}
                   </span>
                 </div>
@@ -133,8 +132,7 @@ export default function CartSidebar() {
                     dispatch({ type: "TOGGLE_CART", payload: false });
                     navigate("/products/checkout");
                   }}
-                  className="w-full btn-primary flex justify-center py-4"
-                  style={{ fontFamily: "var(--font-hughes)" }}
+                  className="w-full btn-primary flex justify-center py-4 font-medium tracking-wide shadow-md"
                 >
                   Proceed to Checkout
                 </button>

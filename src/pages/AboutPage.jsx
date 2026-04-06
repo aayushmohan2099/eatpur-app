@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   FaBullseye,
@@ -39,41 +39,62 @@ const TEAM = [
     name: "Devesh Srivastava",
     role: "Co-Founder",
     pic: "/team/devesh.png",
-  },
-  {
-    name: "Shishir Srivastava",
-    role: "Co-Founder",
-    pic: "/team/shishir.png",
-  },
+  }
 ];
 const founder = TEAM[0];
 const others = TEAM.slice(1);
 
+// Fallback image function
+const getFallbackAvatar = (name, size = 200) => {
+  const [first, last] = name.split(" ");
+  const initials = `${first?.charAt(0) || ""}${last?.charAt(0) || ""}`;
+  return `https://ui-avatars.com/api/?name=${initials}&background=D4C4A8&color=FFFDF8&size=${size}&font-size=0.35&bold=true`;
+};
+
 export default function AboutPage() {
+  const [carouselWidth, setCarouselWidth] = useState(0);
+  const carouselRef = useRef(null);
+
+  useEffect(() => {
+    if (carouselRef.current) {
+      setCarouselWidth(
+        carouselRef.current.scrollWidth - carouselRef.current.offsetWidth
+      );
+    }
+    // Optional: Recalculate on window resize
+    const handleResize = () => {
+      if (carouselRef.current) {
+        setCarouselWidth(
+          carouselRef.current.scrollWidth - carouselRef.current.offsetWidth
+        );
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
-    <div className="w-full relative z-10 overflow-hidden">
+    <div className="w-full relative z-10 overflow-hidden bg-[#FFFDF8]">
       {/* Hero Section */}
-      <section className="pt-32 pb-24 px-6 relative bg-eatpur-dark flex flex-col items-center justify-center text-center">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,201,51,0.05)_0%,transparent_60%)] pointer-events-none" />
+      <section className="pt-24 pb-16 px-6 relative flex flex-col items-center justify-center text-center">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#A8C686]/20 to-transparent pointer-events-none -z-10" />
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <h1
-            className="text-6xl md:text-8xl font-display text-gradient-gold mb-6 drop-shadow-[0_0_30px_rgba(255,201,51,0.2)] leading-[1.5] py-2"
-            style={{ fontFamily: "var(--font-hughes)" }}
-          >
+          <img src="/icons/flourish-top.png" alt="" className="h-6 mx-auto mb-4 opacity-50" onError={(e) => e.target.style.display = 'none'} />
+          <h1 className="text-6xl md:text-8xl font-serif text-[#2E2410] mb-6 leading-[1.1] tracking-tight">
             Our Story
           </h1>
-          <p className="text-xl md:text-2xl text-eatpur-text-light max-w-2xl mx-auto">
+          <p className="text-xl md:text-2xl font-serif italic text-[#5C4F3A] max-w-2xl mx-auto">
             Rediscovering the ancient power of millets.
           </p>
         </motion.div>
       </section>
 
       {/* MVV Cards */}
-      <section className="py-24 px-6 max-w-7xl mx-auto">
+      <section className="py-24 px-6 max-w-7xl mx-auto border-t border-[#D4C4A8]/30">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
             {
@@ -98,39 +119,34 @@ export default function AboutPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.2 }}
-              className="glass-card p-10 rounded-3xl flex flex-col items-center text-center glow-hover"
+              className="p-10 flex flex-col items-center text-center group bg-white/60 border border-[#D4C4A8]/40 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300"
             >
-              <div className="w-16 h-16 rounded-full bg-eatpur-dark border border-eatpur-gold/20 text-eatpur-gold flex items-center justify-center text-2xl mb-6 shadow-lg shadow-eatpur-gold/5">
+              <div className="w-16 h-16 rounded-full bg-[#A8C686]/20 text-[#6B8E23] flex items-center justify-center text-2xl mb-6 shadow-inner group-hover:scale-110 transition-transform">
                 {item.icon}
               </div>
-              <h3
-                className="text-2xl font-bold text-eatpur-white-warm mb-4"
-                style={{ fontFamily: "var(--font-hughes)" }}
-              >
+              <h3 className="text-2xl font-serif font-semibold text-[#2E2410] mb-4">
                 {item.title}
               </h3>
-              <p className="text-eatpur-text leading-relaxed">{item.text}</p>
+              <p className="text-[#5C4F3A] font-sans leading-relaxed">{item.text}</p>
             </motion.div>
           ))}
         </div>
       </section>
 
       {/* Story & Origins */}
-      <section className="py-24 px-6 bg-eatpur-green-dark/60 max-w-7xl mx-auto md:rounded-[3rem] shadow-[0_30px_60px_rgba(4,7,4,0.6)] border border-eatpur-gold/5 my-12 backdrop-blur-3xl">
+      <section className="py-24 px-6 bg-[#F4EEE0]/50 max-w-7xl mx-auto sm:rounded-[2rem] border border-[#D4C4A8]/30 my-12 shadow-sm">
         <div className="flex flex-col md:flex-row gap-16 items-center">
           <div className="md:w-1/2">
-            <h2
-              className="text-4xl text-eatpur-yellow font-display mb-6"
-              style={{ fontFamily: "var(--font-hughes)" }}
-            >
+            <h2 className="text-4xl md:text-5xl text-[#2E2410] font-serif mb-6 leading-tight">
               Rooted in Tradition
             </h2>
-            <p className="text-eatpur-text leading-relaxed text-lg mb-6">
+            <div className="w-16 h-1 bg-[#6B8E23] rounded-full mb-6"></div>
+            <p className="text-[#5C4F3A] font-sans leading-relaxed text-lg mb-6">
               EatPur was born from a simple belief: healthy food should never
               compromise on taste. As a family, we were frustrated by the lack
               of nutritious yet delicious options in the market.
             </p>
-            <p className="text-eatpur-text leading-relaxed text-lg">
+            <p className="text-[#5C4F3A] font-sans leading-relaxed text-lg">
               That's when we turned to millets – the ancient supergrains our
               grandparents thrived on. By blending traditional wisdom with
               modern culinary techniques, we created a range of products that
@@ -141,47 +157,39 @@ export default function AboutPage() {
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="md:w-1/2 rounded-3xl overflow-hidden glass-card p-2 shadow-2xl"
+            className="md:w-1/2 rounded-2xl overflow-hidden bg-white p-2 border border-[#D4C4A8]/40 shadow-sm"
           >
             <img
-              src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=800"
+              src="/home/prods.jpg"
               alt="Millet origin"
-              className="w-full h-auto rounded-2xl"
+              className="w-full h-auto rounded-xl"
             />
           </motion.div>
         </div>
       </section>
 
       {/* Core Values Grid */}
-      <section className="py-24 px-6 bg-eatpur-green-dark/40 relative">
-        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-eatpur-gold/20 to-transparent" />
+      <section className="py-24 px-6 border-y border-[#D4C4A8]/30 bg-[#FFFDF8] relative">
         <div className="max-w-7xl mx-auto text-center">
-          <h2
-            className="text-4xl md:text-5xl font-display text-gradient-gold mb-16 leading-[1] py-2"
-            style={{ fontFamily: "var(--font-hughes)" }}
-          >
+          <h2 className="text-4xl md:text-5xl font-serif text-[#2E2410] mb-16 leading-[1] py-2">
             The EatPur Promise
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               {
                 icon: <FaLeaf />,
-                color: "text-eatpur-green-light",
                 title: "Natural Goodness",
               },
               {
                 icon: <FaHeartPulse />,
-                color: "text-red-400",
                 title: "Health First",
               },
               {
                 icon: <FaAward />,
-                color: "text-eatpur-gold",
                 title: "Quality Promise",
               },
               {
                 icon: <FaEye />,
-                color: "text-eatpur-yellow-light",
                 title: "Transparency",
               },
             ].map((v, i) => (
@@ -192,13 +200,10 @@ export default function AboutPage() {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
                 whileHover={{ y: -8 }}
-                className="glass-card p-8 rounded-2xl flex flex-col items-center justify-center"
+                className="p-8 flex flex-col items-center justify-center bg-white border border-[#D4C4A8]/20 rounded-xl shadow-sm"
               >
-                <div className={`text-4xl mb-4 ${v.color}`}>{v.icon}</div>
-                <h4
-                  className="text-lg font-bold text-eatpur-white-warm"
-                  style={{ fontFamily: "var(--font-hughes)" }}
-                >
+                <div className={`text-4xl mb-4 text-[#6B8E23]`}>{v.icon}</div>
+                <h4 className="text-lg font-serif font-semibold text-[#2E2410] tracking-wide">
                   {v.title}
                 </h4>
               </motion.div>
@@ -207,111 +212,106 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Meet the Team */}
-      <section className="py-24 px-6 max-w-7xl mx-auto">
-        <h2
-          className="text-4xl md:text-5xl font-display text-gradient-gold mb-16 text-center leading-[1] py-2"
-          style={{ fontFamily: "var(--font-hughes)" }}
-        >
+      {/* ========================================================= */}
+      {/* 🌿 Meet the Team Section (Founder Top + Draggable Carousel) */}
+      {/* ========================================================= */}
+      <section className="py-24 px-6 max-w-7xl mx-auto overflow-hidden">
+        <h2 className="text-4xl md:text-5xl font-serif text-[#2E2410] mb-4 text-center leading-[1] py-2">
           Meet Our Team
         </h2>
+        <div className="leaf-divider mx-auto mb-16"><span></span></div>
 
-        {/* 🌟 Founder (CENTER HERO) */}
+        {/* 🌟 Founder (TOP CENTER) */}
         <div className="flex justify-center mb-16">
-          <div className="glass-card pt-10 pb-15 px-10 rounded-3xl text-center glow-hover group border border-eatpur-gold/30 relative overflow-hidden">
-            {/* Image */}
-            <div className="relative flex justify-center">
-              {/* GOLD GLOW */}
-              <div className="absolute bottom-6 flex justify-center w-full z-0">
-                {/* Core glow */}
-                <div className="w-44 h-26 bg-eatpur-gold/60 blur-xl rounded-full" />
+          <div className="pt-10 pb-8 px-12 text-center border border-[#D4C4A8]/40 bg-white rounded-2xl shadow-lg relative flex flex-col items-center">
+            {/* Pista glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-b from-[#A8C686]/20 to-transparent pointer-events-none rounded-2xl" />
 
-                {/* Outer soft glow */}
-                <div className="absolute w-64 h-24 bg-eatpur-gold/30 blur-2xl rounded-full" />
+            <div className="relative flex justify-center mb-6 z-10">
+              <div className="w-48 h-48 rounded-full bg-[#F4EEE0] overflow-hidden shadow-inner flex items-end border-2 border-white">
+                <img
+                  src={founder.pic}
+                  alt={founder.name}
+                  onError={(e) => { e.target.src = getFallbackAvatar(founder.name, 200) }}
+                  className="h-[100%] w-full object-cover object-top"
+                />
               </div>
-              <img
-                src={founder.pic}
-                alt={founder.name}
-                className="h-64 object-contain relative z-10"
-              />
             </div>
 
-            {/* TEXT OVER IMAGE */}
-            <div className="absolute bottom-7 left-0 w-full z-30 text-center">
-              <h3
-                className="text-2xl font-bold text-eatpur-white-warm"
-                style={{ fontFamily: "var(--font-hughes)" }}
-              >
+            <div className="text-center z-10 relative">
+              <h3 className="text-3xl font-serif font-semibold text-[#2E2410] mb-1">
                 {founder.name}
               </h3>
-              <p className="text-eatpur-gold text-sm tracking-wider uppercase">
+              <p className="text-[#6B8E23] text-[11px] tracking-[0.2em] uppercase font-bold">
                 {founder.role}
               </p>
             </div>
-            {/* Bottom gradient for readability */}
-            <div className="absolute bottom-0 left-0 w-full h-[45%] bg-gradient-to-t from-[#040704] via-[#040704]/90 to-transparent z-20 pointer-events-none" />
           </div>
         </div>
 
-        {/* 👥 Team Around */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-8">
-          {others.map((member) => (
-            <div
-              key={member.name}
-              className="glass-card pt-8 pb-12 px-6 rounded-3xl text-center glow-hover group relative overflow-hidden"
+        {/* 👥 Co-Founders (DRAGGABLE CAROUSEL) */}
+        <div className="w-full">
+          <p className="text-center font-sans text-sm text-[#5C4F3A] mb-4 italic opacity-70">
+            ← Drag to view more →
+          </p>
+
+          <motion.div
+            ref={carouselRef}
+            className="cursor-grab active:cursor-grabbing overflow-hidden w-full py-4"
+          >
+            <motion.div
+              drag="x"
+              dragConstraints={{ right: 0, left: -carouselWidth }}
+              dragElastic={0.1}
+              animate={{ x: [0, -carouselWidth] }}
+              transition={{ repeat: Infinity, duration: 12, ease: "linear" }}
+              className="flex gap-6 w-max px-4"
             >
-              {/* IMAGE + GLOW */}
-              <div className="relative flex justify-center">
-                {/* GOLD GLOW (same system as founder, scaled down) */}
-                <div className="absolute bottom-4 flex justify-center w-full z-0">
-                  <div className="w-30 h-34 bg-eatpur-gold/60 blur-lg rounded-full" />
-                  <div className="absolute w-40 h-20 bg-eatpur-gold/30 blur-2xl rounded-full" />
-                </div>
-
-                {/* IMAGE */}
-                <img
-                  src={member.pic}
-                  alt={member.name}
-                  className="h-52 object-contain relative z-10 group-hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-
-              {/* TEXT OVER IMAGE */}
-              <div className="absolute bottom-6 left-0 w-full z-30 text-center px-2">
-                <h3
-                  className="text-lg font-bold text-eatpur-white-warm leading-tight"
-                  style={{ fontFamily: "var(--font-hughes)" }}
+              {others.map((member) => (
+                <div
+                  key={member.name}
+                  className="w-64 pt-8 pb-6 px-4 text-center bg-white border border-[#D4C4A8]/30 rounded-2xl shadow-sm relative flex flex-col items-center pointer-events-none select-none"
                 >
-                  {member.name}
-                </h3>
-                <p className="text-eatpur-gold text-xs tracking-wider uppercase">
-                  {member.role}
-                </p>
-              </div>
+                  <div className="relative flex justify-center mb-4">
+                    <div className="w-32 h-32 rounded-full bg-[#F4EEE0] overflow-hidden shadow-inner flex items-end border-2 border-white">
+                      <img
+                        src={member.pic}
+                        alt={member.name}
+                        onError={(e) => { e.target.src = getFallbackAvatar(member.name, 150) }}
+                        className="h-[95%] w-full object-cover object-[center_top]"
+                      />
+                    </div>
+                  </div>
 
-              {/* MATCHED GRADIENT */}
-              <div className="absolute bottom-0 left-0 w-full h-[45%] bg-gradient-to-t from-[#040704] via-[#040704]/90 to-transparent z-20 pointer-events-none" />
-            </div>
-          ))}
+                  <div className="text-center px-2 z-10 relative mt-2">
+                    <h3 className="text-xl font-serif font-semibold text-[#2E2410] leading-tight mb-1">
+                      {member.name}
+                    </h3>
+                    <p className="text-[#6B8E23] text-[10px] tracking-[0.15em] uppercase font-bold">
+                      {member.role}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </motion.div>
+          </motion.div>
         </div>
       </section>
+      {/* ========================================================= */}
 
       {/* Stats */}
-      <section className="py-24 px-6 bg-eatpur-dark relative border-t border-eatpur-gold/10">
+      <section className="py-24 px-6 border-y border-[#D4C4A8]/30 bg-[#F4EEE0]/40 relative">
         <div className="max-w-7xl mx-auto text-center">
-          <p
-            className="text-2xl text-eatpur-text-light font-light mb-16 max-w-3xl mx-auto"
-            style={{ fontFamily: "var(--font-hughes)" }}
-          >
+          <p className="text-2xl md:text-3xl text-[#2E2410] font-serif max-w-3xl mx-auto mb-16 leading-relaxed italic">
             "Millets are not just a food trend – they're a return to our roots.
             Sustaining both the body and the earth."
           </p>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-eatpur-gold/10">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-[#D4C4A8]/60">
             {[
               { num: "100+", text: "Products" },
               { num: "5k+", text: "Happy Customers" },
-              { num: "20+", text: "Tasty Recipies" },
+              { num: "20+", text: "Tasty Recipes" },
               { num: "ZERO", text: "Preservatives" },
             ].map((stat, i) => (
               <motion.div
@@ -322,10 +322,10 @@ export default function AboutPage() {
                 transition={{ delay: i * 0.1 }}
                 className="flex flex-col items-center"
               >
-                <div className="text-4xl md:text-5xl font-display text-eatpur-yellow mb-2">
+                <div className="text-4xl md:text-5xl font-serif text-[#2E2410] mb-2 font-bold">
                   {stat.num}
                 </div>
-                <div className="text-eatpur-text text-sm uppercase tracking-widest">
+                <div className="text-[#5C4F3A] font-sans font-medium text-[11px] uppercase tracking-widest">
                   {stat.text}
                 </div>
               </motion.div>
