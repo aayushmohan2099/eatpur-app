@@ -9,6 +9,7 @@ import {
   FaPhone,
   FaEnvelope,
 } from "react-icons/fa6";
+import Logo from "../assets/Logo3D.png";
 
 export default function Footer() {
   return (
@@ -17,9 +18,11 @@ export default function Footer() {
         {/* Column 1: Brand */}
         <div className="space-y-6">
           <Link to="/" className="flex flex-col">
-            <h2 className="font-display font-bold text-2xl text-eatpur-dark tracking-wide">
-              EATPUR NATURALS
-            </h2>
+            <img
+              src={Logo}
+              alt="Eatpur Naturals Logo"
+              className="w-24 md:w-30 lg:w-36 h-auto transition-transform duration-500 ease-out group-hover:scale-[1.02]"
+            />
             <span className="text-[9px] tracking-[0.25em] text-eatpur-text-light uppercase mt-1">
               PURE & WHOLESOME
             </span>
@@ -145,7 +148,10 @@ export default function Footer() {
           </h4>
           <ul className="space-y-4">
             <li className="flex items-start gap-3">
-              <FaLocationDot className="text-eatpur-green-dark mt-1" size={14} />
+              <FaLocationDot
+                className="text-eatpur-green-dark mt-1"
+                size={14}
+              />
               <span className="text-eatpur-text text-sm">New Delhi, India</span>
             </li>
             <li className="flex items-center gap-3">
@@ -154,7 +160,9 @@ export default function Footer() {
             </li>
             <li className="flex items-center gap-3">
               <FaEnvelope className="text-eatpur-green-dark" size={14} />
-              <span className="text-eatpur-text text-sm">lovelesh@eatpur.com</span>
+              <span className="text-eatpur-text text-sm">
+                lovelesh@eatpur.com
+              </span>
             </li>
           </ul>
         </div>
@@ -162,7 +170,8 @@ export default function Footer() {
 
       <div className="max-w-7xl mx-auto px-6 border-t border-black/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-eatpur-text-light">
         <p className="flex items-center gap-2">
-          © {new Date().getFullYear()} Eatpur Naturals. All rights reserved. Powered by 
+          © {new Date().getFullYear()} Eatpur Naturals. All rights reserved.
+          Powered by
           <span className="flex items-center gap-1 font-medium text-eatpur-text">
             TechnoHorizon
           </span>

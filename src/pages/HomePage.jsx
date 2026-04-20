@@ -16,6 +16,7 @@ import {
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import Chatbot from "../components/Chatbot";
+import FloatingImagesBackground from "./FloatingBG/floatingBG";
 
 // Mock Data
 const products = [
@@ -26,8 +27,7 @@ const products = [
     description: "Calcium-rich sprouted finger millet flour.",
     category: "Raw Flour",
     healthScore: 92,
-    image:
-      "/Products/Sprouted_Ragi_Flour_202604061614.jpeg",
+    image: "/Products/Sprouted_Ragi_Flour_202604061614.jpeg",
   },
   {
     id: 2,
@@ -36,8 +36,7 @@ const products = [
     description: "Healthy hakka style noodles made purely from millets.",
     category: "Ready to Cook",
     healthScore: 85,
-    image:
-      "/Products/Millet_noodles_EATPUR_202604061614.jpeg",
+    image: "/Products/Millet_noodles_EATPUR_202604061614.jpeg",
   },
   {
     id: 3,
@@ -46,9 +45,22 @@ const products = [
     description: "Crispy, crunchy bajra cookies sweetened with jaggery.",
     category: "Ready to Eat",
     healthScore: 78,
-    image:
-      "/Products/Pearl_Millet_Cookies_202604061611.jpeg",
+    image: "/Products/Pearl_Millet_Cookies_202604061611.jpeg",
   },
+];
+
+const heroImages = [
+  "/home/home-carousel/pic1.jpeg",
+  "/home/home-carousel/pic2.jpeg",
+  "/home/home-carousel/pic3.jpeg",
+  "/home/home-carousel/pic4.jpeg",
+  "/home/home-carousel/pic5.jpeg",
+  "/home/home-carousel/pic6.jpeg",
+  "/home/home-carousel/pic7.jpeg",
+  "/home/home-carousel/pic8.jpeg",
+  "/home/home-carousel/pic9.jpeg",
+  "/home/home-carousel/pic10.jpeg",
+  "/home/home-carousel/pic11.jpeg",
 ];
 
 export default function HomePage() {
@@ -56,6 +68,7 @@ export default function HomePage() {
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [trendingBlogs, setTrendingBlogs] = useState([]);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
 
   useEffect(() => {
     const fetchBlogs = async () => {
@@ -73,17 +86,27 @@ export default function HomePage() {
     fetchBlogs();
   }, []);
 
+  // Hero Carousel Timer
+  useEffect(() => {
+    const heroTimer = setInterval(() => {
+      setCurrentHeroIndex((prev) => (prev + 1) % heroImages.length);
+    }, 3500);
+    return () => clearInterval(heroTimer);
+  }, []);
+
   return (
     <div className="w-full relative min-h-screen">
-
       {/* Hero Section */}
-      <section
-        className="relative w-full pt-32 pb-20 md:pt-40 md:pb-32 px-6 overflow-hidden bg-cover bg-center bg-no-repeat bg-[url('/home/Mobanner.png')] md:bg-[url('/home/banner.png')]"
-      >
-        {/* Soft Pista Green Gradient behind text on the left to maintain readability over the image */}
-        <div className="absolute top-0 left-0 w-full md:w-2/3 h-full bg-gradient-to-r from-eatpur-green-light/60 to-transparent pointer-events-none z-0" />
+      <section className="relative w-full pt-20 pb-20 md:pt-28 md:pb-32 px-6 overflow-hidden bg-cover bg-center bg-no-repeat bg-[url('/home/Mobanner.png')]">
+        {/* ✅ Floating 3D Images Background */}
+        <FloatingImagesBackground />
 
+        {/* Soft Gradient Overlay (kept above bg, below content) */}
+        <div className="absolute top-0 left-0 w-full md:w-1/2 h-full bg-gradient-to-r from-eatpur-green-light/80 to-transparent pointer-events-none z-[1]" />
+
+        {/* Content */}
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-12 relative z-10">
+          {/* LEFT SIDE: Texts and Buttons (Untouched) */}
           <motion.div
             className="flex-1 flex flex-col items-center md:items-start text-center md:text-left"
             initial={{ opacity: 0, y: 20 }}
@@ -98,22 +121,136 @@ export default function HomePage() {
             <h1 className="text-5xl md:text-7xl font-display text-eatpur-dark leading-tight mb-6 tracking-tight drop-shadow-sm">
               Millets... <br />
               Fuel Your Body
-              <br></br><span className="italic text-eatpur-green-dark">Naturally</span>
+              <br />
+              <span className="italic text-eatpur-green-dark">Naturally</span>
             </h1>
 
-            <p className="text-eatpur-text text-lg md:text-xl mb-10 max-w-md font-sans leading-relaxed drop-shadow-sm">
-              Smart nutrition for modern life – ready in minutes. Pure, wholesome, and tradition-rich grains.
+            <p className="text-eatpur-text text-lg md:text-xl mb-10 max-w-md font-display leading-relaxed drop-shadow-sm">
+              Smart nutrition for modern life – ready in minutes. Pure,
+              wholesome, and tradition-rich grains.
             </p>
 
             <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-              <Link to="/products" className="btn-primary flex items-center gap-2 shadow-md hover:shadow-lg transition-shadow">
+              <Link
+                to="/products"
+                className="btn-primary flex items-center gap-2 shadow-md hover:shadow-lg transition-shadow"
+              >
                 Shop Now
               </Link>
-              <Link to="/recipes" className="btn-ghost bg-black/50 backdrop-blur-sm border border-eatpur-dark/20 hover:bg-black/70 transition-colors">
+              <Link
+                to="/recipes"
+                className="btn-ghost bg-black/50 backdrop-blur-sm border border-eatpur-dark/20 hover:!bg-[#cf7324]"
+              >
                 Explore Recipes
               </Link>
             </div>
           </motion.div>
+
+          {/* RIGHT SIDE: Stacked Crossfade Carousel */}
+          <div className="flex-1 w-full flex justify-center md:justify-end lg:pr-12">
+            {/* Carousel Container */}
+            <div className="relative w-full max-w-[340px] md:max-w-[400px] aspect-[3/4]">
+              {/* Layer 1: The Orange Outline Border (Appears First) */}
+              <motion.div
+                initial={{ opacity: 0, rotate: 0, scale: 0.9 }}
+                animate={{ opacity: 1, rotate: 8, scale: 1 }}
+                transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
+                className="absolute inset-0 border-[6px] border-[#E37A2C] z-0 pointer-events-none shadow-lg"
+              ></motion.div>
+
+              {/* Layer 2: The Solid Orange Block (Appears Second) */}
+              <motion.div
+                initial={{ opacity: 0, rotate: 0, scale: 0.9 }}
+                animate={{ opacity: 1, rotate: 4, scale: 1 }}
+                transition={{ duration: 0.6, ease: "easeOut", delay: 0.6 }}
+                className="absolute inset-0 bg-[#E37A2C] z-10 pointer-events-none shadow-md"
+              ></motion.div>
+
+              {/* Layer 3: The Image Carousel (Appears Third, 1 sec delay relative to the start) */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: "easeOut", delay: 1.2 }}
+                // FIXED 1: Applied border directly to container for mathematically perfect, uniform sides
+                className="absolute inset-0 z-20 bg-[#DFD1D1] shadow-xl overflow-hidden border-[4px] md:border-[5px] border-[#E37A2C]"
+              >
+                <AnimatePresence>
+                  <motion.div
+                    key={currentHeroIndex}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 1.2, ease: "easeInOut" }}
+                    // Padding gives the image breathing room against the border
+                    className="absolute inset-0 w-full h-full p-2 md:p-3"
+                  >
+                    {/* FIXED 2: Dynamically rendered SVG Filter for the exact requested dissolve animation */}
+                    <svg width="0" height="0" className="absolute hidden">
+                      <defs>
+                        <filter
+                          id={`turbulent-dissolve-${currentHeroIndex}`}
+                          x="0%"
+                          y="0%"
+                          width="100%"
+                          height="100%"
+                        >
+                          <feTurbulence
+                            type="fractalNoise"
+                            baseFrequency=".012"
+                            result="noise"
+                          />
+                          <feColorMatrix
+                            type="luminanceToAlpha"
+                            in="noise"
+                            result="alphaNoise"
+                          />
+                          <feComponentTransfer
+                            in="alphaNoise"
+                            result="animatedAlpha"
+                          >
+                            <feFuncA type="linear" slope="0">
+                              <animate
+                                attributeName="slope"
+                                values="0; 0.5; 1; 1.5; 2; 3; 5"
+                                dur="1.2s"
+                                fill="freeze"
+                              />
+                            </feFuncA>
+                          </feComponentTransfer>
+                          <feComponentTransfer
+                            in="animatedAlpha"
+                            result="discreteAlpha"
+                          >
+                            <feFuncA type="discrete" tableValues="0 1" />
+                          </feComponentTransfer>
+                          <feGaussianBlur
+                            stdDeviation="1"
+                            in="discreteAlpha"
+                            result="blurredAlpha"
+                          />
+                          <feComposite
+                            operator="in"
+                            in="SourceGraphic"
+                            in2="blurredAlpha"
+                          />
+                        </filter>
+                      </defs>
+                    </svg>
+
+                    <img
+                      src={heroImages[currentHeroIndex]}
+                      className="w-full h-full object-contain"
+                      // Apply the dynamic filter to the image
+                      style={{
+                        filter: `url(#turbulent-dissolve-${currentHeroIndex})`,
+                      }}
+                      alt={`EatPur Highlight ${currentHeroIndex + 1}`}
+                    />
+                  </motion.div>
+                </AnimatePresence>
+              </motion.div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -131,8 +268,9 @@ export default function HomePage() {
                 alt={`Carousel Product ${item}`}
                 className="w-full h-full object-contain drop-shadow-md"
                 onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.parentElement.innerHTML = '<span class="text-3xl">🌾</span>';
+                  e.target.style.display = "none";
+                  e.target.parentElement.innerHTML =
+                    '<span class="text-3xl">🌾</span>';
                 }}
               />
             </div>
@@ -141,13 +279,23 @@ export default function HomePage() {
       </section>
 
       {/* Shop by Need Section */}
-      <section className="py-24 px-6 relative border-t border-black/5 bg-white/30">
+      <section className="py-12 px-6 relative border-t border-black/5 bg-white/30">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16 flex flex-col items-center">
             <h2 className="text-3xl md:text-4xl font-display text-eatpur-dark flex items-center gap-4">
-              <img src="/icons/flourish-left.png" alt="~" className="h-6 opacity-60 hidden md:block" onError={(e) => e.target.style.display = 'none'} />
+              <img
+                src="/icons/flourish-left.png"
+                alt="~"
+                className="h-6 opacity-60 hidden md:block"
+                onError={(e) => (e.target.style.display = "none")}
+              />
               🌿 Shop by Need 🌿
-              <img src="/icons/flourish-right.png" alt="~" className="h-6 opacity-60 hidden md:block" onError={(e) => e.target.style.display = 'none'} />
+              <img
+                src="/icons/flourish-right.png"
+                alt="~"
+                className="h-6 opacity-60 hidden md:block"
+                onError={(e) => (e.target.style.display = "none")}
+              />
             </h2>
           </div>
 
@@ -160,7 +308,7 @@ export default function HomePage() {
               { title: "Organic Living", icon: FaSeedling },
             ].map((cat, i) => (
               <Link
-                to={`/products?need=${cat.title.toLowerCase().replace(/ & | /g, '-')}`}
+                to={`/products?need=${cat.title.toLowerCase().replace(/ & | /g, "-")}`}
                 key={i}
                 className="vintage-card w-40 h-44 md:w-48 md:h-52 flex flex-col items-center justify-center p-4 hover:-translate-y-2 transition-transform duration-300"
               >
@@ -183,7 +331,9 @@ export default function HomePage() {
             <h2 className="text-3xl md:text-4xl font-display text-eatpur-dark mb-4">
               Trending Products
             </h2>
-            <p className="text-eatpur-text font-serif italic">Crafted from nature's finest grains.</p>
+            <p className="text-eatpur-text font-serif italic">
+              Crafted from nature's finest grains.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -230,11 +380,16 @@ export default function HomePage() {
 
                   {/* Eatpur Health Score Meter */}
                   <div className="mt-3 mb-4 w-full bg-gray-100 rounded-full h-2 overflow-hidden shadow-inner flex items-center relative">
-                    <div className="h-full bg-eatpur-green-dark" style={{ width: `${product.healthScore}%` }}></div>
+                    <div
+                      className="h-full bg-eatpur-green-dark"
+                      style={{ width: `${product.healthScore}%` }}
+                    ></div>
                     {/* Overlay text would go somewhere nearby usually */}
                   </div>
                   <div className="text-xs text-eatpur-text flex justify-between mb-2">
-                    <span className="font-medium text-eatpur-green-dark">Health Score</span>
+                    <span className="font-medium text-eatpur-green-dark">
+                      Health Score
+                    </span>
                     <span className="font-bold">{product.healthScore}/100</span>
                   </div>
 
@@ -246,10 +401,6 @@ export default function HomePage() {
                           {/* Diagonal Strikethrough (Top-Right to Bottom-Left) */}
                           <span className="absolute top-1/2 left-[-10%] w-[120%] h-[1.5px] bg-[#8B3A2A] -rotate-[15deg] origin-center"></span>
                         </span>
-                        {/* Super text 30% OFF
-                        <sup className="text-[#8B3A2A] font-bold text-[10px] mt-1 tracking-wider">
-                          30% OFF
-                        </sup> */}
                       </div>
                       {/* New Discounted Price */}
                       <span className="text-xl font-bold text-[#3A5A1C]">
@@ -258,7 +409,9 @@ export default function HomePage() {
                     </div>
 
                     <button
-                      onClick={() => dispatch({ type: "ADD_ITEM", payload: product })}
+                      onClick={() =>
+                        dispatch({ type: "ADD_ITEM", payload: product })
+                      }
                       className="w-10 h-10 rounded-full border border-eatpur-dark/20 flex items-center justify-center text-eatpur-dark hover:bg-eatpur-green-dark hover:border-eatpur-green-dark hover:text-white transition-all transform hover:scale-105"
                       aria-label="Add to cart"
                     >
@@ -270,7 +423,9 @@ export default function HomePage() {
             ))}
           </div>
           <div className="mt-12 text-center">
-            <Link to="/products" className="btn-ghost shadow-sm">View All Products</Link>
+            <Link to="/products" className="btn-ghost shadow-sm">
+              View All Products
+            </Link>
           </div>
         </div>
       </section>
@@ -282,7 +437,9 @@ export default function HomePage() {
             <h2 className="text-3xl md:text-4xl font-display text-eatpur-dark mb-4">
               Our Blogs
             </h2>
-            <p className="text-eatpur-text font-serif italic">Discover modern nutrition through ancient wisdom.</p>
+            <p className="text-eatpur-text font-serif italic">
+              Discover modern nutrition through ancient wisdom.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -297,15 +454,21 @@ export default function HomePage() {
                 >
                   <div className="h-64 overflow-hidden rounded-t-xl bg-gray-100 flex items-center justify-center">
                     <img
-                      src={blog.image || "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=400"}
+                      src={
+                        blog.image ||
+                        "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=400"
+                      }
                       alt={blog.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>
                   <div className="p-8 flex flex-col flex-1 border-t border-black/5 bg-white">
                     <div className="flex items-center gap-2 mb-4 flex-wrap">
-                      {blog.tags?.slice(0, 2).map(tag => (
-                        <span key={tag} className="text-[10px] uppercase tracking-widest font-semibold text-eatpur-green-dark border border-eatpur-green-dark/20 px-2 py-1 rounded-full">
+                      {blog.tags?.slice(0, 2).map((tag) => (
+                        <span
+                          key={tag}
+                          className="text-[10px] uppercase tracking-widest font-semibold text-eatpur-green-dark border border-eatpur-green-dark/20 px-2 py-1 rounded-full"
+                        >
                           {tag}
                         </span>
                       ))}
@@ -314,11 +477,18 @@ export default function HomePage() {
                       {blog.title}
                     </h3>
                     <p className="text-eatpur-text line-clamp-3 mb-6 font-serif text-sm">
-                      {blog.content?.replace(/<[^>]*>?/gm, '') || "Explore our thoughts and recipes..."}
+                      {blog.content?.replace(/<[^>]*>?/gm, "") ||
+                        "Explore our thoughts and recipes..."}
                     </p>
                     <div className="mt-auto flex items-center justify-between text-sm text-eatpur-text-light font-medium">
-                      <span>{new Date(blog.created_at || Date.now()).toLocaleDateString()}</span>
-                      <span className="flex items-center gap-1"><FaEye /> {blog.views_count || 0}</span>
+                      <span>
+                        {new Date(
+                          blog.created_at || Date.now(),
+                        ).toLocaleDateString()}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <FaEye /> {blog.views_count || 0}
+                      </span>
                     </div>
                   </div>
                 </motion.div>
@@ -327,17 +497,17 @@ export default function HomePage() {
           </div>
 
           <div className="mt-16 text-center">
-            <Link to="/blogs" className="btn-primary font-medium tracking-wide">View All Blogs</Link>
+            <Link to="/blogs" className="btn-primary font-medium tracking-wide">
+              View All Blogs
+            </Link>
           </div>
         </div>
       </section>
 
       {/* Special Offer Banner / Section */}
       <section className="py-20 px-6 relative bg-transparent text-center">
-
         {/* The Dark Green Vintage Card */}
         <div className="max-w-4xl mx-auto relative z-10 border border-[#D4C4A8]/40 p-8 md:p-14 rounded-[12px] bg-[#3A5A1C] shadow-[0_8px_30px_rgba(58,40,10,0.15)]">
-
           {/* Top Decorative Element */}
           <div className="text-[#C8922A] text-sm tracking-[0.3em] mb-4">
             ✦ ─── ─── ✦
@@ -407,17 +577,26 @@ export default function HomePage() {
                   ₹{quickViewProduct.price}
                 </span>
                 <p className="text-eatpur-text leading-relaxed mb-6 gap-2">
-                  {quickViewProduct.description} This premium product ensures you get all the natural health benefits of pure millet without any artificial additives.
+                  {quickViewProduct.description} This premium product ensures
+                  you get all the natural health benefits of pure millet without
+                  any artificial additives.
                 </p>
 
                 {/* Health Score in Modal */}
                 <div className="mb-8 p-4 border border-green-900/10 rounded-lg bg-green-50/50">
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="font-medium text-eatpur-dark">Eatpur Health Score</span>
-                    <span className="font-bold text-eatpur-green-dark">{quickViewProduct.healthScore}/100</span>
+                    <span className="font-medium text-eatpur-dark">
+                      Eatpur Health Score
+                    </span>
+                    <span className="font-bold text-eatpur-green-dark">
+                      {quickViewProduct.healthScore}/100
+                    </span>
                   </div>
                   <div className="w-full bg-white rounded-full h-1.5 shadow-inner">
-                    <div className="h-full bg-eatpur-green-dark rounded-full" style={{ width: `${quickViewProduct.healthScore}%` }}></div>
+                    <div
+                      className="h-full bg-eatpur-green-dark rounded-full"
+                      style={{ width: `${quickViewProduct.healthScore}%` }}
+                    ></div>
                   </div>
                 </div>
 

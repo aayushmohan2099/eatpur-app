@@ -120,7 +120,7 @@
   font-weight: 500;
   font-family: var(--font-display);
   padding: 0.75rem 2rem;
-  border-radius: 4px;
+  border-radius: 25px;
   box-shadow: 0 4px 10px rgba(107, 142, 35, 0.2);
   transition: all 0.3s ease;
   letter-spacing: 0.05em;
@@ -138,7 +138,7 @@
   font-weight: 500;
   font-family: var(--font-display);
   padding: 0.75rem 2rem;
-  border-radius: 4px;
+  border-radius: 25px;
   transition: all 0.3s ease;
   background: transparent;
   letter-spacing: 0.05em;
