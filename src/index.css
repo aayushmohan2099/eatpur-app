@@ -159,6 +159,10 @@
   }
 }
 
+.animate-marquee {
+  animation: marquee 30s linear infinite; /* Adjust 30s to change speed */
+}
+
 .marquee-container {
   display: flex;
   width: max-content;

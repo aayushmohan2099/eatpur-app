@@ -100,7 +100,7 @@ export default function FloatingImagesBackground() {
         ))}
       </div>
 
-      <style jsx>{`
+      <style>{`
         /* Organic floating animation: 
           Moves slowly bottom to top while drifting slightly left/right 
         */

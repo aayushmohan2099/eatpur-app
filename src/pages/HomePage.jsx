@@ -22,30 +22,83 @@ import FloatingImagesBackground from "./FloatingBG/floatingBG";
 const products = [
   {
     id: 1,
-    name: "Sprouted Ragi Flour",
-    price: 149,
-    description: "Calcium-rich sprouted finger millet flour.",
-    category: "Raw Flour",
+    name: "Hakka Multi Millet Noodles Pcs",
+    price: 227,
+    description:
+      "Delicious hakka-style noodles made from nutritious millets, offering a healthy twist to your favorite Indo-Chinese dish.",
+    category: "Ready to Cook",
     healthScore: 92,
-    image: "/Products/Sprouted_Ragi_Flour_202604061614.jpeg",
+    image: "/home/prod-carousel/HakkaMultiMilletNoodles.jpeg",
   },
   {
     id: 2,
-    name: "Millet Noodles",
-    price: 99,
-    description: "Healthy hakka style noodles made purely from millets.",
+    name: "Pasta Multi Millet",
+    price: 171,
+    description:
+      "Wholesome multi-millet pasta packed with fiber and nutrients, perfect for a guilt-free Italian meal.",
     category: "Ready to Cook",
     healthScore: 85,
-    image: "/Products/Millet_noodles_EATPUR_202604061614.jpeg",
+    image: "/home/prod-carousel/PastaMultiMillet.jpeg",
   },
   {
     id: 3,
-    name: "Pearl Millet Cookies",
-    price: 129,
-    description: "Crispy, crunchy bajra cookies sweetened with jaggery.",
+    name: "Roasted Mixture Multi",
+    price: 85,
+    description:
+      "Crunchy roasted millet snack mix, lightly spiced for a healthy and satisfying munch anytime.",
     category: "Ready to Eat",
     healthScore: 78,
-    image: "/Products/Pearl_Millet_Cookies_202604061611.jpeg",
+    image: "/home/prod-carousel/RoastedMixtureMulti.jpeg",
+  },
+  {
+    id: 4,
+    name: "Namkeen Chips Multi Millet Soya based Chatpata Masala",
+    price: 193,
+    description:
+      "Crispy millet and soya-based chips with a tangy chatpata masala flavor, combining taste with nutrition.",
+    category: "Ready to Cook",
+    healthScore: 92,
+    image: "/home/prod-carousel/NamkeenChipsMultiMillet.jpeg",
+  },
+  {
+    id: 5,
+    name: "Cookies Millet Butter Kaju",
+    price: 125,
+    description:
+      "Rich and crunchy millet cookies infused with butter and kaju, offering a healthy indulgent snack.",
+    category: "Ready to Cook",
+    healthScore: 85,
+    image: "/home/prod-carousel/CookiesMilletButterKaju.jpeg",
+  },
+  {
+    id: 6,
+    name: "Millet Energy Bar Chocolate Light",
+    price: 57,
+    description:
+      "Light chocolate-flavored millet energy bar, perfect for a quick healthy boost on the go.",
+    category: "Ready to Eat",
+    healthScore: 78,
+    image: "/home/prod-carousel/MilletEnergyBar.jpeg",
+  },
+  {
+    id: 7,
+    name: "Millet Granola Muesli Chocolate",
+    price: 447,
+    description:
+      "Nutritious millet granola muesli blended with chocolate for a tasty and energizing breakfast option.",
+    category: "Ready to Cook",
+    healthScore: 92,
+    image: "/home/prod-carousel/MilletGranolaMuesli.jpeg",
+  },
+  {
+    id: 8,
+    name: "Multi Flour",
+    price: 207,
+    description:
+      "Premium blend of multiple millets flour, ideal for making healthy rotis, breads, and everyday meals.",
+    category: "Ready to Cook",
+    healthScore: 85,
+    image: "/home/prod-carousel/MultiFlour.jpeg",
   },
 ];
 
@@ -101,61 +154,20 @@ export default function HomePage() {
         {/* ✅ Floating 3D Images Background */}
         <FloatingImagesBackground />
 
-        {/* Soft Gradient Overlay (kept above bg, below content) */}
-        <div className="absolute top-0 left-0 w-full md:w-1/2 h-full bg-gradient-to-r from-eatpur-green-light/80 to-transparent pointer-events-none z-[1]" />
+        {/* Soft Gradient Overlay - Flipped to the right side to keep text readable */}
+        <div className="absolute top-0 right-0 w-full md:w-1/2 h-full bg-gradient-to-l from-eatpur-green-light/90 to-transparent pointer-events-none z-[1]" />
 
-        {/* Content */}
+        {/* Content Container */}
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-12 relative z-10">
-          {/* LEFT SIDE: Texts and Buttons (Untouched) */}
-          <motion.div
-            className="flex-1 flex flex-col items-center md:items-start text-center md:text-left"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <div className="inline-flex items-center gap-2 bg-eatpur-green-dark/10 text-eatpur-dark px-4 py-1.5 rounded-full text-sm font-medium mb-6 backdrop-blur-sm">
-              <FaLeaf className="text-eatpur-green-dark" />
-              <span>100% Natural • No Maida • High Fiber</span>
-            </div>
-
-            <h1 className="text-5xl md:text-7xl font-display text-eatpur-dark leading-tight mb-6 tracking-tight drop-shadow-sm">
-              Millets... <br />
-              Fuel Your Body
-              <br />
-              <span className="italic text-eatpur-green-dark">Naturally</span>
-            </h1>
-
-            <p className="text-eatpur-text text-lg md:text-xl mb-10 max-w-md font-display leading-relaxed drop-shadow-sm">
-              Smart nutrition for modern life – ready in minutes. Pure,
-              wholesome, and tradition-rich grains.
-            </p>
-
-            <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-              <Link
-                to="/products"
-                className="btn-primary flex items-center gap-2 shadow-md hover:shadow-lg transition-shadow"
-              >
-                Shop Now
-              </Link>
-              <Link
-                to="/recipes"
-                className="btn-ghost bg-black/50 backdrop-blur-sm border border-eatpur-dark/20 hover:!bg-[#cf7324]"
-              >
-                Explore Recipes
-              </Link>
-            </div>
-          </motion.div>
-
-          {/* RIGHT SIDE: Stacked Crossfade Carousel */}
-          <div className="flex-1 w-full flex justify-center md:justify-end lg:pr-12">
-            {/* Carousel Container */}
+          {/* LEFT SIDE: Image Carousel */}
+          <div className="flex-1 w-full flex justify-center md:justify-start lg:pr-12">
             <div className="relative w-full max-w-[340px] md:max-w-[400px] aspect-[3/4]">
               {/* Layer 1: The Orange Outline Border (Appears First) */}
               <motion.div
                 initial={{ opacity: 0, rotate: 0, scale: 0.9 }}
                 animate={{ opacity: 1, rotate: 8, scale: 1 }}
                 transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
-                className="absolute inset-0 border-[6px] border-[#E37A2C] z-0 pointer-events-none shadow-lg"
+                className="absolute inset-0 border-[6px] border-[#E37A2C] z-0 pointer-events-none shadow-lg rounded-sm"
               ></motion.div>
 
               {/* Layer 2: The Solid Orange Block (Appears Second) */}
@@ -163,28 +175,26 @@ export default function HomePage() {
                 initial={{ opacity: 0, rotate: 0, scale: 0.9 }}
                 animate={{ opacity: 1, rotate: 4, scale: 1 }}
                 transition={{ duration: 0.6, ease: "easeOut", delay: 0.6 }}
-                className="absolute inset-0 bg-[#E37A2C] z-10 pointer-events-none shadow-md"
+                className="absolute inset-0 bg-[#E37A2C] z-10 pointer-events-none shadow-md rounded-sm"
               ></motion.div>
 
-              {/* Layer 3: The Image Carousel (Appears Third, 1 sec delay relative to the start) */}
+              {/* Layer 3: The Image Carousel */}
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, ease: "easeOut", delay: 1.2 }}
-                // FIXED 1: Applied border directly to container for mathematically perfect, uniform sides
-                className="absolute inset-0 z-20 bg-[#DFD1D1] shadow-xl overflow-hidden border-[4px] md:border-[5px] border-[#E37A2C]"
+                className="absolute inset-0 z-20 bg-[#DFD1D1] shadow-2xl overflow-hidden border-[4px] md:border-[5px] border-[#E37A2C] rounded-sm"
               >
-                <AnimatePresence>
+                <AnimatePresence mode="wait">
                   <motion.div
                     key={currentHeroIndex}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 1.2, ease: "easeInOut" }}
-                    // Padding gives the image breathing room against the border
                     className="absolute inset-0 w-full h-full p-2 md:p-3"
                   >
-                    {/* FIXED 2: Dynamically rendered SVG Filter for the exact requested dissolve animation */}
+                    {/* SVG Filter for Dissolve Animation */}
                     <svg width="0" height="0" className="absolute hidden">
                       <defs>
                         <filter
@@ -239,8 +249,7 @@ export default function HomePage() {
 
                     <img
                       src={heroImages[currentHeroIndex]}
-                      className="w-full h-full object-contain"
-                      // Apply the dynamic filter to the image
+                      className="w-full h-full object-contain mix-blend-multiply"
                       style={{
                         filter: `url(#turbulent-dissolve-${currentHeroIndex})`,
                       }}
@@ -251,6 +260,46 @@ export default function HomePage() {
               </motion.div>
             </div>
           </div>
+
+          {/* RIGHT SIDE: Texts and Buttons */}
+          <motion.div
+            className="flex-1 flex flex-col items-center md:items-start text-center md:text-left lg:pl-8"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
+            <div className="inline-flex items-center gap-2 bg-eatpur-green-dark/10 text-eatpur-dark px-4 py-1.5 rounded-full text-sm font-medium mb-6 backdrop-blur-sm border border-eatpur-green-dark/20 shadow-sm">
+              <FaLeaf className="text-eatpur-green-dark" />
+              <span>100% Natural • No Maida • High Fiber</span>
+            </div>
+
+            <h1 className="text-5xl md:text-7xl font-display text-eatpur-dark leading-tight mb-6 tracking-tight drop-shadow-sm">
+              Millets... <br />
+              Fuel Your Body
+              <br />
+              <span className="italic text-eatpur-green-dark">Naturally</span>
+            </h1>
+
+            <p className="text-eatpur-text text-lg md:text-xl mb-10 max-w-md font-display leading-relaxed drop-shadow-sm">
+              Smart nutrition for modern life – ready in minutes. Pure,
+              wholesome, and tradition-rich grains.
+            </p>
+
+            <div className="flex flex-wrap gap-4 justify-center md:justify-start">
+              <Link
+                to="/products"
+                className="btn-primary flex items-center gap-2 shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
+              >
+                Shop Now
+              </Link>
+              <Link
+                to="/recipes"
+                className="btn-ghost bg-black/50 backdrop-blur-sm border border-eatpur-dark/20 text-white hover:text-white hover:!bg-[#cf7324] hover:border-[#cf7324] shadow-md hover:shadow-xl transition-all duration-300"
+              >
+                Explore Recipes
+              </Link>
+            </div>
+          </motion.div>
         </div>
       </section>
 
@@ -325,8 +374,8 @@ export default function HomePage() {
       </section>
 
       {/* Featured Products */}
-      <section className="py-24 px-6 relative border-t border-black/5">
-        <div className="max-w-7xl mx-auto">
+      <section className="py-24 relative border-t border-black/5 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display text-eatpur-dark mb-4">
               Trending Products
@@ -335,98 +384,114 @@ export default function HomePage() {
               Crafted from nature's finest grains.
             </p>
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {products.map((product, i) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ delay: i * 0.1 }}
-                className="vintage-card overflow-hidden flex flex-col group relative"
+        {/* --- PREMIUM SCROLLING CAROUSEL START --- */}
+        <div className="relative w-full max-w-[100vw] overflow-hidden group">
+          {/* Optional: Premium Fade Masks for the edges */}
+          <div className="absolute top-0 left-0 w-16 md:w-32 h-full bg-gradient-to-r from-white to-transparent z-10 pointer-events-none"></div>
+          <div className="absolute top-0 right-0 w-16 md:w-32 h-full bg-gradient-to-l from-white to-transparent z-10 pointer-events-none"></div>
+
+          {/* The Scrolling Track */}
+          <div className="flex w-max animate-marquee hover:[animation-play-state:paused]">
+            {/* Render the lists twice to create the infinite loop */}
+            {[0, 1].map((loopIndex) => (
+              <div
+                key={loopIndex}
+                className="flex gap-8 px-4"
+                aria-hidden={loopIndex === 1 ? "true" : "false"}
               >
-                {/* --- NEW: Top Right 30% OFF Tag --- */}
-                <div className="absolute top-4 right-4 z-20 bg-[#8B3A2A] text-white font-sans text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full shadow-md">
-                  30% OFF
-                </div>
-
-                <div className="h-64 overflow-hidden p-6 pb-0 flex items-center justify-center bg-white/50 relative">
-                  <motion.img
-                    whileHover={{ scale: 1.05 }}
-                    transition={{ duration: 0.4 }}
-                    src={product.image}
-                    alt={product.name}
-                    className="h-full object-contain drop-shadow-md rounded-t-xl"
-                    loading="lazy"
-                  />
-                  <button
-                    onClick={() => setQuickViewProduct(product)}
-                    className="absolute inset-0 bg-eatpur-white-warm/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm"
+                {products.map((product) => (
+                  <div
+                    key={`${loopIndex}-${product.id}`}
+                    className="vintage-card w-[280px] md:w-[320px] shrink-0 overflow-hidden flex flex-col group/card relative transition-transform duration-300 hover:-translate-y-2 hover:shadow-xl"
                   >
-                    <span className="flex items-center gap-2 border border-eatpur-dark text-eatpur-dark px-6 py-3 rounded-full font-display hover:bg-eatpur-dark hover:text-white transition-colors">
-                      <FaEye /> Quick View
-                    </span>
-                  </button>
-                </div>
-
-                <div className="p-6 flex flex-col flex-1 border-t border-black/5 bg-white">
-                  <span className="text-eatpur-green-dark text-[11px] uppercase tracking-widest font-semibold mb-1">
-                    {product.category}
-                  </span>
-                  <h3 className="text-xl font-display font-medium text-eatpur-dark mb-1">
-                    {product.name}
-                  </h3>
-
-                  {/* Eatpur Health Score Meter */}
-                  <div className="mt-3 mb-4 w-full bg-gray-100 rounded-full h-2 overflow-hidden shadow-inner flex items-center relative">
-                    <div
-                      className="h-full bg-eatpur-green-dark"
-                      style={{ width: `${product.healthScore}%` }}
-                    ></div>
-                    {/* Overlay text would go somewhere nearby usually */}
-                  </div>
-                  <div className="text-xs text-eatpur-text flex justify-between mb-2">
-                    <span className="font-medium text-eatpur-green-dark">
-                      Health Score
-                    </span>
-                    <span className="font-bold">{product.healthScore}/100</span>
-                  </div>
-
-                  <div className="mt-auto flex items-end justify-between pt-4">
-                    <div className="flex flex-col">
-                      <div className="flex items-start gap-1.5 mb-0.5">
-                        <span className="relative text-sm font-sans text-eatpur-text/60">
-                          ₹{product.price}
-                          {/* Diagonal Strikethrough (Top-Right to Bottom-Left) */}
-                          <span className="absolute top-1/2 left-[-10%] w-[120%] h-[1.5px] bg-[#8B3A2A] -rotate-[15deg] origin-center"></span>
-                        </span>
-                      </div>
-                      {/* New Discounted Price */}
-                      <span className="text-xl font-bold text-[#3A5A1C]">
-                        ₹{Math.round(product.price * 0.7)}
-                      </span>
+                    {/* Top Right 30% OFF Tag */}
+                    <div className="absolute top-4 right-4 z-20 bg-[#8B3A2A] text-white font-sans text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full shadow-md">
+                      30% OFF
                     </div>
 
-                    <button
-                      onClick={() =>
-                        dispatch({ type: "ADD_ITEM", payload: product })
-                      }
-                      className="w-10 h-10 rounded-full border border-eatpur-dark/20 flex items-center justify-center text-eatpur-dark hover:bg-eatpur-green-dark hover:border-eatpur-green-dark hover:text-white transition-all transform hover:scale-105"
-                      aria-label="Add to cart"
-                    >
-                      <FaCartShopping size={14} />
-                    </button>
+                    <div className="h-64 overflow-hidden p-6 pb-0 flex items-center justify-center bg-white/50 relative">
+                      <motion.img
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ duration: 0.4 }}
+                        src={product.image}
+                        alt={product.name}
+                        className="h-full object-contain drop-shadow-md rounded-t-xl"
+                        loading="lazy"
+                      />
+                      <button
+                        onClick={() => setQuickViewProduct(product)}
+                        className="absolute inset-0 bg-eatpur-white-warm/80 flex items-center justify-center opacity-0 group-hover/card:opacity-100 transition-opacity backdrop-blur-sm"
+                      >
+                        <span className="flex items-center gap-2 border border-eatpur-dark text-eatpur-dark px-6 py-3 rounded-full font-display hover:bg-eatpur-dark hover:text-white transition-colors">
+                          <FaEye /> Quick View
+                        </span>
+                      </button>
+                    </div>
+
+                    <div className="p-6 flex flex-col flex-1 border-t border-black/5 bg-white">
+                      <span className="text-eatpur-green-dark text-[11px] uppercase tracking-widest font-semibold mb-1">
+                        {product.category}
+                      </span>
+                      <h3 className="text-xl font-display font-medium text-eatpur-dark mb-1">
+                        {product.name}
+                      </h3>
+
+                      {/* Eatpur Health Score Meter */}
+                      <div className="mt-3 mb-4 w-full bg-gray-100 rounded-full h-2 overflow-hidden shadow-inner flex items-center relative">
+                        <div
+                          className="h-full bg-eatpur-green-dark"
+                          style={{ width: `${product.healthScore}%` }}
+                        ></div>
+                      </div>
+                      <div className="text-xs text-eatpur-text flex justify-between mb-2">
+                        <span className="font-medium text-eatpur-green-dark">
+                          Health Score
+                        </span>
+                        <span className="font-bold">
+                          {product.healthScore}/100
+                        </span>
+                      </div>
+
+                      <div className="mt-auto flex items-end justify-between pt-4">
+                        <div className="flex flex-col">
+                          <div className="flex items-start gap-1.5 mb-0.5">
+                            <span className="relative text-sm font-sans text-eatpur-text/60">
+                              ₹{product.price}
+                              {/* Diagonal Strikethrough */}
+                              <span className="absolute top-1/2 left-[-10%] w-[120%] h-[1.5px] bg-[#8B3A2A] -rotate-[15deg] origin-center"></span>
+                            </span>
+                          </div>
+                          {/* New Discounted Price */}
+                          <span className="text-xl font-bold text-[#3A5A1C]">
+                            ₹{Math.round(product.price - product.price * 0.3)}
+                          </span>
+                        </div>
+
+                        <button
+                          onClick={() =>
+                            dispatch({ type: "ADD_ITEM", payload: product })
+                          }
+                          className="w-10 h-10 rounded-full border border-eatpur-dark/20 flex items-center justify-center text-eatpur-dark hover:bg-eatpur-green-dark hover:border-eatpur-green-dark hover:text-white transition-all transform hover:scale-105"
+                          aria-label="Add to cart"
+                        >
+                          <FaCartShopping size={14} />
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
+                ))}
+              </div>
             ))}
           </div>
-          <div className="mt-12 text-center">
-            <Link to="/products" className="btn-ghost shadow-sm">
-              View All Products
-            </Link>
-          </div>
+        </div>
+        {/* --- PREMIUM SCROLLING CAROUSEL END --- */}
+
+        <div className="mt-12 text-center">
+          <Link to="/products" className="btn-ghost shadow-sm">
+            View All Products
+          </Link>
         </div>
       </section>
 
