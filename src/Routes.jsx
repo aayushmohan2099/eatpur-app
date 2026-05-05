@@ -2,9 +2,9 @@ import React from "react";
 import { Routes, Route } from "react-router-dom";
 import MainLayout from "./layout/MainLayout";
 import HomePage from "./pages/HomePage";
-import BlogsPage from "./pages/BlogsPage";
-import BlogWriter from "./pages/BlogWriter";
-import PreviewBlog from "./pages/PreviewBlog";
+import BlogsPage from "./pages/Blog/BlogsPage";
+import BlogWriter from "./pages/Blog/BlogWriter";
+import PreviewBlog from "./pages/Blog/PreviewBlog";
 import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
 import ProductsPage from "./pages/ProductsPage";
@@ -52,9 +52,11 @@ export default function AppRoutes() {
         {/* Authoring tools */}
         <Route path="/write-blog" element={<BlogWriter />} />
         <Route path="/preview-blog" element={<PreviewBlog />} />
+        <Route path="/preview-blog/:id" element={<PreviewBlog />} />
 
         {/* Login */}
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<LoginPage />} />
         <Route path="/user/dashboard" element={<Dashboard />} />
       </Route>
     </Routes>

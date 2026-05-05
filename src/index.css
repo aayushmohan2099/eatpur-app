@@ -19,9 +19,9 @@
   --color-eatpur-white-warm: #F4F8F2;
   /* Cream/Off-white */
 
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Playfair Display", serif;
-  --font-serif: "Playfair Display", serif;
+  --font-sans: "Satoshi", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Clash Display", serif;
+  --font-serif: "Georgia", serif;
 }
 
 @layer base {

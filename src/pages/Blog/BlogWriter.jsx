@@ -4,18 +4,17 @@ import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { Color } from "@tiptap/extension-color";
-import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-import { createBlog } from "../api/blogs";
+import { useNavigate, useLocation } from "react-router-dom";
+import { createBlog } from "../../api/blogs";
 import TextAlign from "@tiptap/extension-text-align";
-import { useLocation } from "react-router-dom";
 
 export default function BlogWriter() {
   const navigate = useNavigate();
+  const { state } = useLocation();
   const [title, setTitle] = useState("");
+  const [metaDescription, setMetaDescription] = useState("");
   const [images, setImages] = useState([]);
   const [coverImage, setCoverImage] = useState(null);
-  const { state } = useLocation();
   const [charCount, setCharCount] = useState(0);
   const MAX_CHARS = 5000;
 
@@ -41,6 +40,7 @@ export default function BlogWriter() {
     }
     if (!draft) return;
     if (draft.title) setTitle(draft.title);
+    if (draft.metaDescription) setMetaDescription(draft.metaDescription);
     if (draft.images) setImages(draft.images);
     if (draft.coverImage) setCoverImage(draft.coverImage);
   }, [state]);
@@ -72,7 +72,13 @@ export default function BlogWriter() {
   };
 
   const handlePreview = () => {
-    const draft = { title, coverImage, images, editorJSON: editor.getJSON() };
+    const draft = {
+      title,
+      metaDescription,
+      coverImage,
+      images,
+      editorJSON: editor.getJSON(),
+    };
     localStorage.setItem("blog_draft", JSON.stringify(draft));
     navigate("/preview-blog", {
       state: { ...draft, content: editor.getHTML() },
@@ -108,8 +114,15 @@ export default function BlogWriter() {
       }
       if (node.type === "image") {
         const matched = images.find((img) => img.url === node.attrs.src);
-        if (matched && matched.file instanceof File) {
-          blocks.push({ type: "image", file: matched.file, order: order++ });
+        if (matched) {
+          if (matched.file instanceof File || matched.file instanceof Blob) {
+            blocks.push({ type: "image", file: matched.file, order: order++ });
+          } else {
+            alert(
+              "Warning: One or more content images were loaded from a draft. Please re-insert them, or they won't be published.",
+            );
+            throw new Error("Draft images invalid");
+          }
         }
       }
     });
@@ -120,27 +133,31 @@ export default function BlogWriter() {
     const text = editor.getText();
     if (text.length > MAX_CHARS)
       return alert("More than 5000 characters not allowed ❌");
+
     try {
-      const author = prompt("Enter Author Name");
-      const email = prompt("Enter Email (optional)");
-      if (!title || !author) return alert("Title and Author required");
+      if (!title) return alert("Title is required");
 
       const blocks = buildBlocks(editor.getJSON(), images);
       const formData = new FormData();
+
       formData.append("title", title);
-      formData.append("author", author);
-      formData.append("is_active", "1");
-      formData.append("is_published", "1");
+      formData.append("is_published", "True");
+
+      // Auto-generate meta description if left blank (max 160 chars)
+      const finalMetaDesc = metaDescription || text.slice(0, 120) + "...";
+      formData.append("meta_description", finalMetaDesc);
+
       if (coverImage) {
         const coverFile = images.find((i) => i.url === coverImage)?.file;
-        if (coverFile) formData.append("cover_image", coverFile);
+        // SURGICAL FIX: Ensure it is an actual File object, not a dead object from localStorage
+        if (coverFile instanceof File || coverFile instanceof Blob) {
+          formData.append("cover_image", coverFile);
+        } else {
+          return alert(
+            "Your cover image was loaded from a saved draft and cannot be uploaded. Please remove it and re-select the image.",
+          );
+        }
       }
-      const slugify = (text) =>
-        text
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/(^-|-$)/g, "");
-      formData.append("slug", slugify(title) + "-" + Date.now());
 
       blocks.forEach((block, i) => {
         formData.append(`blocks[${i}][type]`, block.type);
@@ -154,8 +171,13 @@ export default function BlogWriter() {
       await createBlog(formData);
       alert("Blog published successfully 🚀");
       localStorage.removeItem("blog_draft");
+      // Optional: navigate away after success
+      // navigate("/blogs");
     } catch (err) {
-      alert(JSON.stringify(err.response?.data || "Error", null, 2));
+      console.error(err);
+      alert(
+        JSON.stringify(err.response?.data || "Error publishing blog", null, 2),
+      );
     }
   };
 
@@ -164,13 +186,24 @@ export default function BlogWriter() {
   return (
     <div className="w-full min-h-screen top-5 pt-24 pb-32 px-6 relative z-10 bg-eatpur-white-warm">
       <div className="max-w-4xl mx-auto vintage-card p-8 md:p-12 rounded-2xl bg-white border border-black/5 shadow-sm">
+        {/* Title Input */}
         <input
           placeholder="Your Story Title..."
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full text-4xl md:text-5xl font-display bg-transparent border-b border-black/10 pb-4 text-eatpur-dark focus:outline-none focus:border-eatpur-green-dark transition-colors mb-8 placeholder:text-eatpur-text-light"
+          className="w-full text-4xl md:text-5xl font-display bg-transparent border-b border-black/10 pb-4 text-eatpur-dark focus:outline-none focus:border-eatpur-green-dark transition-colors mb-4 placeholder:text-eatpur-text-light"
         />
 
+        {/* SEO Meta Description Input */}
+        <textarea
+          placeholder="A short summary for SEO (optional)..."
+          value={metaDescription}
+          onChange={(e) => setMetaDescription(e.target.value.slice(0, 160))}
+          className="w-full text-base font-sans bg-transparent border border-black/10 rounded-lg p-3 text-eatpur-dark focus:outline-none focus:border-eatpur-green-dark transition-colors mb-8 placeholder:text-eatpur-text-light resize-none"
+          rows={2}
+        />
+
+        {/* Toolbar */}
         <div className="flex flex-wrap gap-2 mb-8">
           {["Bold", "Italic"].map((action) => (
             <button
@@ -200,6 +233,7 @@ export default function BlogWriter() {
           ))}
         </div>
 
+        {/* Editor Area */}
         <div className="relative rounded-xl border border-black/10 bg-eatpur-white-warm p-6 min-h-[400px] focus-within:border-eatpur-green-dark/50 transition-colors shadow-inner font-serif text-lg">
           <EditorContent
             editor={editor}
@@ -207,12 +241,14 @@ export default function BlogWriter() {
           />
         </div>
 
+        {/* Character Count */}
         <div
           className={`text-right text-sm mt-2 ${charCount > MAX_CHARS ? "text-red-500 font-medium" : "text-eatpur-text-light"}`}
         >
           {charCount} / {MAX_CHARS}
         </div>
 
+        {/* Cover Image */}
         <div className="mt-12">
           <h3 className="text-xl font-display text-eatpur-dark mb-4">
             Cover Image
@@ -256,6 +292,7 @@ export default function BlogWriter() {
           </label>
         </div>
 
+        {/* Content Images Manager */}
         <div className="mt-8">
           <label className="inline-flex cursor-pointer px-6 py-2 rounded-full border border-eatpur-green-dark/30 bg-white text-eatpur-green-dark items-center gap-2 hover:bg-eatpur-green-light/20 transition-colors font-medium shadow-sm">
             <span className="text-xl leading-none">+</span> Add Content Images
@@ -298,6 +335,7 @@ export default function BlogWriter() {
           </div>
         )}
 
+        {/* Actions */}
         <div className="flex flex-col items-end gap-4 mt-12 pt-8 border-t border-black/5">
           {charCount > MAX_CHARS && (
             <div className="text-red-500 text-sm font-medium">

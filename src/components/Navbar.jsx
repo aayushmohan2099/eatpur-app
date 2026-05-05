@@ -77,16 +77,18 @@ export default function Navbar() {
         {/* Changed wrapper to purely flex items-center */}
         <div className="w-full max-w-[1440px] mx-auto px-6 lg:px-12 py-4 flex items-center">
           {/* 1. Left: Logo (flex-1 forces it to take equal space as the right side) */}
-          <div className="flex-1 flex items-center justify-start">
-            <NavLink
-              to="/"
-              className="flex-shrink-0 decoration-transparent group"
-            >
-              <img
-                src={Logo}
-                alt="Eatpur Naturals Logo"
-                className="w-24 md:w-30 lg:w-36 h-auto transition-transform duration-500 ease-out group-hover:scale-[1.02]"
-              />
+          <div className="flex-1 flex items-center justify-start h-full">
+            <NavLink to="/" className="flex items-center h-full group">
+              <div className="relative flex items-center justify-center">
+                {/* Logo */}
+                <img
+                  src={Logo}
+                  alt="Eatpur Naturals Logo"
+                  className="relative z-10 w-28 md:w-32 lg:w-36 h-auto object-contain 
+                  drop-shadow-[0_10px_20px_rgba(0,0,0,0.25)] 
+                  transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+                />
+              </div>
             </NavLink>
           </div>
 

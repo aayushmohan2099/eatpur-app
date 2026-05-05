@@ -39,7 +39,7 @@ const TEAM = [
     name: "Devesh Srivastava",
     role: "Co-Founder",
     pic: "/team/devesh.png",
-  }
+  },
 ];
 const founder = TEAM[0];
 const others = TEAM.slice(1);
@@ -58,14 +58,14 @@ export default function AboutPage() {
   useEffect(() => {
     if (carouselRef.current) {
       setCarouselWidth(
-        carouselRef.current.scrollWidth - carouselRef.current.offsetWidth
+        carouselRef.current.scrollWidth - carouselRef.current.offsetWidth,
       );
     }
     // Optional: Recalculate on window resize
     const handleResize = () => {
       if (carouselRef.current) {
         setCarouselWidth(
-          carouselRef.current.scrollWidth - carouselRef.current.offsetWidth
+          carouselRef.current.scrollWidth - carouselRef.current.offsetWidth,
         );
       }
     };
@@ -83,7 +83,12 @@ export default function AboutPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <img src="/icons/flourish-top.png" alt="" className="h-6 mx-auto mb-4 opacity-50" onError={(e) => e.target.style.display = 'none'} />
+          <img
+            src="/icons/flourish-top.png"
+            alt=""
+            className="h-6 mx-auto mb-4 opacity-50"
+            onError={(e) => (e.target.style.display = "none")}
+          />
           <h1 className="text-6xl md:text-8xl font-serif text-[#2E2410] mb-6 leading-[1.1] tracking-tight">
             Our Story
           </h1>
@@ -127,7 +132,9 @@ export default function AboutPage() {
               <h3 className="text-2xl font-serif font-semibold text-[#2E2410] mb-4">
                 {item.title}
               </h3>
-              <p className="text-[#5C4F3A] font-sans leading-relaxed">{item.text}</p>
+              <p className="text-[#5C4F3A] font-sans leading-relaxed">
+                {item.text}
+              </p>
             </motion.div>
           ))}
         </div>
@@ -138,7 +145,7 @@ export default function AboutPage() {
         <div className="flex flex-col md:flex-row gap-16 items-center">
           <div className="md:w-1/2">
             <h2 className="text-4xl md:text-5xl text-[#2E2410] font-serif mb-6 leading-tight">
-              Rooted in Tradition
+              Message from the Founder
             </h2>
             <div className="w-16 h-1 bg-[#6B8E23] rounded-full mb-6"></div>
             <p className="text-[#5C4F3A] font-sans leading-relaxed text-lg mb-6">
@@ -219,7 +226,9 @@ export default function AboutPage() {
         <h2 className="text-4xl md:text-5xl font-serif text-[#2E2410] mb-4 text-center leading-[1] py-2">
           Meet Our Team
         </h2>
-        <div className="leaf-divider mx-auto mb-16"><span></span></div>
+        <div className="leaf-divider mx-auto mb-16">
+          <span></span>
+        </div>
 
         {/* 🌟 Founder (TOP CENTER) */}
         <div className="flex justify-center mb-16">
@@ -232,7 +241,9 @@ export default function AboutPage() {
                 <img
                   src={founder.pic}
                   alt={founder.name}
-                  onError={(e) => { e.target.src = getFallbackAvatar(founder.name, 200) }}
+                  onError={(e) => {
+                    e.target.src = getFallbackAvatar(founder.name, 200);
+                  }}
                   className="h-[100%] w-full object-cover object-top"
                 />
               </div>
@@ -277,7 +288,9 @@ export default function AboutPage() {
                       <img
                         src={member.pic}
                         alt={member.name}
-                        onError={(e) => { e.target.src = getFallbackAvatar(member.name, 150) }}
+                        onError={(e) => {
+                          e.target.src = getFallbackAvatar(member.name, 150);
+                        }}
                         className="h-[95%] w-full object-cover object-[center_top]"
                       />
                     </div>

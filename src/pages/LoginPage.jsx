@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { getCaptcha, loginUser, registerUser } from "../api/authApi";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function AuthPage() {
   const [captcha, setCaptcha] = useState(null);
-  const [isLogin, setIsLogin] = useState(true);
+  const location = useLocation();
+  const [isLogin, setIsLogin] = useState(location.pathname !== "/signup");
   const [errors, setErrors] = useState({});
 
   const [form, setForm] = useState({
@@ -141,11 +142,20 @@ export default function AuthPage() {
               </h1>
 
               <ul className="text-white/80 space-y-3 font-serif text-[15px]">
-                <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-white opacity-70"></span> Username must be unique</li>
-                <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-white opacity-70"></span> Enter a valid email (example@gmail.com)</li>
-                <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-white opacity-70"></span> Mobile must be exactly 10 digits</li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1 h-1 rounded-full bg-white opacity-70"></span>{" "}
+                  Username must be unique
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1 h-1 rounded-full bg-white opacity-70"></span>{" "}
+                  Enter a valid email (example@gmail.com)
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1 h-1 rounded-full bg-white opacity-70"></span>{" "}
+                  Mobile must be exactly 10 digits
+                </li>
                 <li className="flex items-start gap-2">
-                  <span className="w-1 h-1 rounded-full bg-white opacity-70 mt-2"></span> 
+                  <span className="w-1 h-1 rounded-full bg-white opacity-70 mt-2"></span>
                   <div>
                     Password must include:
                     <ul className="ml-4 mt-1 space-y-1 text-white/70 italic text-sm">
@@ -156,8 +166,14 @@ export default function AuthPage() {
                     </ul>
                   </div>
                 </li>
-                <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-white opacity-70"></span> Confirm password must match</li>
-                <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-white opacity-70"></span> Complete CAPTCHA to verify</li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1 h-1 rounded-full bg-white opacity-70"></span>{" "}
+                  Confirm password must match
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1 h-1 rounded-full bg-white opacity-70"></span>{" "}
+                  Complete CAPTCHA to verify
+                </li>
               </ul>
             </div>
           )}
@@ -168,17 +184,27 @@ export default function AuthPage() {
           {/* Toggle */}
           <div className="flex mb-8 bg-eatpur-white-warm p-1 rounded-xl overflow-hidden border border-black/5 shadow-inner">
             <button
-              onClick={() => setIsLogin(true)}
+              onClick={() => {
+                setIsLogin(true);
+                navigate("/login");
+              }}
               className={`w-1/2 py-2.5 text-sm font-medium rounded-lg transition-all ${
-                isLogin ? "bg-white text-eatpur-green-dark shadow-sm border border-black/5" : "text-eatpur-text-light hover:text-eatpur-dark"
+                isLogin
+                  ? "bg-white text-eatpur-green-dark shadow-sm border border-black/5"
+                  : "text-eatpur-text-light hover:text-eatpur-dark"
               }`}
             >
               Sign In
             </button>
             <button
-              onClick={() => setIsLogin(false)}
+              onClick={() => {
+                setIsLogin(false);
+                navigate("/signup");
+              }}
               className={`w-1/2 py-2.5 text-sm font-medium rounded-lg transition-all ${
-                !isLogin ? "bg-white text-eatpur-green-dark shadow-sm border border-black/5" : "text-eatpur-text-light hover:text-eatpur-dark"
+                !isLogin
+                  ? "bg-white text-eatpur-green-dark shadow-sm border border-black/5"
+                  : "text-eatpur-text-light hover:text-eatpur-dark"
               }`}
             >
               Register
@@ -198,7 +224,9 @@ export default function AuthPage() {
                 onChange={(e) => setForm({ ...form, username: e.target.value })}
               />
               {errors.username && (
-                <p className="text-red-500 text-xs mt-1.5 ml-1 font-medium">{errors.username}</p>
+                <p className="text-red-500 text-xs mt-1.5 ml-1 font-medium">
+                  {errors.username}
+                </p>
               )}
             </div>
 
@@ -218,7 +246,9 @@ export default function AuthPage() {
                     }}
                   />
                   {errors.mobile && (
-                    <p className="text-red-500 text-xs mt-1.5 ml-1 font-medium">{errors.mobile}</p>
+                    <p className="text-red-500 text-xs mt-1.5 ml-1 font-medium">
+                      {errors.mobile}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -226,7 +256,9 @@ export default function AuthPage() {
                     type="email"
                     placeholder="Email"
                     className="w-full p-3.5 rounded-xl bg-eatpur-white-warm border border-black/10 focus:border-eatpur-green-dark outline-none text-eatpur-dark placeholder:text-eatpur-text-light shadow-inner font-serif transition-colors"
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, email: e.target.value })
+                    }
                   />
                 </div>
                 <div>
@@ -255,7 +287,9 @@ export default function AuthPage() {
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
               />
               {errors.password && (
-                <p className="text-red-500 text-xs mt-1.5 ml-1 font-medium">{errors.password}</p>
+                <p className="text-red-500 text-xs mt-1.5 ml-1 font-medium">
+                  {errors.password}
+                </p>
               )}
             </div>
 
@@ -287,7 +321,9 @@ export default function AuthPage() {
                     }
                   />
                   {errors.captcha && (
-                    <p className="text-red-500 text-xs mt-1.5 ml-1 font-medium text-center">{errors.captcha}</p>
+                    <p className="text-red-500 text-xs mt-1.5 ml-1 font-medium text-center">
+                      {errors.captcha}
+                    </p>
                   )}
                 </div>
               </div>
