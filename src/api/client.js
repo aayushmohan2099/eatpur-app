@@ -1,6 +1,6 @@
 import { decryptResponse } from "../utils/decrypt";
 
-const BASE_URL = "http://66.116.207.88:2203/api";
+const BASE_URL = "https://eatpur.in/api";
 
 // 🔥 Added: Queue for holding requests while the token is seamlessly refreshing
 let isRefreshing = false;
