@@ -124,6 +124,19 @@ export default function BlogsPage() {
         </div>
       </motion.div>
 
+      {/* Hero Section */}
+      <section className="pt-16 pb-12 px-6 relative flex flex-col items-center justify-center text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <p className="text-xl md:text-2xl font-serif italic text-[#5C4F3A] max-w-2xl mx-auto">
+            View all our Blogs below,
+          </p>
+        </motion.div>
+      </section>
+
       {/* Search & Filter Bar */}
       <div className="max-w-4xl mx-auto mb-12">
         <div className="relative flex items-center w-full shadow-sm rounded-full bg-white border border-black/10 overflow-hidden focus-within:border-eatpur-green-dark transition-colors">

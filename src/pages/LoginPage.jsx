@@ -7,6 +7,7 @@ export default function AuthPage() {
   const location = useLocation();
   const [isLogin, setIsLogin] = useState(location.pathname !== "/signup");
   const [errors, setErrors] = useState({});
+  const [successMessage, setSuccessMessage] = useState("");
 
   const [form, setForm] = useState({
     username: "",
@@ -47,38 +48,74 @@ export default function AuthPage() {
         res = await registerUser(payload);
       }
 
-      if (res.access) {
+      // 🔥 SURGICAL FIX: Since native fetch doesn't throw on 400 errors,
+      // the decoded backend error JSON lands right here!
+      if (res && (res.errors || res.error || (res.detail && !res.access))) {
+        setErrors(res.errors || res.error || { detail: res.detail });
+        setSuccessMessage("");
+        fetchCaptcha();
+        return; // Stop execution
+      }
+
+      if (res && res.access) {
         localStorage.setItem("access", res.access);
         localStorage.setItem("refresh", res.refresh);
 
-        // SURGICAL INJECTION: Extract role name and route conditionally
+        // Extract role name for UI state (like Navbars)
         const userRole = res.user?.role_name || "CUSTOMER";
         localStorage.setItem("role", userRole);
 
-        switch (userRole) {
-          case "ADMIN":
-            navigate("/admin/dashboard");
-            break;
-          case "STAFF":
-            navigate("/staff/dashboard");
-            break;
-          case "INVENTORY_MANAGER":
-            navigate("/inventory/dashboard");
-            break;
-          case "CUSTOMER":
-          default:
-            navigate("/user/dashboard");
-            break;
-        }
+        // Show success message and clear any errors
+        setErrors({});
+        setSuccessMessage(
+          isLogin
+            ? "Login successful! Redirecting..."
+            : "Account created successfully! Redirecting...",
+        );
+
+        // Delay redirect by 1.5 seconds so the user can see the message
+        setTimeout(() => {
+          navigate("/");
+        }, 1500);
       }
     } catch (err) {
-      const backendErrors = err?.errors || {};
+      let backendErrors = {};
 
-      setErrors((prev) => ({
-        ...prev,
-        ...backendErrors,
-      }));
+      // Handle pure network crashes or edge-case decoding failures
+      const rawBase64 = err?.response?.data?.data || err?.data;
 
+      if (typeof rawBase64 === "string") {
+        try {
+          const standard = rawBase64.replace(/-/g, "+").replace(/_/g, "/");
+          const padded = standard.padEnd(
+            standard.length + ((4 - (standard.length % 4)) % 4),
+            "=",
+          );
+          const decodedStr = new TextDecoder().decode(
+            Uint8Array.from(atob(padded), (m) => m.codePointAt(0)),
+          );
+
+          if (decodedStr.startsWith("HEALTHY_LIFE")) {
+            const parsed = JSON.parse(decodedStr.slice(12));
+            backendErrors = parsed.errors || parsed;
+          } else {
+            backendErrors = { detail: "Invalid secure response prefix." };
+          }
+        } catch (e) {
+          backendErrors = { detail: "Failed to parse secure server response." };
+        }
+      } else if (err?.response?.data?.errors || err?.errors) {
+        backendErrors = err?.response?.data?.errors || err?.errors;
+      } else if (typeof err?.message === "string") {
+        backendErrors = { detail: err.message };
+      } else {
+        backendErrors = {
+          detail: "Authentication failed. Please check your details.",
+        };
+      }
+
+      setSuccessMessage("");
+      setErrors(backendErrors);
       fetchCaptcha();
     }
   };
@@ -245,6 +282,46 @@ export default function AuthPage() {
             {isLogin ? "Welcome Back" : "Create Account"}
           </h2>
 
+          {/* SUCCESS MESSAGE */}
+          {successMessage && (
+            <div className="mb-6 p-3.5 rounded-xl border border-green-200 bg-green-50 text-green-700 text-sm font-medium flex items-center justify-center gap-2 shadow-sm animate-pulse">
+              <span>✅</span> {successMessage}
+            </div>
+          )}
+
+          {/* GLOBAL ERRORS SUMMARY */}
+          {Object.keys(errors).length > 0 && (
+            <div className="mb-6 p-4 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm font-medium flex items-start gap-3 shadow-sm">
+              <span className="text-lg leading-none mt-0.5">⚠️</span>
+              <ul className="flex flex-col gap-1.5 list-disc list-inside w-full">
+                {Object.entries(errors).map(([field, msg]) => {
+                  // Normalize field name
+                  const displayField =
+                    field === "detail" || field === "non_field_errors"
+                      ? "Error"
+                      : field.replace(/_/g, " ");
+
+                  // Safely extract string from array or object
+                  let displayMsg = msg;
+                  if (Array.isArray(msg)) {
+                    displayMsg = msg.join(" | ");
+                  } else if (typeof msg === "object" && msg !== null) {
+                    displayMsg = JSON.stringify(msg);
+                  }
+
+                  return (
+                    <li key={field} className="break-words">
+                      <span className="capitalize font-bold mr-1">
+                        {displayField}:
+                      </span>
+                      {displayMsg}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-5 font-sans">
             <div>
               <input
@@ -253,9 +330,12 @@ export default function AuthPage() {
                 className="w-full p-3.5 rounded-xl bg-eatpur-white-warm border border-black/10 focus:border-eatpur-green-dark outline-none text-eatpur-dark placeholder:text-eatpur-text-light shadow-inner font-serif transition-colors"
                 onChange={(e) => setForm({ ...form, username: e.target.value })}
               />
+              {/* Note: We handle fields globally above, but keeping this for immediate field context if needed */}
               {errors.username && (
                 <p className="text-red-500 text-xs mt-1.5 ml-1 font-medium">
-                  {errors.username}
+                  {Array.isArray(errors.username)
+                    ? errors.username[0]
+                    : errors.username}
                 </p>
               )}
             </div>
@@ -271,13 +351,14 @@ export default function AuthPage() {
                     className="w-full p-3.5 rounded-xl bg-eatpur-white-warm border border-black/10 focus:border-eatpur-green-dark outline-none text-eatpur-dark placeholder:text-eatpur-text-light shadow-inner font-serif transition-colors"
                     onChange={(e) => {
                       const value = e.target.value.replace(/\D/g, "");
-
                       setForm({ ...form, mobile: value });
                     }}
                   />
                   {errors.mobile && (
                     <p className="text-red-500 text-xs mt-1.5 ml-1 font-medium">
-                      {errors.mobile}
+                      {Array.isArray(errors.mobile)
+                        ? errors.mobile[0]
+                        : errors.mobile}
                     </p>
                   )}
                 </div>
@@ -290,6 +371,13 @@ export default function AuthPage() {
                       setForm({ ...form, email: e.target.value })
                     }
                   />
+                  {errors.email && (
+                    <p className="text-red-500 text-xs mt-1.5 ml-1 font-medium">
+                      {Array.isArray(errors.email)
+                        ? errors.email[0]
+                        : errors.email}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <input
@@ -302,7 +390,9 @@ export default function AuthPage() {
                   />
                   {errors.password_confirm && (
                     <p className="text-red-500 text-xs mt-1.5 ml-1 font-medium">
-                      {errors.password_confirm}
+                      {Array.isArray(errors.password_confirm)
+                        ? errors.password_confirm[0]
+                        : errors.password_confirm}
                     </p>
                   )}
                 </div>
@@ -318,7 +408,9 @@ export default function AuthPage() {
               />
               {errors.password && (
                 <p className="text-red-500 text-xs mt-1.5 ml-1 font-medium">
-                  {errors.password}
+                  {Array.isArray(errors.password)
+                    ? errors.password[0]
+                    : errors.password}
                 </p>
               )}
             </div>
@@ -352,7 +444,9 @@ export default function AuthPage() {
                   />
                   {errors.captcha && (
                     <p className="text-red-500 text-xs mt-1.5 ml-1 font-medium text-center">
-                      {errors.captcha}
+                      {Array.isArray(errors.captcha)
+                        ? errors.captcha[0]
+                        : errors.captcha}
                     </p>
                   )}
                 </div>
