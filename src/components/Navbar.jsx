@@ -12,6 +12,8 @@ import { useCart } from "../context/CartContext";
 import Chatbot from "./Chatbot";
 import { getMe, logoutUser } from "../api/authApi";
 import Logo from "../assets/Logo3D.png";
+import ShopNowButton from "./SpcBtns/ShopNow/ShopNow";
+import { useUserRole } from "../utils/useUserRole";
 
 export default function Navbar() {
   const { state, dispatch } = useCart();
@@ -20,9 +22,22 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const { isAdmin, isStaff, isInventoryManager } = useUserRole();
+  const getDashboardConfig = () => {
+    if (isAdmin) return { path: "/admin/dashboard", label: "Admin Panel" };
+    if (isStaff) return { path: "/staff/dashboard", label: "Staff Panel" };
+    if (isInventoryManager)
+      return { path: "/inventory/dashboard", label: "Inventory" };
+    return { path: "/user/dashboard", label: "Profile" };
+  };
+
+  const { path: dashboardPath, label: dashboardLabel } = getDashboardConfig();
+
   const [user, setUser] = useState(null);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [loadingUser, setLoadingUser] = useState(true);
+  const [showFloatingButton, setShowFloatingButton] = useState(false);
+  const [hideShopButton, setHideShopButton] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("access");
@@ -62,6 +77,20 @@ export default function Navbar() {
     0,
   );
 
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 180) {
+        setShowFloatingButton(true);
+      } else {
+        setShowFloatingButton(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   const navItems = [
     { label: "Home", path: "/" },
     { label: "Products", path: "/products" },
@@ -73,7 +102,21 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="w-full relative z-[60] bg-transparent border-b border-[#D4C4A8]/40">
+      <nav
+        className="
+        w-full
+        sticky
+        top-0
+        z-[100]
+        border-b
+        border-[#D4C4A8]/20
+        bg-[#FAFDF8]/55
+        backdrop-blur-xl
+        shadow-[0_8px_30px_rgba(76,122,79,0.08)]
+        transition-all
+        duration-500
+      "
+      >
         {/* Changed wrapper to purely flex items-center */}
         <div className="w-full max-w-[1440px] mx-auto px-6 lg:px-12 py-4 flex items-center">
           {/* 1. Left: Logo (flex-1 forces it to take equal space as the right side) */}
@@ -147,13 +190,50 @@ export default function Navbar() {
             {/* User Menu (Desktop) */}
             <div className="relative user-menu hidden lg:block">
               {!user ? (
-                <button
-                  onClick={() => navigate("/login")}
-                  className="relative text-[14px] xl:text-[15px] hover:text-[#6B8E23] transition-colors font-serif font-medium tracking-wide group"
-                >
-                  Subscribe
-                  <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-[#6B8E23] transition-all duration-300 group-hover:w-full"></span>
-                </button>
+                <>
+                  <button
+                    onClick={() => navigate("/login")}
+                    className="relative text-[14px] xl:text-[15px] hover:text-[#6B8E23] transition-colors font-serif font-medium tracking-wide group"
+                  >
+                    Subscribe
+                    <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-[#6B8E23] transition-all duration-300 group-hover:w-full"></span>
+                  </button>
+
+                  <AnimatePresence>
+                    {showFloatingButton && !hideShopButton && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -140 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{
+                          opacity: 0,
+                          y: -60,
+                          scale: 0.9,
+                          filter: "blur(6px)",
+                        }}
+                        transition={{
+                          duration: 0.7,
+                          ease: [0.22, 1, 0.36, 1],
+                        }}
+                        className="
+                          absolute
+                          top-[72px]
+                          right-0
+                          z-[90]
+                        "
+                      >
+                        <ShopNowButton
+                          onClick={() => {
+                            setHideShopButton(true);
+
+                            setTimeout(() => {
+                              navigate("/products");
+                            }, 350);
+                          }}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </>
               ) : (
                 <>
                   <button
@@ -174,11 +254,11 @@ export default function Navbar() {
                         className="absolute right-0 mt-6 w-52 bg-[#FFFDF8] border border-[#D4C4A8]/50 rounded-lg shadow-[0_12px_40px_rgba(46,36,16,0.08)] py-2 z-[200] text-[#2E2410]"
                       >
                         <NavLink
-                          to="/user/dashboard"
+                          to={dashboardPath}
                           className="block px-5 py-2.5 text-[14px] font-sans hover:text-[#6B8E23] hover:bg-[#EADDCA]/20 transition-colors"
                           onClick={() => setIsUserMenuOpen(false)}
                         >
-                          Profile
+                          {dashboardLabel}
                         </NavLink>
 
                         <button
@@ -269,11 +349,11 @@ export default function Navbar() {
               ) : (
                 <>
                   <NavLink
-                    to="/user/dashboard"
+                    to={dashboardPath}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="text-xl font-serif text-[#2E2410] hover:text-[#6B8E23] transition-colors"
                   >
-                    Profile
+                    {dashboardLabel}
                   </NavLink>
                   <button
                     onClick={async () => {

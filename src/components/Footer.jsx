@@ -45,13 +45,13 @@ export default function Footer() {
               <FaFacebook size={16} />
             </a>
             <a
-              href="#"
+              href="https://x.com/eatpurnaturals"
               className="w-9 h-9 rounded-full border border-eatpur-green-dark/20 flex items-center justify-center text-eatpur-green-dark hover:bg-eatpur-green-dark hover:text-white transition-all duration-300"
             >
               <FaTwitter size={16} />
             </a>
             <a
-              href="#"
+              href="https://www.youtube.com/@EatpurNaturals"
               className="w-9 h-9 rounded-full border border-eatpur-green-dark/20 flex items-center justify-center text-eatpur-green-dark hover:bg-eatpur-green-dark hover:text-white transition-all duration-300"
             >
               <FaYoutube size={16} />
@@ -161,20 +161,17 @@ export default function Footer() {
             <li className="flex items-center gap-3">
               <FaEnvelope className="text-eatpur-green-dark" size={14} />
               <span className="text-eatpur-text text-sm">
-                lovelesh@eatpur.com
+                contact@eatpur.com
               </span>
             </li>
           </ul>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 border-t border-black/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-eatpur-text-light">
-        <p className="flex items-center gap-2">
+      {/* Copyright & Links Row */}
+      <div className="max-w-7xl mx-auto px-6 border-t border-black/5 pt-6 pb-6 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-eatpur-text-light">
+        <p>
           © {new Date().getFullYear()} Eatpur Naturals. All rights reserved.
-          Powered by
-          <span className="flex items-center gap-1 font-medium text-eatpur-text">
-            TechnoHorizon
-          </span>
         </p>
         <div className="flex gap-6">
           <Link
@@ -190,6 +187,16 @@ export default function Footer() {
             Terms of Service
           </Link>
         </div>
+      </div>
+
+      {/* Separated Made with Love Row */}
+      <div className="max-w-7xl mx-auto px-6 border-t border-black/5 pt-6 flex justify-center items-center text-xs text-eatpur-text-light">
+        <p className="flex items-center gap-2">
+          Made with ♥ by
+          <span className="flex items-center gap-1 font-medium text-eatpur-text">
+            TechnoHorizon
+          </span>
+        </p>
       </div>
     </footer>
   );

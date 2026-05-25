@@ -40,6 +40,11 @@ const TEAM = [
     role: "Co-Founder",
     pic: "/team/devesh.png",
   },
+  {
+    name: "Manish Srivastava",
+    role: "Co-Founder",
+    pic: "/team/manish.png",
+  },
 ];
 const founder = TEAM[0];
 const others = TEAM.slice(1);
@@ -278,9 +283,9 @@ export default function AboutPage() {
               transition={{ repeat: Infinity, duration: 12, ease: "linear" }}
               className="flex gap-6 w-max px-4"
             >
-              {others.map((member) => (
+              {[...others, ...others].map((member, index) => (
                 <div
-                  key={member.name}
+                  key={`${member.name}-${index}`}
                   className="w-64 pt-8 pb-6 px-4 text-center bg-white border border-[#D4C4A8]/30 rounded-2xl shadow-sm relative flex flex-col items-center pointer-events-none select-none"
                 >
                   <div className="relative flex justify-center mb-4">
@@ -291,7 +296,7 @@ export default function AboutPage() {
                         onError={(e) => {
                           e.target.src = getFallbackAvatar(member.name, 150);
                         }}
-                        className="h-[95%] w-full object-cover object-[center_top]"
+                        className="h-[100%] w-full object-cover object-[center_top]"
                       />
                     </div>
                   </div>

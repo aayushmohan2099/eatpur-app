@@ -12,11 +12,16 @@ import CheckoutPage from "./pages/CheckoutPage";
 
 // Login now
 import LoginPage from "./pages/LoginPage";
-import Dashboard from "./pages/User/Dashboard";
 
-// Placeholders for now
-// const ProductsPage = () => <div className="pt-32 text-center text-eatpur-yellow">Products Page</div>;
-// const CheckoutPage = () => <div className="pt-32 text-center text-eatpur-yellow">Checkout Page</div>;
+// Role-Based Dashboards
+import Dashboard from "./pages/User/Dashboard"; // Customer Dashboard
+
+// Admin Dashboard - Routes
+import AdminDashboard from "./pages/Admin/Admin/Dashboard";
+
+import StaffDashboard from "./pages/Admin/Staff/Dashboard";
+import InventoryManagerDashboard from "./pages/Admin/InventoryManager/Dashboard";
+
 const RecipesPage = () => (
   <div className="pt-32 text-center text-eatpur-yellow">Recipes Page</div>
 );
@@ -28,8 +33,12 @@ const PublishRecipePage = () => (
     Publish Recipe Page
   </div>
 );
-// const AboutPage = () => <div className="pt-32 text-center text-eatpur-yellow">About Page</div>;
-// const ContactPage = () => <div className="pt-32 text-center text-eatpur-yellow">Contact Page</div>;
+
+//  Google form
+const FeedbackRedirect = () => {
+  window.location.href = "https://forms.gle/zTjzmXDamQ9HTyru6";
+  return null;
+};
 
 export default function AppRoutes() {
   return (
@@ -57,8 +66,23 @@ export default function AppRoutes() {
         {/* Login */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<LoginPage />} />
+
+        {/* Role-Specific Dashboard Routes */}
         <Route path="/user/dashboard" element={<Dashboard />} />
+        {/* Admin Dashboard Routes */}
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route
+          path="/admin/dashboard/:tab/:subTab"
+          element={<AdminDashboard />}
+        />
+        <Route path="/staff/dashboard" element={<StaffDashboard />} />
+        <Route
+          path="/inventory/dashboard"
+          element={<InventoryManagerDashboard />}
+        />
       </Route>
+      {/* Google form */}
+      <Route path="/feedback" element={<FeedbackRedirect />} />
     </Routes>
   );
 }

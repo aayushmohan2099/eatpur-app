@@ -50,7 +50,26 @@ export default function AuthPage() {
       if (res.access) {
         localStorage.setItem("access", res.access);
         localStorage.setItem("refresh", res.refresh);
-        navigate("/user/dashboard");
+
+        // SURGICAL INJECTION: Extract role name and route conditionally
+        const userRole = res.user?.role_name || "CUSTOMER";
+        localStorage.setItem("role", userRole);
+
+        switch (userRole) {
+          case "ADMIN":
+            navigate("/admin/dashboard");
+            break;
+          case "STAFF":
+            navigate("/staff/dashboard");
+            break;
+          case "INVENTORY_MANAGER":
+            navigate("/inventory/dashboard");
+            break;
+          case "CUSTOMER":
+          default:
+            navigate("/user/dashboard");
+            break;
+        }
       }
     } catch (err) {
       const backendErrors = err?.errors || {};
@@ -67,11 +86,22 @@ export default function AuthPage() {
   const validateForm = () => {
     const newErrors = {};
 
+    // 1. Common required fields for BOTH Login and Registration
     if (!form.username) {
       newErrors.username = "Username is required";
     }
 
+    if (!form.password) {
+      newErrors.password = "Password is required";
+    }
+
+    if (!form.captcha_answer) {
+      newErrors.captcha = "Captcha is required";
+    }
+
+    // 2. Strict complex validations ONLY active during registration
     if (!isLogin) {
+      // Email checking
       if (!form.email) {
         newErrors.email = "Email is required";
       } else if (
@@ -79,40 +109,40 @@ export default function AuthPage() {
       ) {
         newErrors.email = "Enter valid email (example@gmail.com)";
       }
+
+      // Mobile checking
       if (!form.mobile) {
         newErrors.mobile = "Mobile number is required";
       } else if (!/^\d{10,15}$/.test(form.mobile)) {
         newErrors.mobile = "Mobile must be 10–15 digits";
       }
 
+      // Password Confirmation presence
       if (!form.password_confirm) {
         newErrors.password_confirm = "Please confirm password";
       }
-    }
 
-    if (!form.password) {
-      newErrors.password = "Password is required";
-    } else {
-      if (form.password.length < 8) {
-        newErrors.password = "Minimum 8 characters required";
+      // Password strength complexity checks (Only for registration!)
+      if (form.password) {
+        if (form.password.length < 8) {
+          newErrors.password = "Minimum 8 characters required";
+        } else if (!/[A-Z]/.test(form.password)) {
+          newErrors.password = "Must include uppercase letter";
+        } else if (!/[0-9]/.test(form.password)) {
+          newErrors.password = "Must include a digit";
+        } else if (!/[!@#$%^&*]/.test(form.password)) {
+          newErrors.password = "Must include special character";
+        }
       }
-      if (!/[A-Z]/.test(form.password)) {
-        newErrors.password = "Must include uppercase letter";
-      }
-      if (!/[0-9]/.test(form.password)) {
-        newErrors.password = "Must include a digit";
-      }
-      if (!/[!@#$%^&*]/.test(form.password)) {
-        newErrors.password = "Must include special character";
-      }
-    }
 
-    if (!isLogin && form.password !== form.password_confirm) {
-      newErrors.password_confirm = "Passwords do not match";
-    }
-
-    if (!form.captcha_answer) {
-      newErrors.captcha = "Captcha is required";
+      // Match check
+      if (
+        form.password &&
+        form.password_confirm &&
+        form.password !== form.password_confirm
+      ) {
+        newErrors.password_confirm = "Passwords do not match";
+      }
     }
 
     setErrors(newErrors);
