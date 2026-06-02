@@ -9,6 +9,7 @@ import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
 import ProductsPage from "./pages/ProductsPage";
 import CheckoutPage from "./pages/CheckoutPage";
+import EatpurSurveyPage from "./pages/MilletSurvey/EatpurSurveyPage";
 
 // Login now
 import LoginPage from "./pages/LoginPage";
@@ -83,6 +84,7 @@ export default function AppRoutes() {
       </Route>
       {/* Google form */}
       <Route path="/feedback" element={<FeedbackRedirect />} />
+      <Route path="/survey" element={<EatpurSurveyPage />} />
     </Routes>
   );
 }

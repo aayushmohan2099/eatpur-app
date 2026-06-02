@@ -1,0 +1,31 @@
+MilletSurvey/
+│
+├── EatpurSurveyPage.jsx
+│
+├── components/
+│   ├── SurveyHero.jsx
+│   ├── SurveyStepper.jsx
+│   ├── SurveyNavigation.jsx
+│   │
+│   ├── sections/
+│   │   ├── BasicProfileSection.jsx
+│   │   ├── FoodHabitsSection.jsx
+│   │   ├── PainPointsSection.jsx
+│   │   ├── ProductValidationSection.jsx
+│   │   ├── PricingSection.jsx
+│   │   └── LeadCollectionSection.jsx
+│   │
+│   ├── fields/
+│   │   ├── RadioGroupField.jsx
+│   │   ├── CheckboxGroupField.jsx
+│   │   ├── RatingScaleField.jsx
+│   │   ├── TextInputField.jsx
+│   │   ├── TextAreaField.jsx
+│   │   ├── SliderField.jsx
+│   │   └── MatrixQuestionField.jsx
+│
+├── hooks/
+│   └── useSurveyForm.js
+│
+└── constants/
+    └── surveyQuestions.js
