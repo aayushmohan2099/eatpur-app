@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 
 import { SURVEY_SECTIONS } from "../../constants/surveyQuestions";
 
-import CheckboxGroupField from "../fields/CheckboxGroupField";
+import CheckboxGroupField from "../fields/CheckBoxGroupField";
 import MatrixQuestionField from "../fields/MatrixQuestionField";
 import RadioGroupField from "../fields/RadioGroupField";
 

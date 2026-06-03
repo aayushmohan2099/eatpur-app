@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { SURVEY_SECTIONS } from "../../constants/surveyQuestions";
 
 import RadioGroupField from "../fields/RadioGroupField";
-import CheckboxGroupField from "../fields/CheckboxGroupField";
+import CheckboxGroupField from "../fields/CheckBoxGroupField";
 import SliderField from "../fields/SliderField";
 
 const PricingSection = ({ formData, updateField, errors }) => {

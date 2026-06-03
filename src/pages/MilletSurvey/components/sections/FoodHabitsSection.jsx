@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { SURVEY_SECTIONS } from "../../constants/surveyQuestions";
 
 import RatingScaleField from "../fields/RatingScaleField";
-import CheckboxGroupField from "../fields/CheckboxGroupField";
+import CheckboxGroupField from "../fields/CheckBoxGroupField";
 import RadioGroupField from "../fields/RadioGroupField";
 
 const FoodHabitsSection = ({ formData, updateField, errors }) => {
