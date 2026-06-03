@@ -172,3 +172,31 @@
 .marquee-container:active {
   animation-play-state: paused;
 }
+
+@keyframes eatpurGradient {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.eatpur-animated-bg {
+  background: linear-gradient(
+    -45deg,
+    #f7f3e8,
+    #eef8ee,
+    #fff4d6,
+    #e8f7f0,
+    #fdf5e6
+  );
+
+  background-size: 400% 400%;
+  animation: eatpurGradient 18s ease infinite;
+}

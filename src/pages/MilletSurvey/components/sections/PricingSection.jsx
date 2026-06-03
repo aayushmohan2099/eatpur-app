@@ -1,52 +1,41 @@
 import React from "react";
 import { motion } from "framer-motion";
 
-import {
-    SURVEY_SECTIONS,
-} from "../../constants/surveyQuestions";
+import { SURVEY_SECTIONS } from "../../constants/surveyQuestions";
 
 import RadioGroupField from "../fields/RadioGroupField";
 import CheckboxGroupField from "../fields/CheckboxGroupField";
 import SliderField from "../fields/SliderField";
 
-const PricingSection = ({
-    formData,
-    updateField,
-    errors,
-}) => {
-    const section = SURVEY_SECTIONS.find(
-        (item) => item.key === "pricing"
-    );
+const PricingSection = ({ formData, updateField, errors }) => {
+  const section = SURVEY_SECTIONS.find((item) => item.key === "pricing");
 
-    const priceRangeQuestion =
-        section.questions.find(
-            (q) => q.id === "priceRange"
-        );
+  const priceRangeQuestion = section.questions.find(
+    (q) => q.id === "priceRange",
+  );
 
-    const purchaseChannelsQuestion =
-        section.questions.find(
-            (q) => q.id === "purchaseChannels"
-        );
+  const purchaseChannelsQuestion = section.questions.find(
+    (q) => q.id === "purchaseChannels",
+  );
 
-    const purchaseIntentQuestion =
-        section.questions.find(
-            (q) => q.id === "purchaseIntent"
-        );
+  const purchaseIntentQuestion = section.questions.find(
+    (q) => q.id === "purchaseIntent",
+  );
 
-    return (
-        <motion.div
-            initial={{
-                opacity: 0,
-                y: 20,
-            }}
-            animate={{
-                opacity: 1,
-                y: 0,
-            }}
-            transition={{
-                duration: 0.3,
-            }}
-            className="
+  return (
+    <motion.div
+      initial={{
+        opacity: 0,
+        y: 20,
+      }}
+      animate={{
+        opacity: 1,
+        y: 0,
+      }}
+      transition={{
+        duration: 0.3,
+      }}
+      className="
         rounded-3xl
         border
         border-eatpur-yellow-light
@@ -55,12 +44,12 @@ const PricingSection = ({
         shadow-lg
         md:p-8
       "
-        >
-            {/* Header */}
+    >
+      {/* Header */}
 
-            <div className="mb-10">
-                <div
-                    className="
+      <div className="mb-10">
+        <div
+          className="
             inline-flex
             items-center
             rounded-full
@@ -71,121 +60,78 @@ const PricingSection = ({
             font-medium
             text-eatpur-green-dark
           "
-                >
-                    Section 5
-                </div>
+        >
+          Section 5
+        </div>
 
-                <h2
-                    className="
+        <h2
+          className="
             mt-4
             font-display
             text-3xl
             text-eatpur-dark
           "
-                >
-                    {section.title}
-                </h2>
+        >
+          {section.title}
+        </h2>
 
-                <p
-                    className="
+        <p
+          className="
             mt-3
             max-w-2xl
             text-eatpur-text-light
           "
-                >
-                    {section.description}
-                </p>
-            </div>
+        >
+          {section.description}
+        </p>
+      </div>
 
-            {/* Questions */}
+      {/* Questions */}
 
-            <div className="space-y-12">
-                {/* Q14 */}
+      <div className="space-y-12">
+        {/* Q14 */}
 
-                <RadioGroupField
-                    label={
-                        priceRangeQuestion.question
-                    }
-                    value={formData.priceRange}
-                    onChange={(value) =>
-                        updateField(
-                            "priceRange",
-                            value
-                        )
-                    }
-                    options={
-                        priceRangeQuestion.options
-                    }
-                    required={
-                        priceRangeQuestion.required
-                    }
-                    columns={1}
-                    error={errors.priceRange}
-                />
+        <RadioGroupField
+          label={priceRangeQuestion.question}
+          value={formData.priceRange}
+          onChange={(value) => updateField("priceRange", value)}
+          options={priceRangeQuestion.options}
+          required={priceRangeQuestion.required}
+          columns={1}
+          error={errors.priceRange}
+        />
 
-                {/* Q15 */}
+        {/* Q15 */}
 
-                <CheckboxGroupField
-                    label={
-                        purchaseChannelsQuestion.question
-                    }
-                    value={
-                        formData.purchaseChannels
-                    }
-                    onChange={(value) =>
-                        updateField(
-                            "purchaseChannels",
-                            value
-                        )
-                    }
-                    options={
-                        purchaseChannelsQuestion.options
-                    }
-                    required={
-                        purchaseChannelsQuestion.required
-                    }
-                    columns={2}
-                    error={errors.purchaseChannels}
-                />
+        <CheckboxGroupField
+          label={purchaseChannelsQuestion.question}
+          value={formData.purchaseChannels}
+          onChange={(value) => updateField("purchaseChannels", value)}
+          options={purchaseChannelsQuestion.options}
+          required={purchaseChannelsQuestion.required}
+          columns={2}
+          error={errors.purchaseChannels}
+        />
 
-                {/* Q16 */}
+        {/* Q16 */}
 
-                <SliderField
-                    label={
-                        purchaseIntentQuestion.question
-                    }
-                    value={
-                        formData.purchaseIntent
-                    }
-                    onChange={(value) =>
-                        updateField(
-                            "purchaseIntent",
-                            value
-                        )
-                    }
-                    min={
-                        purchaseIntentQuestion.min
-                    }
-                    max={
-                        purchaseIntentQuestion.max
-                    }
-                    leftLabel={
-                        purchaseIntentQuestion.leftLabel
-                    }
-                    rightLabel={
-                        purchaseIntentQuestion.rightLabel
-                    }
-                    required={
-                        purchaseIntentQuestion.required
-                    }
-                    error={errors.purchaseIntent}
-                />
-            </div>
+        <SliderField
+          label={purchaseIntentQuestion.question}
+          value={formData.purchaseIntent}
+          onChange={(value) => updateField("purchaseIntent", value)}
+          min={purchaseIntentQuestion.min}
+          max={purchaseIntentQuestion.max}
+          leftLabel={purchaseIntentQuestion.leftLabel}
+          rightLabel={purchaseIntentQuestion.rightLabel}
+          required={purchaseIntentQuestion.required}
+          error={errors.purchaseIntent}
+        />
+      </div>
 
-            {/* Pricing Insight Card */}
+      {/* Pricing Insight Card */}
 
-            <div
-                className="
+      <div
+        className="
           mt-10
           rounded-2xl
           border
@@ -193,45 +139,41 @@ const PricingSection = ({
           bg-eatpur-white-warm
           p-5
         "
-            >
-                <div
-                    className="
+      >
+        <div
+          className="
             flex
             items-start
             gap-4
           "
-                >
-                    <div className="text-2xl">
-                        💰
-                    </div>
+        >
+          <div className="text-2xl">💰</div>
 
-                    <div>
-                        <h3
-                            className="
+          <div>
+            <h3
+              className="
                 font-semibold
                 text-eatpur-dark
               "
-                        >
-                            Purchase Intent Insights
-                        </h3>
+            >
+              Purchase Intent Insights
+            </h3>
 
-                        <p
-                            className="
+            <p
+              className="
                 mt-2
                 text-sm
                 leading-6
                 text-eatpur-text-light
               "
-                        >
-                            This section helps determine
-                            acceptable pricing, preferred
-                            buying channels, and overall
-                            willingness to try Eatpur
-                            products before launch.
-                        </p>
+            >
+              This section helps determine acceptable pricing, preferred buying
+              channels, and overall willingness to try Eatpur products before
+              launch.
+            </p>
 
-                        <div
-                            className="
+            <div
+              className="
                 mt-4
                 rounded-xl
                 border
@@ -239,38 +181,34 @@ const PricingSection = ({
                 bg-eatpur-green-light/10
                 p-3
               "
-                        >
-                            <p
-                                className="
+            >
+              <p
+                className="
                   text-sm
                   font-medium
                   text-eatpur-green-dark
                 "
-                            >
-                                Example:
-                            </p>
+              >
+                Example:
+              </p>
 
-                            <p
-                                className="
+              <p
+                className="
                   mt-1
                   text-sm
                   text-eatpur-text
                 "
-                            >
-                                If most respondents choose
-                                ₹100–200 pricing, prefer
-                                Amazon/Blinkit, and give
-                                purchase intent scores of
-                                8–10, Eatpur has strong
-                                validation for initial
-                                market launch.
-                            </p>
-                        </div>
-                    </div>
-                </div>
+              >
+                If most respondents choose ₹100–200 pricing, prefer
+                Amazon/Blinkit, and give purchase intent scores of 8–10, Eatpur
+                has strong validation for initial market launch.
+              </p>
             </div>
-        </motion.div>
-    );
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
 };
 
 export default PricingSection;

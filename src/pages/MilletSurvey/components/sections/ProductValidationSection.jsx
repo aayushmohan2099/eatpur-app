@@ -1,52 +1,43 @@
 import React from "react";
 import { motion } from "framer-motion";
 
-import {
-    SURVEY_SECTIONS,
-} from "../../constants/surveyQuestions";
+import { SURVEY_SECTIONS } from "../../constants/surveyQuestions";
 
 import CheckboxGroupField from "../fields/CheckboxGroupField";
 import MatrixQuestionField from "../fields/MatrixQuestionField";
 import RadioGroupField from "../fields/RadioGroupField";
 
-const ProductValidationSection = ({
-    formData,
-    updateField,
-    errors,
-}) => {
-    const section = SURVEY_SECTIONS.find(
-        (item) => item.key === "productValidation"
-    );
+const ProductValidationSection = ({ formData, updateField, errors }) => {
+  const section = SURVEY_SECTIONS.find(
+    (item) => item.key === "productValidation",
+  );
 
-    const preferredProductsQuestion =
-        section.questions.find(
-            (q) => q.id === "preferredProducts"
-        );
+  const preferredProductsQuestion = section.questions.find(
+    (q) => q.id === "preferredProducts",
+  );
 
-    const buyingFactorsQuestion =
-        section.questions.find(
-            (q) => q.id === "buyingFactors"
-        );
+  const buyingFactorsQuestion = section.questions.find(
+    (q) => q.id === "buyingFactors",
+  );
 
-    const packagingStyleQuestion =
-        section.questions.find(
-            (q) => q.id === "packagingStyle"
-        );
+  const packagingStyleQuestion = section.questions.find(
+    (q) => q.id === "packagingStyle",
+  );
 
-    return (
-        <motion.div
-            initial={{
-                opacity: 0,
-                y: 20,
-            }}
-            animate={{
-                opacity: 1,
-                y: 0,
-            }}
-            transition={{
-                duration: 0.3,
-            }}
-            className="
+  return (
+    <motion.div
+      initial={{
+        opacity: 0,
+        y: 20,
+      }}
+      animate={{
+        opacity: 1,
+        y: 0,
+      }}
+      transition={{
+        duration: 0.3,
+      }}
+      className="
         rounded-3xl
         border
         border-eatpur-yellow-light
@@ -55,12 +46,12 @@ const ProductValidationSection = ({
         shadow-lg
         md:p-8
       "
-        >
-            {/* Header */}
+    >
+      {/* Header */}
 
-            <div className="mb-10">
-                <div
-                    className="
+      <div className="mb-10">
+        <div
+          className="
             inline-flex
             items-center
             rounded-full
@@ -71,117 +62,76 @@ const ProductValidationSection = ({
             font-medium
             text-eatpur-green-dark
           "
-                >
-                    Section 4
-                </div>
+        >
+          Section 4
+        </div>
 
-                <h2
-                    className="
+        <h2
+          className="
             mt-4
             font-display
             text-3xl
             text-eatpur-dark
           "
-                >
-                    {section.title}
-                </h2>
+        >
+          {section.title}
+        </h2>
 
-                <p
-                    className="
+        <p
+          className="
             mt-3
             max-w-2xl
             text-eatpur-text-light
           "
-                >
-                    {section.description}
-                </p>
-            </div>
+        >
+          {section.description}
+        </p>
+      </div>
 
-            {/* Questions */}
+      {/* Questions */}
 
-            <div className="space-y-12">
-                {/* Q11 */}
+      <div className="space-y-12">
+        {/* Q11 */}
 
-                <CheckboxGroupField
-                    label={
-                        preferredProductsQuestion.question
-                    }
-                    value={
-                        formData.preferredProducts
-                    }
-                    onChange={(value) =>
-                        updateField(
-                            "preferredProducts",
-                            value
-                        )
-                    }
-                    options={
-                        preferredProductsQuestion.options
-                    }
-                    required={
-                        preferredProductsQuestion.required
-                    }
-                    columns={2}
-                    error={errors.preferredProducts}
-                />
+        <CheckboxGroupField
+          label={preferredProductsQuestion.question}
+          value={formData.preferredProducts}
+          onChange={(value) => updateField("preferredProducts", value)}
+          options={preferredProductsQuestion.options}
+          required={preferredProductsQuestion.required}
+          columns={2}
+          error={errors.preferredProducts}
+        />
 
-                {/* Q12 */}
+        {/* Q12 */}
 
-                <MatrixQuestionField
-                    label={
-                        buyingFactorsQuestion.question
-                    }
-                    value={
-                        formData.buyingFactors
-                    }
-                    onChange={(value) =>
-                        updateField(
-                            "buyingFactors",
-                            value
-                        )
-                    }
-                    rows={
-                        buyingFactorsQuestion.rows
-                    }
-                    columns={
-                        buyingFactorsQuestion.columns
-                    }
-                    required={
-                        buyingFactorsQuestion.required
-                    }
-                    error={errors.buyingFactors}
-                />
+        <MatrixQuestionField
+          label={buyingFactorsQuestion.question}
+          value={formData.buyingFactors}
+          onChange={(value) => updateField("buyingFactors", value)}
+          rows={buyingFactorsQuestion.rows}
+          columns={buyingFactorsQuestion.columns}
+          required={buyingFactorsQuestion.required}
+          error={errors.buyingFactors}
+        />
 
-                {/* Q13 */}
+        {/* Q13 */}
 
-                <RadioGroupField
-                    label={
-                        packagingStyleQuestion.question
-                    }
-                    value={
-                        formData.packagingStyle
-                    }
-                    onChange={(value) =>
-                        updateField(
-                            "packagingStyle",
-                            value
-                        )
-                    }
-                    options={
-                        packagingStyleQuestion.options
-                    }
-                    required={
-                        packagingStyleQuestion.required
-                    }
-                    columns={2}
-                    error={errors.packagingStyle}
-                />
-            </div>
+        <RadioGroupField
+          label={packagingStyleQuestion.question}
+          value={formData.packagingStyle}
+          onChange={(value) => updateField("packagingStyle", value)}
+          options={packagingStyleQuestion.options}
+          required={packagingStyleQuestion.required}
+          columns={2}
+          error={errors.packagingStyle}
+        />
+      </div>
 
-            {/* Strategy Insight Card */}
+      {/* Strategy Insight Card */}
 
-            <div
-                className="
+      <div
+        className="
           mt-10
           rounded-2xl
           border
@@ -189,47 +139,41 @@ const ProductValidationSection = ({
           bg-eatpur-white-warm
           p-5
         "
-            >
-                <div
-                    className="
+      >
+        <div
+          className="
             flex
             items-start
             gap-4
           "
-                >
-                    <div className="text-2xl">
-                        🚀
-                    </div>
+        >
+          <div className="text-2xl">🚀</div>
 
-                    <div>
-                        <h3
-                            className="
+          <div>
+            <h3
+              className="
                 font-semibold
                 text-eatpur-dark
               "
-                        >
-                            Product Validation Insights
-                        </h3>
+            >
+              Product Validation Insights
+            </h3>
 
-                        <p
-                            className="
+            <p
+              className="
                 mt-2
                 text-sm
                 leading-6
                 text-eatpur-text-light
               "
-                        >
-                            This section helps identify
-                            which products consumers
-                            actually want, what factors
-                            influence purchase decisions,
-                            and how Eatpur products
-                            should be positioned in the
-                            market.
-                        </p>
+            >
+              This section helps identify which products consumers actually
+              want, what factors influence purchase decisions, and how Eatpur
+              products should be positioned in the market.
+            </p>
 
-                        <div
-                            className="
+            <div
+              className="
                 mt-4
                 rounded-xl
                 border
@@ -237,38 +181,34 @@ const ProductValidationSection = ({
                 bg-eatpur-green-light/10
                 p-3
               "
-                        >
-                            <p
-                                className="
+            >
+              <p
+                className="
                   text-sm
                   font-medium
                   text-eatpur-green-dark
                 "
-                            >
-                                Example:
-                            </p>
+              >
+                Example:
+              </p>
 
-                            <p
-                                className="
+              <p
+                className="
                   mt-1
                   text-sm
                   text-eatpur-text
                 "
-                            >
-                                If consumers rate
-                                "Taste" and "Nutrition"
-                                as Very Important while
-                                selecting Millet Cookies
-                                and Millet Snacks, those
-                                become priority products
-                                for launch.
-                            </p>
-                        </div>
-                    </div>
-                </div>
+              >
+                If consumers rate "Taste" and "Nutrition" as Very Important
+                while selecting Millet Cookies and Millet Snacks, those become
+                priority products for launch.
+              </p>
             </div>
-        </motion.div>
-    );
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
 };
 
 export default ProductValidationSection;

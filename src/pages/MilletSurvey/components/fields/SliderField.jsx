@@ -2,63 +2,60 @@ import React from "react";
 import { motion } from "framer-motion";
 
 const SliderField = ({
-    label,
-    value = 5,
-    onChange,
-    min = 1,
-    max = 10,
-    required = false,
-    helperText,
-    error,
-    leftLabel = "",
-    rightLabel = "",
-    disabled = false,
+  label,
+  value = 5,
+  onChange,
+  min = 1,
+  max = 10,
+  required = false,
+  helperText,
+  error,
+  leftLabel = "",
+  rightLabel = "",
+  disabled = false,
 }) => {
-    const percentage =
-        ((value - min) / (max - min)) * 100;
+  const percentage = ((value - min) / (max - min)) * 100;
 
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25 }}
-            className="w-full"
-        >
-            {/* Label */}
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25 }}
+      className="w-full"
+    >
+      {/* Label */}
 
-            {label && (
-                <label
-                    className="
+      {label && (
+        <label
+          className="
             mb-5
             block
             font-medium
             text-eatpur-dark
           "
-                >
-                    {label}
+        >
+          {label}
 
-                    {required && (
-                        <span className="ml-1 text-red-500">*</span>
-                    )}
-                </label>
-            )}
+          {required && <span className="ml-1 text-red-500">*</span>}
+        </label>
+      )}
 
-            {/* Score Display */}
+      {/* Score Display */}
 
-            <motion.div
-                key={value}
-                initial={{
-                    scale: 0.9,
-                    opacity: 0,
-                }}
-                animate={{
-                    scale: 1,
-                    opacity: 1,
-                }}
-                className="mb-8 flex justify-center"
-            >
-                <div
-                    className="
+      <motion.div
+        key={value}
+        initial={{
+          scale: 0.9,
+          opacity: 0,
+        }}
+        animate={{
+          scale: 1,
+          opacity: 1,
+        }}
+        className="mb-8 flex justify-center"
+      >
+        <div
+          className="
             rounded-3xl
             border
             border-eatpur-green-light
@@ -73,58 +70,55 @@ const SliderField = ({
 
             shadow-md
           "
-                >
-                    <div
-                        className="
+        >
+          <div
+            className="
               text-center
               text-xs
               uppercase
               tracking-wider
               text-eatpur-text-light
             "
-                    >
-                        Selected Score
-                    </div>
+          >
+            Selected Score
+          </div>
 
-                    <div
-                        className="
+          <div
+            className="
               mt-1
               text-center
               text-4xl
               font-bold
               text-eatpur-green-dark
             "
-                    >
-                        {value}
-                        <span
-                            className="
+          >
+            {value}
+            <span
+              className="
                 ml-1
                 text-lg
                 text-eatpur-text-light
               "
-                        >
-                            / {max}
-                        </span>
-                    </div>
-                </div>
-            </motion.div>
-
-            {/* Slider */}
-
-            <div
-                className={`
-    px-2
-    ${error
-                        ? "rounded-2xl border border-red-300 p-4"
-                        : ""
-                    }
-  `}
             >
-                <div className="relative">
-                    {/* Track */}
+              / {max}
+            </span>
+          </div>
+        </div>
+      </motion.div>
 
-                    <div
-                        className="
+      {/* Slider */}
+
+      <div
+        className={`
+    px-2
+    ${error ? "rounded-2xl border border-red-300 p-4" : ""}
+  `}
+      >
+        <div className="relative">
+          {/* Track */}
+
+          <div
+            className="
               absolute
               top-1/2
               h-3
@@ -133,18 +127,18 @@ const SliderField = ({
               rounded-full
               bg-eatpur-yellow-light
             "
-                    />
+          />
 
-                    {/* Progress */}
+          {/* Progress */}
 
-                    <motion.div
-                        animate={{
-                            width: `${percentage}%`,
-                        }}
-                        transition={{
-                            duration: 0.2,
-                        }}
-                        className="
+          <motion.div
+            animate={{
+              width: `${percentage}%`,
+            }}
+            transition={{
+              duration: 0.2,
+            }}
+            className="
               absolute
               top-1/2
               h-3
@@ -156,20 +150,18 @@ const SliderField = ({
               via-eatpur-green-light
               to-eatpur-gold
             "
-                    />
+          />
 
-                    {/* Range */}
+          {/* Range */}
 
-                    <input
-                        type="range"
-                        min={min}
-                        max={max}
-                        value={value}
-                        disabled={disabled}
-                        onChange={(e) =>
-                            onChange(Number(e.target.value))
-                        }
-                        className="
+          <input
+            type="range"
+            min={min}
+            max={max}
+            value={value}
+            disabled={disabled}
+            onChange={(e) => onChange(Number(e.target.value))}
+            className="
               relative
               z-10
               h-3
@@ -195,13 +187,13 @@ const SliderField = ({
               [&::-moz-range-thumb]:bg-eatpur-green-dark
               [&::-moz-range-thumb]:cursor-pointer
             "
-                    />
-                </div>
+          />
+        </div>
 
-                {/* Numbers */}
+        {/* Numbers */}
 
-                <div
-                    className="
+        <div
+          className="
             mt-4
             flex
             justify-between
@@ -209,30 +201,27 @@ const SliderField = ({
             font-medium
             text-eatpur-text-light
           "
-                >
-                    {Array.from(
-                        { length: max - min + 1 },
-                        (_, i) => min + i
-                    ).map((number) => (
-                        <span
-                            key={number}
-                            className={
-                                number === value
-                                    ? "text-eatpur-green-dark font-bold"
-                                    : ""
-                            }
-                        >
-                            {number}
-                        </span>
-                    ))}
-                </div>
-            </div>
+        >
+          {Array.from({ length: max - min + 1 }, (_, i) => min + i).map(
+            (number) => (
+              <span
+                key={number}
+                className={
+                  number === value ? "text-eatpur-green-dark font-bold" : ""
+                }
+              >
+                {number}
+              </span>
+            ),
+          )}
+        </div>
+      </div>
 
-            {/* Labels */}
+      {/* Labels */}
 
-            {(leftLabel || rightLabel) && (
-                <div
-                    className="
+      {(leftLabel || rightLabel) && (
+        <div
+          className="
             mt-5
             flex
             justify-between
@@ -241,19 +230,17 @@ const SliderField = ({
             text-sm
             text-eatpur-text-light
           "
-                >
-                    <span>{leftLabel}</span>
-                    <span className="text-right">
-                        {rightLabel}
-                    </span>
-                </div>
-            )}
+        >
+          <span>{leftLabel}</span>
+          <span className="text-right">{rightLabel}</span>
+        </div>
+      )}
 
-            {/* Interpretation */}
+      {/* Interpretation */}
 
-            <div className="mt-6 flex justify-center">
-                <div
-                    className="
+      <div className="mt-6 flex justify-center">
+        <div
+          className="
             rounded-full
             bg-eatpur-white-warm
             px-4
@@ -263,32 +250,28 @@ const SliderField = ({
             font-medium
             text-eatpur-dark
           "
-                >
-                    {value >= 8
-                        ? "🔥 Strong Purchase Intent"
-                        : value >= 6
-                            ? "👍 Moderate Interest"
-                            : "⚡ Needs More Convincing"}
-                </div>
-            </div>
+        >
+          {value >= 8
+            ? "🔥 Strong Purchase Intent"
+            : value >= 6
+              ? "👍 Moderate Interest"
+              : "⚡ Needs More Convincing"}
+        </div>
+      </div>
 
-            {/* Footer */}
+      {/* Footer */}
 
-            {(helperText || error) && (
-                <div className="mt-4">
-                    {error ? (
-                        <p className="text-sm text-red-500">
-                            {error}
-                        </p>
-                    ) : (
-                        <p className="text-sm text-eatpur-text-light">
-                            {helperText}
-                        </p>
-                    )}
-                </div>
-            )}
-        </motion.div>
-    );
+      {(helperText || error) && (
+        <div className="mt-4">
+          {error ? (
+            <p className="text-sm text-red-500">{error}</p>
+          ) : (
+            <p className="text-sm text-eatpur-text-light">{helperText}</p>
+          )}
+        </div>
+      )}
+    </motion.div>
+  );
 };
 
 export default SliderField;

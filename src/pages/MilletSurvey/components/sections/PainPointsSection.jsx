@@ -1,46 +1,36 @@
 import React from "react";
 import { motion } from "framer-motion";
 
-import {
-    SURVEY_SECTIONS,
-} from "../../constants/surveyQuestions";
+import { SURVEY_SECTIONS } from "../../constants/surveyQuestions";
 
 import CheckboxGroupField from "../fields/CheckboxGroupField";
 import RadioGroupField from "../fields/RadioGroupField";
 
-const PainPointsSection = ({
-    formData,
-    updateField,
-    errors,
-}) => {
-    const section = SURVEY_SECTIONS.find(
-        (item) => item.key === "painPoints"
-    );
+const PainPointsSection = ({ formData, updateField, errors }) => {
+  const section = SURVEY_SECTIONS.find((item) => item.key === "painPoints");
 
-    const painPointsQuestion =
-        section.questions.find(
-            (q) => q.id === "painPoints"
-        );
+  const painPointsQuestion = section.questions.find(
+    (q) => q.id === "painPoints",
+  );
 
-    const eatingHabitQuestion =
-        section.questions.find(
-            (q) => q.id === "eatingHabit"
-        );
+  const eatingHabitQuestion = section.questions.find(
+    (q) => q.id === "eatingHabit",
+  );
 
-    return (
-        <motion.div
-            initial={{
-                opacity: 0,
-                y: 20,
-            }}
-            animate={{
-                opacity: 1,
-                y: 0,
-            }}
-            transition={{
-                duration: 0.3,
-            }}
-            className="
+  return (
+    <motion.div
+      initial={{
+        opacity: 0,
+        y: 20,
+      }}
+      animate={{
+        opacity: 1,
+        y: 0,
+      }}
+      transition={{
+        duration: 0.3,
+      }}
+      className="
         rounded-3xl
         border
         border-eatpur-yellow-light
@@ -49,12 +39,12 @@ const PainPointsSection = ({
         shadow-lg
         md:p-8
       "
-        >
-            {/* Header */}
+    >
+      {/* Header */}
 
-            <div className="mb-10">
-                <div
-                    className="
+      <div className="mb-10">
+        <div
+          className="
             inline-flex
             items-center
             rounded-full
@@ -65,86 +55,64 @@ const PainPointsSection = ({
             font-medium
             text-eatpur-green-dark
           "
-                >
-                    Section 3
-                </div>
+        >
+          Section 3
+        </div>
 
-                <h2
-                    className="
+        <h2
+          className="
             mt-4
             font-display
             text-3xl
             text-eatpur-dark
           "
-                >
-                    {section.title}
-                </h2>
+        >
+          {section.title}
+        </h2>
 
-                <p
-                    className="
+        <p
+          className="
             mt-3
             max-w-2xl
             text-eatpur-text-light
           "
-                >
-                    {section.description}
-                </p>
-            </div>
+        >
+          {section.description}
+        </p>
+      </div>
 
-            {/* Questions */}
+      {/* Questions */}
 
-            <div className="space-y-12">
-                {/* Q9 */}
+      <div className="space-y-12">
+        {/* Q9 */}
 
-                <CheckboxGroupField
-                    label={
-                        painPointsQuestion.question
-                    }
-                    value={formData.painPoints}
-                    onChange={(value) =>
-                        updateField(
-                            "painPoints",
-                            value
-                        )
-                    }
-                    options={
-                        painPointsQuestion.options
-                    }
-                    required={
-                        painPointsQuestion.required
-                    }
-                    columns={2}
-                    error={errors.painPoints}
-                />
+        <CheckboxGroupField
+          label={painPointsQuestion.question}
+          value={formData.painPoints}
+          onChange={(value) => updateField("painPoints", value)}
+          options={painPointsQuestion.options}
+          required={painPointsQuestion.required}
+          columns={2}
+          error={errors.painPoints}
+        />
 
-                {/* Q10 */}
+        {/* Q10 */}
 
-                <RadioGroupField
-                    label={
-                        eatingHabitQuestion.question
-                    }
-                    value={formData.eatingHabit}
-                    onChange={(value) =>
-                        updateField(
-                            "eatingHabit",
-                            value
-                        )
-                    }
-                    options={
-                        eatingHabitQuestion.options
-                    }
-                    required={
-                        eatingHabitQuestion.required
-                    }
-                    columns={1}
-                    error={errors.eatingHabit}
-                />
-            </div>
+        <RadioGroupField
+          label={eatingHabitQuestion.question}
+          value={formData.eatingHabit}
+          onChange={(value) => updateField("eatingHabit", value)}
+          options={eatingHabitQuestion.options}
+          required={eatingHabitQuestion.required}
+          columns={1}
+          error={errors.eatingHabit}
+        />
+      </div>
 
-            {/* Insight Card */}
+      {/* Insight Card */}
 
-            <div
-                className="
+      <div
+        className="
           mt-10
           rounded-2xl
           border
@@ -152,47 +120,41 @@ const PainPointsSection = ({
           bg-eatpur-white-warm
           p-5
         "
-            >
-                <div
-                    className="
+      >
+        <div
+          className="
             flex
             items-start
             gap-4
           "
-                >
-                    <div className="text-2xl">
-                        🎯
-                    </div>
+        >
+          <div className="text-2xl">🎯</div>
 
-                    <div>
-                        <h3
-                            className="
+          <div>
+            <h3
+              className="
                 font-semibold
                 text-eatpur-dark
               "
-                        >
-                            Why this matters
-                        </h3>
+            >
+              Why this matters
+            </h3>
 
-                        <p
-                            className="
+            <p
+              className="
                 mt-2
                 text-sm
                 leading-6
                 text-eatpur-text-light
               "
-                        >
-                            Understanding barriers to
-                            millet adoption helps us
-                            design products, packaging,
-                            education, and messaging
-                            that solve real consumer
-                            problems instead of making
-                            assumptions.
-                        </p>
+            >
+              Understanding barriers to millet adoption helps us design
+              products, packaging, education, and messaging that solve real
+              consumer problems instead of making assumptions.
+            </p>
 
-                        <div
-                            className="
+            <div
+              className="
                 mt-4
                 rounded-xl
                 border
@@ -200,47 +162,44 @@ const PainPointsSection = ({
                 bg-eatpur-green-light/10
                 p-3
               "
-                        >
-                            <p
-                                className="
+            >
+              <p
+                className="
                   text-sm
                   font-medium
                   text-eatpur-green-dark
                 "
-                            >
-                                Example:
-                            </p>
+              >
+                Example:
+              </p>
 
-                            <p
-                                className="
+              <p
+                className="
                   mt-1
                   text-sm
                   text-eatpur-text
                 "
-                            >
-                                If "Hard to cook" becomes
-                                the biggest pain point,
-                                Eatpur can position itself
-                                as:
-                            </p>
+              >
+                If "Hard to cook" becomes the biggest pain point, Eatpur can
+                position itself as:
+              </p>
 
-                            <p
-                                className="
+              <p
+                className="
                   mt-2
                   italic
                   text-eatpur-green-dark
                   font-medium
                 "
-                            >
-                                "Healthy millet foods made
-                                easy for modern families."
-                            </p>
-                        </div>
-                    </div>
-                </div>
+              >
+                "Healthy millet foods made easy for modern families."
+              </p>
             </div>
-        </motion.div>
-    );
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
 };
 
 export default PainPointsSection;

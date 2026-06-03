@@ -1,10 +1,6 @@
 // src/pages/MilletSurvey/EatpurSurveyPage.jsx
-
 import React from "react";
-import {
-    AnimatePresence,
-    motion,
-} from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 
 import SurveyHero from "./components/SurveyHero";
 import SurveyStepper from "./components/SurveyStepper";
@@ -17,107 +13,82 @@ import ProductValidationSection from "./components/sections/ProductValidationSec
 import PricingSection from "./components/sections/PricingSection";
 import LeadCollectionSection from "./components/sections/LeadCollectionSection";
 
+import FloatingImagesBackground from "../../pages/FloatingBG/floatingBG";
+
 import useSurveyForm from "./hooks/useSurveyForm";
 
-import {
-    SURVEY_META,
-    SURVEY_SECTIONS,
-} from "./constants/surveyQuestions";
+import { SURVEY_META, SURVEY_SECTIONS } from "./constants/surveyQuestions";
 
 export default function EatpurSurveyPage() {
-    const {
-        formData,
-        errors,
-        loading,
-        submitted,
+  const {
+    formData,
+    errors,
+    loading,
+    submitted,
 
-        currentStep,
-        totalSteps,
-        progress,
+    currentStep,
+    totalSteps,
+    progress,
 
-        updateField,
+    updateField,
 
-        nextStep,
-        previousStep,
+    nextStep,
+    previousStep,
 
-        submitSurvey,
-    } = useSurveyForm();
+    submitSurvey,
+  } = useSurveyForm();
 
-    const renderSection = () => {
-        const commonProps = {
-            formData,
-            updateField,
-            errors,
-        };
-
-        switch (currentStep) {
-            case 1:
-                return (
-                    <BasicProfileSection
-                        {...commonProps}
-                    />
-                );
-
-            case 2:
-                return (
-                    <FoodHabitsSection
-                        {...commonProps}
-                    />
-                );
-
-            case 3:
-                return (
-                    <PainPointsSection
-                        {...commonProps}
-                    />
-                );
-
-            case 4:
-                return (
-                    <ProductValidationSection
-                        {...commonProps}
-                    />
-                );
-
-            case 5:
-                return (
-                    <PricingSection
-                        {...commonProps}
-                    />
-                );
-
-            case 6:
-                return (
-                    <LeadCollectionSection
-                        {...commonProps}
-                    />
-                );
-
-            default:
-                return null;
-        }
+  const renderSection = () => {
+    const commonProps = {
+      formData,
+      updateField,
+      errors,
     };
 
-    /*
-     * ----------------------------------
-     * Success Screen
-     * ----------------------------------
-     */
+    switch (currentStep) {
+      case 1:
+        return <BasicProfileSection {...commonProps} />;
 
-    if (submitted) {
-        return (
-            <div className="min-h-screen bg-eatpur-white-warm px-6 py-12">
-                <div className="mx-auto max-w-4xl">
-                    <motion.div
-                        initial={{
-                            opacity: 0,
-                            y: 20,
-                        }}
-                        animate={{
-                            opacity: 1,
-                            y: 0,
-                        }}
-                        className="
+      case 2:
+        return <FoodHabitsSection {...commonProps} />;
+
+      case 3:
+        return <PainPointsSection {...commonProps} />;
+
+      case 4:
+        return <ProductValidationSection {...commonProps} />;
+
+      case 5:
+        return <PricingSection {...commonProps} />;
+
+      case 6:
+        return <LeadCollectionSection {...commonProps} />;
+
+      default:
+        return null;
+    }
+  };
+
+  /*
+   * ----------------------------------
+   * Success Screen
+   * ----------------------------------
+   */
+
+  if (submitted) {
+    return (
+      <div className="min-h-screen bg-eatpur-white-warm px-6 py-12">
+        <div className="mx-auto max-w-4xl">
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: 20,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            className="
               rounded-3xl
               border
               border-eatpur-yellow-light
@@ -126,89 +97,103 @@ export default function EatpurSurveyPage() {
               text-center
               shadow-xl
             "
-                    >
-                        <div className="mb-6 text-6xl">
-                            🌾
-                        </div>
+          >
+            <div className="mb-6 text-6xl">🌾</div>
 
-                        <h1
-                            className="
+            <h1
+              className="
                 font-display
                 text-4xl
                 text-eatpur-dark
               "
-                        >
-                            Thank You!
-                        </h1>
+            >
+              Thank You!
+            </h1>
 
-                        <p
-                            className="
+            <p
+              className="
                 mx-auto
                 mt-4
                 max-w-2xl
                 text-eatpur-text-light
               "
-                        >
-                            Your feedback helps us build
-                            healthier millet foods for
-                            modern Indian families.
-                        </p>
+            >
+              Your feedback helps us build healthier millet foods for modern
+              Indian families.
+            </p>
 
-                        <div className="mt-10 grid gap-4 md:grid-cols-3">
-                            <div
-                                className="
+            <div className="mt-10 grid gap-4 md:grid-cols-3">
+              <div
+                className="
                   rounded-2xl
                   border
                   border-green-200
                   p-5
                 "
-                            >
-                                ✓ Free Sample Interest
-                                Recorded
-                            </div>
+              >
+                ✓ Free Sample Interest Recorded
+              </div>
 
-                            <div
-                                className="
+              <div
+                className="
                   rounded-2xl
                   border
                   border-green-200
                   p-5
                 "
-                            >
-                                ✓ Launch Offers
-                            </div>
+              >
+                ✓ Launch Offers
+              </div>
 
-                            <div
-                                className="
+              <div
+                className="
                   rounded-2xl
                   border
                   border-green-200
                   p-5
                 "
-                            >
-                                ✓ Product Testing
-                                Opportunities
-                            </div>
-                        </div>
-                    </motion.div>
-                </div>
+              >
+                ✓ Product Testing Opportunities
+              </div>
             </div>
-        );
-    }
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
 
-    /*
-     * ----------------------------------
-     * Main Survey
-     * ----------------------------------
-     */
+  /*
+   * ----------------------------------
+   * Main Survey
+   * ----------------------------------
+   */
 
-    return (
-        <div className="min-h-screen bg-eatpur-white-warm">
-            {/* Decorative Background */}
+  return (
+    // <div className="min-h-screen eatpur-animated-bg">
+    <div
+      className="
+        relative
+        min-h-screen
+        eatpur-animated-bg
+        overflow-hidden
+      "
+    >
+      {/* Decorative Background */}
 
-            <div className="pointer-events-none absolute inset-0 overflow-hidden">
-                <div
-                    className="
+      <FloatingImagesBackground />
+
+      {/* <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <motion.div
+          animate={{
+            x: [0, 80, 0],
+            y: [0, 60, 0],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="
             absolute
             left-0
             top-0
@@ -218,10 +203,19 @@ export default function EatpurSurveyPage() {
             bg-eatpur-green-light/20
             blur-3xl
           "
-                />
+        />
 
-                <div
-                    className="
+        <motion.div
+          animate={{
+            x: [0, -80, 0],
+            y: [0, -60, 0],
+          }}
+          transition={{
+            duration: 24,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="
             absolute
             right-0
             top-60
@@ -231,147 +225,152 @@ export default function EatpurSurveyPage() {
             bg-eatpur-yellow-light/30
             blur-3xl
           "
-                />
-            </div>
+        />
 
-            <div className="relative">
-                {/* Hero */}
+        <motion.div
+          animate={{
+            x: [0, 50, 0],
+            y: [0, -80, 0],
+          }}
+          transition={{
+            duration: 28,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="
+            absolute
+            left-1/2
+            top-1/3
+            h-[500px]
+            w-[500px]
+            -translate-x-1/2
 
-                <SurveyHero
-                    brand={SURVEY_META.brand}
-                    title={SURVEY_META.title}
-                    description={
-                        SURVEY_META.description
-                    }
-                    estimatedTime={
-                        SURVEY_META.estimatedTime
-                    }
-                />
+            rounded-full
+            bg-eatpur-gold-light/15
 
-                <div
-                    className="
+            blur-3xl
+          "
+        />
+      </div> */}
+
+      <div className="relative z-10">
+        {/* Hero */}
+
+        <SurveyHero
+          brand={SURVEY_META.brand}
+          title={SURVEY_META.title}
+          description={SURVEY_META.description}
+          estimatedTime={SURVEY_META.estimatedTime}
+        />
+
+        <div
+          className="
             mx-auto
             max-w-6xl
             px-4
             pb-16
             md:px-6
           "
-                >
-                    {/* Stepper */}
+        >
+          {/* Stepper */}
 
-                    <SurveyStepper
-                        steps={SURVEY_SECTIONS.map(
-                            (
-                                section,
-                                index
-                            ) => ({
-                                id: index + 1,
-                                title:
-                                    section.title,
-                            })
-                        )}
-                        currentStep={
-                            currentStep
-                        }
-                    />
+          <SurveyStepper
+            steps={SURVEY_SECTIONS.map((section, index) => ({
+              id: index + 1,
+              title: section.title,
+            }))}
+            currentStep={currentStep}
+          />
 
-                    {/* Progress */}
+          {/* Progress */}
 
-                    <div className="mt-8">
-                        <div className="mb-2 flex justify-between">
-                            <span
-                                className="
+          <div className="mt-8">
+            <div className="mb-2 flex justify-between">
+              <span
+                className="
                   text-sm
                   text-eatpur-text-light
                 "
-                            >
-                                Survey Progress
-                            </span>
+              >
+                Survey Progress
+              </span>
 
-                            <span
-                                className="
+              <span
+                className="
                   text-sm
                   font-medium
                   text-eatpur-green-dark
                 "
-                            >
-                                {progress}%
-                            </span>
-                        </div>
+              >
+                {progress}%
+              </span>
+            </div>
 
-                        <div
-                            className="
+            <div
+              className="
                 h-3
                 overflow-hidden
                 rounded-full
                 bg-gray-200
               "
-                        >
-                            <motion.div
-                                animate={{
-                                    width: `${progress}%`,
-                                }}
-                                transition={{
-                                    duration: 0.4,
-                                }}
-                                className="
+            >
+              <motion.div
+                animate={{
+                  width: `${progress}%`,
+                }}
+                transition={{
+                  duration: 0.4,
+                }}
+                className="
                   h-full
                   rounded-full
                   bg-eatpur-green-dark
                 "
-                            />
-                        </div>
-                    </div>
-
-                    {/* Section */}
-
-                    <div className="mt-10">
-                        <AnimatePresence mode="wait">
-                            <motion.div
-                                key={currentStep}
-                                initial={{
-                                    opacity: 0,
-                                    x: 25,
-                                }}
-                                animate={{
-                                    opacity: 1,
-                                    x: 0,
-                                }}
-                                exit={{
-                                    opacity: 0,
-                                    x: -25,
-                                }}
-                                transition={{
-                                    duration: 0.3,
-                                }}
-                            >
-                                {renderSection()}
-                            </motion.div>
-                        </AnimatePresence>
-                    </div>
-
-                    {/* Navigation */}
-
-                    <div className="mt-8">
-                        <SurveyNavigation
-                            currentStep={
-                                currentStep
-                            }
-                            totalSteps={
-                                totalSteps
-                            }
-                            onBack={
-                                previousStep
-                            }
-                            onNext={nextStep}
-                            onSubmit={
-                                submitSurvey
-                            }
-                            loading={loading}
-                        />
-                    </div>
-                </div>
+              />
             </div>
+          </div>
+
+          {/* Section */}
+
+          <div className="mt-10">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentStep}
+                initial={{
+                  opacity: 0,
+                  x: 25,
+                }}
+                animate={{
+                  opacity: 1,
+                  x: 0,
+                }}
+                exit={{
+                  opacity: 0,
+                  x: -25,
+                }}
+                transition={{
+                  duration: 0.3,
+                }}
+              >
+                {renderSection()}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* Navigation */}
+
+          <div className="mt-8">
+            <SurveyNavigation
+              currentStep={currentStep}
+              totalSteps={totalSteps}
+              onBack={previousStep}
+              onNext={nextStep}
+              onSubmit={submitSurvey}
+              loading={loading}
+            />
+          </div>
         </div>
-    );
+      </div>
+    </div>
+  );
 }
