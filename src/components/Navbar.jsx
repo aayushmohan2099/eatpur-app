@@ -221,7 +221,7 @@ export default function Navbar() {
                           z-[90]
                         "
                       >
-                        <ShopNowButton
+                        {/* <ShopNowButton
                           onClick={() => {
                             setHideShopButton(true);
 
@@ -229,7 +229,7 @@ export default function Navbar() {
                               navigate("/products");
                             }, 350);
                           }}
-                        />
+                        /> */}
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -316,7 +316,7 @@ export default function Navbar() {
 
             <div className="flex flex-col gap-6 w-full px-4 text-center">
               <div className="text-[#2E2410] font-serif text-2xl mb-6 font-medium border-b border-[#D4C4A8]/40 pb-6 uppercase tracking-[0.2em]">
-                Eatpur Naturals
+                Eatpur Naturals LLP
               </div>
 
               {navItems.map((item, idx) => (

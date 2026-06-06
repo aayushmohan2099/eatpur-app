@@ -164,7 +164,7 @@ const LeadCollectionSection = ({ formData, updateField, errors }) => {
                 text-eatpur-dark
               "
             >
-              Thank you for helping shape Eatpur Naturals
+              Thank you for helping shape Eatpur Naturals LLP
             </h3>
 
             <p

@@ -167,12 +167,12 @@ export default function HomePage() {
             </p>
 
             <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-              <Link
+              {/* <Link
                 to="/products"
                 className="btn-primary flex items-center gap-2 shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
               >
                 Shop Now
-              </Link>
+              </Link> */}
               <Link
                 to="/recipes"
                 className="btn-ghost bg-black/50 backdrop-blur-sm border border-eatpur-dark/20 text-white hover:text-white hover:!bg-[#cf7324] hover:border-[#cf7324] shadow-md hover:shadow-xl transition-all duration-300"

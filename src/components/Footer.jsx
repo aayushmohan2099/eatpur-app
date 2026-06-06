@@ -8,6 +8,7 @@ import {
   FaLocationDot,
   FaPhone,
   FaEnvelope,
+  FaReceipt,
 } from "react-icons/fa6";
 import Logo from "../assets/Logo3D.png";
 
@@ -131,12 +132,12 @@ export default function Footer() {
               </Link>
             </li>
             <li>
-              <Link
+              {/* <Link
                 to="/products?category=raw-flour"
                 className="text-eatpur-text hover:text-eatpur-green-dark transition-colors text-sm"
               >
                 Raw Flour
-              </Link>
+              </Link> */}
             </li>
           </ul>
         </div>
@@ -147,12 +148,25 @@ export default function Footer() {
             Contact Us
           </h4>
           <ul className="space-y-4">
+            <li className="flex items-center gap-3">
+              <span className="text-eatpur-text text-sm">
+                Eatpur Naturals LLP
+              </span>
+            </li>
             <li className="flex items-start gap-3">
               <FaLocationDot
                 className="text-eatpur-green-dark mt-1"
                 size={14}
               />
-              <span className="text-eatpur-text text-sm">New Delhi, India</span>
+              <span className="text-eatpur-text text-sm">
+                5/77 Vikas Nagar Lucknow -226022, UP
+              </span>
+            </li>
+            <li className="flex items-center gap-3">
+              <FaReceipt className="text-eatpur-green-dark" size={14} />
+              <span className="text-eatpur-text text-sm">
+                GST No. 09AAMFE9616Q1ZH
+              </span>
             </li>
             <li className="flex items-center gap-3">
               <FaPhone className="text-eatpur-green-dark" size={14} />
@@ -161,7 +175,7 @@ export default function Footer() {
             <li className="flex items-center gap-3">
               <FaEnvelope className="text-eatpur-green-dark" size={14} />
               <span className="text-eatpur-text text-sm">
-                contact@eatpur.com
+                eatpurnaturals@gmail.com
               </span>
             </li>
           </ul>
@@ -171,7 +185,7 @@ export default function Footer() {
       {/* Copyright & Links Row */}
       <div className="max-w-7xl mx-auto px-6 border-t border-black/5 pt-6 pb-6 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-eatpur-text-light">
         <p>
-          © {new Date().getFullYear()} Eatpur Naturals. All rights reserved.
+          © {new Date().getFullYear()} Eatpur Naturals LLP. All rights reserved.
         </p>
         <div className="flex gap-6">
           <Link

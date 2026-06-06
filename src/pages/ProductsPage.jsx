@@ -5,16 +5,16 @@ import { useCart } from "../context/CartContext";
 import { Link } from "react-router-dom";
 
 const ALL_PRODUCTS = [
-  {
-    id: 1,
-    name: "Sprouted Ragi Flour",
-    price: 149,
-    description: "Calcium-rich sprouted finger millet flour.",
-    category: "Raw Flour",
-    healthScore: 92,
-    image: "/Products/Sprouted_Ragi_Flour_202604061614.jpeg",
-    rating: 4.8,
-  },
+  // {
+  //   id: 1,
+  //   name: "Sprouted Ragi Flour",
+  //   price: 149,
+  //   description: "Calcium-rich sprouted finger millet flour.",
+  //   category: "Raw Flour",
+  //   healthScore: 92,
+  //   image: "/Products/Sprouted_Ragi_Flour_202604061614.jpeg",
+  //   rating: 4.8,
+  // },
   {
     id: 2,
     name: "Millet Noodles",
@@ -55,16 +55,16 @@ const ALL_PRODUCTS = [
     image: "/Products/Multi-millet_Dosa_Mix_202604061614.jpeg",
     rating: 4.7,
   },
-  {
-    id: 6,
-    name: "Barnyard Millet Flour",
-    price: 135,
-    description: "Perfect fasting flour with high fiber content.",
-    category: "Raw Flour",
-    healthScore: 95,
-    image: "/Products/Barnyard_Millet_Flour_202604061614.jpeg",
-    rating: 4.8,
-  },
+  // {
+  //   id: 6,
+  //   name: "Barnyard Millet Flour",
+  //   price: 135,
+  //   description: "Perfect fasting flour with high fiber content.",
+  //   category: "Raw Flour",
+  //   healthScore: 95,
+  //   image: "/Products/Barnyard_Millet_Flour_202604061614.jpeg",
+  //   rating: 4.8,
+  // },
 ];
 
 const CATEGORIES = ["All", "Ready to Eat", "Ready to Cook", "Raw Flour"];
