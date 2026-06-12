@@ -1,3 +1,4 @@
+// src/api/authApi.js
 import { apiFetch } from "./client";
 
 export const getCaptcha = () => {

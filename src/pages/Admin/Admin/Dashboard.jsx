@@ -6,6 +6,7 @@ import AdminSidebar from "./DashComps/AdminSidebar";
 
 // Workspaces
 import BlogsWorkspace from "./Blogs";
+import StaffMgmnt from "./StaffMgmnt";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -170,12 +171,6 @@ export default function AdminDashboard() {
 
         <main className="flex-1 space-y-6 overflow-hidden">
           <div className="flex items-center justify-between mb-2">
-            <h1 className="text-xl font-serif font-medium text-slate-800">
-              {activeTab} —{" "}
-              <span className="text-sm font-sans text-slate-500 font-normal">
-                {activeSubTab}
-              </span>
-            </h1>
             <div className="text-sm text-slate-500 bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm">
               Last updated: Just now
             </div>
@@ -211,6 +206,11 @@ export default function AdminDashboard() {
           {activeTab === "Blogs" && (
             <BlogsWorkspace activeSubTab={activeSubTab} />
           )}
+
+          {/* Staff Management Workspace Container */}
+          {activeTab === "Staff Management" && (
+            <StaffMgmnt activeSubTab={activeSubTab} />
+          )}
         </main>
       </div>
     </div>
@@ -245,9 +245,8 @@ function KpiCardsPlaceholder() {
             </span>
           </div>
           <p
-            className={`text-xs font-medium mt-3 ${
-              kpi.trend.startsWith("+") ? "text-emerald-600" : "text-rose-600"
-            }`}
+            className={`text-xs font-medium mt-3 ${kpi.trend.startsWith("+") ? "text-emerald-600" : "text-rose-600"
+              }`}
           >
             {kpi.trend} from last month
           </p>

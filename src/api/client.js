@@ -1,3 +1,4 @@
+// src/api/client.js
 import { decryptResponse } from "../utils/decrypt";
 
 const BASE_URL = "https://eatpur.in/api";

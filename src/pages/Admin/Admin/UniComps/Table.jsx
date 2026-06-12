@@ -1,3 +1,4 @@
+// src/pages/Admin/Admin/UniComps/Table.jsx
 import React from "react";
 
 export default function EatpurTable({

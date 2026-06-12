@@ -1,9 +1,25 @@
-// src/pages/Dashboard/AdminDashboard.jsx
+// src/pages/Admin/Admin/StaffMgmnt.jsx
 import React from "react";
-export default function AdminDashboard() {
+import StaffList from "./StaffComps/StaffList";
+import RoleMgmnt from "./StaffComps/RoleMgmnt";
+
+export default function StaffMgmnt({ activeSubTab }) {
   return (
-    <div className="pt-32 text-center text-eatpur-yellow font-display text-3xl">
-      Admin Dashboard Management
+    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+      {activeSubTab === "All Staff" && <StaffList activeSubTab={activeSubTab} />}
+
+      {activeSubTab === "Roles & Permissions" && <RoleMgmnt />}
+
+      {activeSubTab === "Activity Logs" && (
+        <div className="py-16 text-center">
+          <p className="text-[--color-eatpur-gold-light] font-display text-3xl mb-2">
+            Activity Logs
+          </p>
+          <p className="text-[--color-eatpur-text-light] text-sm">
+            Workspace Under Construction
+          </p>
+        </div>
+      )}
     </div>
   );
 }

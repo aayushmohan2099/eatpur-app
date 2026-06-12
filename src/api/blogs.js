@@ -1,5 +1,6 @@
 // src/api/blogs.js
 import axios from "axios";
+import { apiFetch } from "./client";
 
 const BASE_URL = "https://eatpur.in";
 const API = axios.create({
@@ -25,6 +26,14 @@ API.interceptors.request.use(
 // ===========================================================================
 // Blog CRUD & Publishing
 // ===========================================================================
+
+/**
+ * Fetches complete blog analytics including KPIs, top blogs, and status distributions.
+ * 🔥 FIXED: Uses apiFetch instead of axios to match the correct decryption flow.
+ */
+export const getBlogAnalytics = () => {
+  return apiFetch("/blog/analytics/"); // Adjust to match your backend urls.py route exactly
+};
 
 export const getBlogs = (params = {}) => API.get("/blog/blogs/", { params });
 
