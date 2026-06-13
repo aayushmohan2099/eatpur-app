@@ -1,9 +1,26 @@
-// src/pages/Dashboard/AdminDashboard.jsx
+// src/pages/Admin/Admin/Products.jsx
 import React from "react";
-export default function AdminDashboard() {
+import ProdList from "./ProdComps/ProdList";
+
+export default function ProductsWorkspace({ activeSubTab }) {
   return (
-    <div className="pt-32 text-center text-eatpur-yellow font-display text-3xl">
-      Admin Dashboard Management
+    <div className="bg-white p-6 rounded-xl border border-slate-200">
+      {activeSubTab === "All Products" && <ProdList />}
+      {activeSubTab === "Add New Product" && (
+        <div className="text-center text-slate-400 py-12">
+          Add New Product Module Construction
+        </div>
+      )}
+      {activeSubTab === "Categories" && (
+        <div className="text-center text-slate-400 py-12">
+          Categories Module Construction
+        </div>
+      )}
+      {activeSubTab === "Discounts" && (
+        <div className="text-center text-slate-400 py-12">
+          Discounts Module Construction
+        </div>
+      )}
     </div>
   );
 }

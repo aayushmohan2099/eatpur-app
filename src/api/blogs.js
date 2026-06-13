@@ -35,6 +35,11 @@ export const getBlogAnalytics = () => {
   return apiFetch("/blog/analytics/"); // Adjust to match your backend urls.py route exactly
 };
 
+// Blog Authors
+export const getBlogAuthors = () => {
+  return apiFetch("/blog/authors/"); 
+};
+
 export const getBlogs = (params = {}) => API.get("/blog/blogs/", { params });
 
 export const getBlogById = (id) => API.get(`/blog/blogs/${id}/`);

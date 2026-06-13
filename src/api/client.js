@@ -3,7 +3,7 @@ import { decryptResponse } from "../utils/decrypt";
 
 const BASE_URL = "https://eatpur.in/api";
 
-// 🔥 Added: Queue for holding requests while the token is seamlessly refreshing
+// Queue for holding requests while the token is seamlessly refreshing
 let isRefreshing = false;
 let failedQueue = [];
 
@@ -25,26 +25,36 @@ export async function apiFetch(endpoint, options = {}) {
 
   try {
     let token = localStorage.getItem("access");
-
-    // detect public routes
     const isPublic = NO_AUTH_ENDPOINTS.includes(endpoint);
 
+    // 1. Build headers safely
     const headers = {
       "Content-Type": "application/json",
       ...(options.headers || {}),
     };
 
-    // ONLY attach token for protected APIs
+    // 🔥 SURGICAL FIX 1: Strip Content-Type for FormData
+    // If FormData is passed, we MUST physically delete the Content-Type key.
+    // This allows the browser to automatically set 'multipart/form-data; boundary=...'
+    if (options.body instanceof FormData || headers["Content-Type"] === undefined) {
+      delete headers["Content-Type"];
+    }
+
+    // 2. Attach token
     if (token && !isPublic) {
       headers["Authorization"] = `Bearer ${token}`;
     }
 
-    let res = await fetch(`${BASE_URL}${endpoint}`, {
-      headers,
+    // 🔥 SURGICAL FIX 2: Merge Options Safely
+    // 'headers' must come LAST so it overrides any empty headers inside 'options'
+    const fetchOptions = {
       ...options,
-    });
+      headers,
+    };
 
-    // 🔥 SURGICAL FIX: Automatic Token Refresh Interceptor
+    let res = await fetch(`${BASE_URL}${endpoint}`, fetchOptions);
+
+    // Automatic Token Refresh Interceptor
     if (!isPublic && (res.status === 401 || res.status === 403)) {
       const refreshToken = localStorage.getItem("refresh");
 
@@ -55,8 +65,8 @@ export async function apiFetch(endpoint, options = {}) {
         token = await new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         });
-        headers["Authorization"] = `Bearer ${token}`;
-        res = await fetch(`${BASE_URL}${endpoint}`, { headers, ...options });
+        fetchOptions.headers["Authorization"] = `Bearer ${token}`;
+        res = await fetch(`${BASE_URL}${endpoint}`, fetchOptions);
       } else {
         isRefreshing = true;
         try {
@@ -84,8 +94,8 @@ export async function apiFetch(endpoint, options = {}) {
           processQueue(null, token);
 
           // Retry the original request seamlessly with the brand new token
-          headers["Authorization"] = `Bearer ${token}`;
-          res = await fetch(`${BASE_URL}${endpoint}`, { headers, ...options });
+          fetchOptions.headers["Authorization"] = `Bearer ${token}`;
+          res = await fetch(`${BASE_URL}${endpoint}`, fetchOptions);
         } catch (err) {
           processQueue(err, null);
           // If the refresh token is entirely dead, force logout
@@ -103,6 +113,13 @@ export async function apiFetch(endpoint, options = {}) {
     const decrypted = decryptResponse(raw);
 
     if (!decrypted) throw new Error("Decryption failed");
+
+    // 🔥 SURGICAL FIX 3: Catch Backend Errors! 
+    // If the HTTP response is 400/401/403/500, throw it so your Modals hit the catch() block instead of faking success.
+    if (!res.ok) {
+      const errorMsg = decrypted.detail || decrypted.error || "API request failed";
+      throw new Error(errorMsg);
+    }
 
     return decrypted;
   } catch (err) {

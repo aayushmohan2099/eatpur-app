@@ -7,6 +7,7 @@ import AdminSidebar from "./DashComps/AdminSidebar";
 // Workspaces
 import BlogsWorkspace from "./Blogs";
 import StaffMgmnt from "./StaffMgmnt";
+import ProductsWorkspace from "./Products";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -203,6 +204,11 @@ export default function AdminDashboard() {
           )}
 
           {/* Products Workspace Workspace Container */}
+          {activeTab === "Products" && (
+            <ProductsWorkspace activeSubTab={activeSubTab} />
+          )}
+
+          {/* Blogs Workspace Workspace Container */}
           {activeTab === "Blogs" && (
             <BlogsWorkspace activeSubTab={activeSubTab} />
           )}
