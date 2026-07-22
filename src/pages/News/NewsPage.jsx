@@ -78,7 +78,7 @@ export default function NewsPage() {
                     <span className="bg-[#E67E22] text-xs font-bold tracking-widest uppercase px-3 py-1 rounded-full inline-block mb-3">
                         EatPur Updates
                     </span>
-                    <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+                    <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-[#E67E22]">
                         News & Stories
                     </h1>
                     <p className="mt-3 text-lg text-[#EAE4D9] max-w-2xl mx-auto">

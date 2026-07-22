@@ -93,5 +93,6 @@ export default function AppRoutes() {
       <Route path="/feedback" element={<FeedbackRedirect />} />
       <Route path="/survey" element={<EatpurSurveyPage />} />
     </Routes>
+
   );
 }

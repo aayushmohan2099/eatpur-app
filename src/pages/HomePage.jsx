@@ -461,7 +461,7 @@ export default function HomePage() {
       </section>
 
       {/* Featured Blogs Section (Live API Data) */}
-      <section className="py-24 px-6 bg-white relative border-t border-black/5">
+      {/* <section className="py-24 px-6 bg-white relative border-t border-black/5">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display text-eatpur-dark mb-4">
@@ -536,10 +536,10 @@ export default function HomePage() {
             </Link>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* NEW SECTION: Verified User Reviews (Live API Data) */}
-      <section className="py-24 px-6 bg-eatpur-white-warm relative border-t border-black/5 overflow-hidden">
+      <section className="py-24 px-6 bg-white relative border-t border-black/5 overflow-hidden">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="text-center mb-16">
