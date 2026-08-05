@@ -95,8 +95,7 @@ export default function Navbar() {
     { label: "Home", path: "/" },
     { label: "Products", path: "/products" },
     { label: "About Us", path: "/about" },
-    { label: "Recipes", path: "/recipes" },
-    { label: "Blogs", path: "/blogs" },
+    { label: "Blogs / Recipes", path: "/blogs" },
     { label: "Contact", path: "/contact" },
   ];
 

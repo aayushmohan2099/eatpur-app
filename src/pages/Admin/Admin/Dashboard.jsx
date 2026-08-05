@@ -69,7 +69,15 @@ export default function AdminDashboard() {
     Dashboard: ["Overview", "Real-time Metrics", "Sales Reports"],
     Products: ["All Products", "Add New Product", "Categories", "Discounts"],
     Inventory: ["Stock Levels", "Suppliers", "Purchase Orders", "Warehouses"],
-    Orders: ["All Orders", "Pending", "Processing", "Completed", "Returns"],
+    Orders: [
+      "All Orders",
+      "Pending",
+      "Processing",
+      "Payment Done",
+      "Pending Delivery",
+      "Completed",
+      "Returns",
+    ],
     Customers: ["Customer List", "Segments", "Loyalty Program"],
     Reviews: ["All Reviews", "Pending Approval", "Reported"],
     Grievances: ["Active Tickets", "Resolved", "Automated Responses"],
@@ -251,8 +259,9 @@ function KpiCardsPlaceholder() {
             </span>
           </div>
           <p
-            className={`text-xs font-medium mt-3 ${kpi.trend.startsWith("+") ? "text-emerald-600" : "text-rose-600"
-              }`}
+            className={`text-xs font-medium mt-3 ${
+              kpi.trend.startsWith("+") ? "text-emerald-600" : "text-rose-600"
+            }`}
           >
             {kpi.trend} from last month
           </p>

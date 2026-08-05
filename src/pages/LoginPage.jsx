@@ -13,6 +13,7 @@ export default function AuthPage() {
     username: "",
     email: "",
     mobile: "",
+    age: "",
     password: "",
     password_confirm: "",
     captcha_answer: "",
@@ -152,6 +153,11 @@ export default function AuthPage() {
         newErrors.mobile = "Mobile number is required";
       } else if (!/^\d{10,15}$/.test(form.mobile)) {
         newErrors.mobile = "Mobile must be 10–15 digits";
+      }
+
+      // age checking
+      if (!form.age) {
+        newErrors.age = "Age is required";
       }
 
       // Password Confirmation presence
@@ -359,6 +365,19 @@ export default function AuthPage() {
                       {Array.isArray(errors.mobile)
                         ? errors.mobile[0]
                         : errors.mobile}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <input
+                    type="age"
+                    placeholder="Tell us your age"
+                    className="w-full p-3.5 rounded-xl bg-eatpur-white-warm border border-black/10 focus:border-eatpur-green-dark outline-none text-eatpur-dark placeholder:text-eatpur-text-light shadow-inner font-serif transition-colors"
+                    onChange={(e) => setForm({ ...form, age: e.target.value })}
+                  />
+                  {errors.age && (
+                    <p className="text-red-500 text-xs mt-1.5 ml-1 font-medium">
+                      {Array.isArray(errors.age) ? errors.age[0] : errors.age}
                     </p>
                   )}
                 </div>
