@@ -327,8 +327,9 @@ function KpiCardsPlaceholder() {
             </span>
           </div>
           <p
-            className={`text-xs font-medium mt-3 ${kpi.trend.startsWith("+") ? "text-emerald-600" : "text-rose-600"
-              }`}
+            className={`text-xs font-medium mt-3 ${
+              kpi.trend.startsWith("+") ? "text-emerald-600" : "text-rose-600"
+            }`}
           >
             {kpi.trend} from last month
           </p>
