@@ -1,235 +1,287 @@
-import React, { useState } from "react";
+// src/pages/ProductsPage.jsx
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaCartShopping, FaStar, FaEye, FaXmark } from "react-icons/fa6";
 import { useCart } from "../context/CartContext";
-import { Link } from "react-router-dom";
+import { ProductCatalog, getCategories } from "../api/inventory";
+import ProductFilters from "./ProductComponents/ProductFilters";
+import ProductSortBar from "./ProductComponents/ProductSortBar";
 
-const ALL_PRODUCTS = [
-  // {
-  //   id: 1,
-  //   name: "Sprouted Ragi Flour",
-  //   price: 149,
-  //   description: "Calcium-rich sprouted finger millet flour.",
-  //   category: "Raw Flour",
-  //   healthScore: 92,
-  //   image: "/Products/Sprouted_Ragi_Flour_202604061614.jpeg",
-  //   rating: 4.8,
-  // },
-  {
-    id: 2,
-    name: "Millet Noodles",
-    price: 99,
-    description: "Healthy hakka style noodles made purely from millets.",
-    category: "Ready to Cook",
-    healthScore: 85,
-    image: "/Products/Millet_noodles_EATPUR_202604061614.jpeg",
-    rating: 4.5,
-  },
-  {
-    id: 3,
-    name: "Pearl Millet Cookies",
-    price: 129,
-    description: "Crispy, crunchy bajra cookies sweetened with jaggery.",
-    category: "Ready to Eat",
-    healthScore: 78,
-    image: "/Products/Pearl_Millet_Cookies_202604061611.jpeg",
-    rating: 4.9,
-  },
-  {
-    id: 4,
-    name: "Jowar Flakes",
-    price: 110,
-    description: "Crunchy jowar flakes for a perfect healthy breakfast.",
-    category: "Ready to Eat",
-    healthScore: 88,
-    image: "/Products/Jowar_flakes_for_202604061615.jpeg",
-    rating: 4.6,
-  },
-  {
-    id: 5,
-    name: "Multi-millet Dosa Mix",
-    price: 175,
-    description: "Instant dosa mix made with 5 different millets.",
-    category: "Ready to Cook",
-    healthScore: 90,
-    image: "/Products/Multi-millet_Dosa_Mix_202604061614.jpeg",
-    rating: 4.7,
-  },
-  // {
-  //   id: 6,
-  //   name: "Barnyard Millet Flour",
-  //   price: 135,
-  //   description: "Perfect fasting flour with high fiber content.",
-  //   category: "Raw Flour",
-  //   healthScore: 95,
-  //   image: "/Products/Barnyard_Millet_Flour_202604061614.jpeg",
-  //   rating: 4.8,
-  // },
-];
-
-const CATEGORIES = ["All", "Ready to Eat", "Ready to Cook", "Raw Flour"];
+// Debounce Hook to prevent API spam while typing in filters
+function useDebounce(value, delay) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debouncedValue;
+}
 
 export default function ProductsPage() {
   const { dispatch } = useCart();
-  const [activeFilter, setActiveFilter] = useState("All");
+
+  // State
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
 
-  const filteredProducts =
-    activeFilter === "All"
-      ? ALL_PRODUCTS
-      : ALL_PRODUCTS.filter((p) => p.category === activeFilter);
+  // Filter & Sort State
+  const [filters, setFilters] = useState({
+    q: "",
+    category: "",
+    size: "",
+    min_price: "",
+    max_price: "",
+    min_weight: "",
+    max_weight: "",
+  });
+  const [sort, setSort] = useState("");
+
+  const debouncedFilters = useDebounce(filters, 500); // 500ms delay
+
+  // Fetch Categories on Mount
+  useEffect(() => {
+    const fetchCats = async () => {
+      try {
+        const res = await getCategories();
+        const data = res.data || res.results || res;
+        setCategories(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Failed to load categories", err);
+      }
+    };
+    fetchCats();
+  }, []);
+
+  // Fetch Products based on debounced filters and sort
+  useEffect(() => {
+    const loadProducts = async () => {
+      setLoading(true);
+      try {
+        const params = { ...debouncedFilters, sort };
+        const res = await ProductCatalog(params);
+        setProducts(res.results || res.data || res);
+      } catch (err) {
+        console.error("Failed to fetch catalog", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadProducts();
+  }, [debouncedFilters, sort]);
+
+  // UI Helper: Calculate a visual health score from nutritional profile (Base 100)
+  const calculateHealthScore = (profile) => {
+    if (!profile || (!profile.protein && !profile.fibre)) return 85; // Fallback
+    const score =
+      100 -
+      Number(profile.calories || 0) / 10 +
+      Number(profile.protein || 0) * 2 +
+      Number(profile.fibre || 0) * 3 -
+      Number(profile.fats || 0);
+    return Math.min(100, Math.max(50, Math.round(score)));
+  };
 
   return (
-    <div className="w-full min-h-screen pb-32 px-6 relative z-10">
-      {/* Short Hero Banner */}
-      <section className="pt-16 pb-16 px-6 relative flex flex-col items-center justify-center text-center">
-        <div className="absolute inset-0 bg-gradient-to-b from-eatpur-green-light/10 to-transparent pointer-events-none -z-10" />
+    <div className="w-full min-h-screen pb-32 relative z-10 font-sans text-eatpur-dark bg-eatpur-white-warm">
+      {/* Hero Banner */}
+      <section className="pt-20 pb-16 px-6 relative flex flex-col items-center justify-center text-center">
+        <div className="absolute inset-0 bg-gradient-to-b from-eatpur-green-light/20 to-transparent pointer-events-none -z-10" />
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <img src="/icons/flourish-top.png" alt="" className="h-6 mx-auto mb-4 opacity-50" onError={(e) => e.target.style.display = 'none'} />
-          <h1 className="text-6xl md:text-8xl font-display text-eatpur-dark mb-6 leading-[1.1] tracking-tight">
+          <img
+            src="/icons/flourish-top.png"
+            alt=""
+            className="h-6 mx-auto mb-4 opacity-50"
+            onError={(e) => (e.target.style.display = "none")}
+          />
+          <h1 className="text-6xl md:text-8xl font-serif text-[#2E2410] mb-6 leading-[1.1] tracking-tight">
             Our Pantry
           </h1>
-          <p className="text-xl md:text-2xl font-serif italic text-eatpur-text max-w-2xl mx-auto">
-            Pure millet nutrition, thoughtfully crafted.
+          <p className="text-lg md:text-xl font-serif italic text-eatpur-text max-w-2xl mx-auto">
+            Pure, normalized nutrition. Filtered precisely to your needs.
           </p>
         </motion.div>
       </section>
 
-      <div className="max-w-7xl mx-auto">
-        {/* Filter Bar */}
-        <div className="flex flex-wrap justify-center gap-4 mb-16">
-          {CATEGORIES.map((category) => (
-            <button
-              key={category}
-              onClick={() => setActiveFilter(category)}
-              className={`px-6 py-2 rounded-full font-sans font-medium transition-all duration-300 ${activeFilter === category
-                ? "bg-[#6B8E23] text-white shadow-md"
-                : "bg-[#FFFDF8] text-[#5C4F3A] border border-[#D4C4A8] hover:border-[#6B8E23] hover:text-[#6B8E23]"
-                }`}
-            >
-              {category}
-            </button>
-          ))}
+      <div className="max-w-7xl mx-auto px-4 md:px-6 flex flex-col lg:flex-row gap-8">
+        {/* LEFT SIDEBAR: Filters */}
+        <div className="lg:w-1/4 w-full">
+          <div className="sticky top-24">
+            <ProductFilters
+              filters={filters}
+              setFilters={setFilters}
+              categories={categories}
+            />
+          </div>
         </div>
 
-        {/* Product Grid */}
-        <motion.div
-          layout
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-        >
-          <AnimatePresence>
-            {filteredProducts.map((product, i) => (
-              <motion.div
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.3, delay: i * 0.05 }}
-                key={product.id}
-                className="vintage-card overflow-hidden flex flex-col group relative bg-[#FFFDF8]/80 backdrop-blur-sm border border-[#D4C4A8]/40 rounded-xl"
-              >
-                {/* --- NEW: Top Right 30% OFF Tag --- */}
-                <div className="absolute top-4 right-4 z-20 bg-[#8B3A2A] text-white font-sans text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full shadow-md">
-                  30% OFF
-                </div>
+        {/* RIGHT AREA: Sort Bar & Grid */}
+        <div className="lg:w-3/4 w-full">
+          <div className="sticky top-24 z-50">
+            <ProductSortBar
+              sort={sort}
+              setSort={setSort}
+              totalCount={products.length}
+            />
+          </div>
 
-                <div className="h-64 overflow-hidden relative bg-white/30 p-6 pb-0 flex justify-center items-center">
-                  <motion.img
-                    whileHover={{ scale: 1.05 }}
-                    transition={{ duration: 0.4 }}
-                    src={product.image}
-                    alt={product.name}
-                    className="h-full object-contain rounded-t-xl drop-shadow-md"
-                    loading="lazy"
-                  />
-                  <div className="absolute top-4 left-4 bg-white/80 backdrop-blur-md px-3 py-1 text-[10px] text-[#6B8E23] font-bold uppercase tracking-wider border border-[#6B8E23]/20 shadow-sm rounded">
-                    {product.category}
-                  </div>
+          {/* Product Grid */}
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div
+                  key={i}
+                  className="animate-pulse bg-white h-96 rounded-xl border border-eatpur-gray-light"
+                ></div>
+              ))}
+            </div>
+          ) : products.length === 0 ? (
+            <div className="text-center py-20 bg-white rounded-xl border border-eatpur-gray-light">
+              <h3 className="font-display text-2xl text-eatpur-dark mb-2">
+                No Products Found
+              </h3>
+              <p className="text-eatpur-text-light">
+                Try adjusting your filters or search terms.
+              </p>
+            </div>
+          ) : (
+            <motion.div
+              layout
+              className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6"
+            >
+              <AnimatePresence>
+                {products.map((product, i) => {
+                  const healthScore = calculateHealthScore(product);
+                  const discountPct = product.discount_percentage || 0;
 
-                  <div className="absolute inset-0 bg-[#F4EEE0]/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm pointer-events-none group-hover:pointer-events-auto">
-                    <button
-                      onClick={() => setQuickViewProduct(product)}
-                      className="flex items-center gap-2 border border-[#2E2410] text-[#2E2410] px-6 py-3 rounded-full font-serif hover:bg-[#2E2410] hover:text-white transition-colors"
+                  return (
+                    <motion.div
+                      layout
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ duration: 0.3, delay: i * 0.05 }}
+                      key={product.id}
+                      className="vintage-card overflow-hidden flex flex-col group relative bg-white transition-all hover:shadow-lg"
                     >
-                      <FaEye /> Quick View
-                    </button>
-                  </div>
-                </div>
+                      {/* Dynamic Discount Tag */}
+                      {discountPct > 0 && (
+                        <div className="absolute top-4 right-4 z-20 bg-rose-700 text-white font-sans text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full shadow-md">
+                          {discountPct}% OFF
+                        </div>
+                      )}
 
-                <div className="p-6 flex flex-col flex-1 border-t border-[#D4C4A8]/20 bg-white/40">
-                  <div className="flex items-center gap-1 text-[#C8922A] text-sm mb-2">
-                    {[...Array(5)].map((_, i) => (
-                      <FaStar
-                        key={i}
-                        className={i < Math.floor(product.rating) ? "text-[#C8922A]" : "text-gray-200"}
-                      />
-                    ))}
-                    <span className="text-[#5C4F3A] ml-2 text-xs">{product.rating}</span>
-                  </div>
+                      {/* Trending Tag */}
+                      {product.is_trending && (
+                        <div className="absolute top-4 left-4 z-20 bg-eatpur-gold-dark text-white font-sans text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded shadow-md">
+                          Trending
+                        </div>
+                      )}
 
-                  <h3 className="text-xl font-serif font-semibold text-[#2E2410] mb-1">
-                    {product.name}
-                  </h3>
-                  <p className="text-[#5C4F3A] text-sm mb-4 line-clamp-2 font-sans">
-                    {product.description}
-                  </p>
+                      <div className="h-56 overflow-hidden relative bg-eatpur-white-warm p-6 pb-0 flex justify-center items-center">
+                        {product.cover_image ? (
+                          <motion.img
+                            whileHover={{ scale: 1.05 }}
+                            transition={{ duration: 0.4 }}
+                            src={product.cover_image}
+                            alt={product.name}
+                            className="h-full object-contain rounded-t-xl drop-shadow-md mix-blend-multiply"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-slate-100 flex items-center justify-center text-eatpur-text-light text-sm">
+                            No Image
+                          </div>
+                        )}
 
-                  {/* Eatpur Health Score Meter */}
-                  <div className="mt-2 mb-1 w-full bg-[#EADDCA]/50 rounded-full h-1.5 shadow-inner overflow-hidden">
-                    <div className="h-full bg-[#6B8E23] rounded-full" style={{ width: `${product.healthScore}%` }}></div>
-                  </div>
-                  <div className="text-[11px] text-[#5C4F3A] flex justify-between mb-6">
-                    <span className="font-medium text-[#6B8E23]">Health Score</span>
-                    <span className="font-bold">{product.healthScore}/100</span>
-                  </div>
-
-                  {/* --- UPDATED: Price Block with Discount logic --- */}
-                  <div className="mt-auto flex items-end justify-between pt-4 border-t border-[#D4C4A8]/20">
-                    <div className="flex flex-col">
-                      <div className="flex items-start gap-1.5 mb-0.5">
-                        <span className="relative text-sm font-sans text-[#5C4F3A]/60">
-                          ₹{product.price}
-                          {/* Diagonal Strikethrough (Top-Right to Bottom-Left) */}
-                          <span className="absolute top-1/2 left-[-10%] w-[120%] h-[1.2px] bg-[#8B3A2A] -rotate-[15deg] origin-center"></span>
-                        </span>
-                        {/* <sup className="text-[#8B3A2A] font-bold text-[9px] mt-1 tracking-wider uppercase">
-                          30% OFF
-                        </sup> */}
+                        <div className="absolute inset-0 bg-eatpur-white-warm/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm pointer-events-none group-hover:pointer-events-auto z-10">
+                          <button
+                            onClick={() => setQuickViewProduct(product)}
+                            className="flex items-center gap-2 border-2 border-eatpur-dark text-eatpur-dark px-6 py-2.5 rounded-full font-serif font-medium hover:bg-eatpur-dark hover:text-white transition-colors"
+                          >
+                            <FaEye /> Quick View
+                          </button>
+                        </div>
                       </div>
-                      <span className="text-2xl font-bold text-[#3A5A1C]">
-                        ₹{Math.round(product.price * 0.7)}
-                      </span>
-                    </div>
 
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => dispatch({ type: "ADD_ITEM", payload: product })}
-                        className="w-11 h-11 rounded-full border border-[#2E2410]/20 text-[#2E2410] flex items-center justify-center hover:scale-110 hover:bg-[#6B8E23] hover:text-white hover:border-[#6B8E23] transition-all shadow-sm"
-                        title="Add to Cart"
-                      >
-                        <FaCartShopping size={16} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </motion.div>
+                      <div className="p-5 flex flex-col flex-1 border-t border-eatpur-gray-light bg-white">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-[10px] text-eatpur-green-dark font-bold uppercase tracking-wider bg-eatpur-green-light/20 px-2 py-1 rounded">
+                            {product.category_name}
+                          </span>
+                          <span className="text-[10px] text-eatpur-text-light font-mono font-medium bg-slate-100 px-2 py-1 rounded">
+                            {product.size_name} ({product.weight}
+                            {product.unit})
+                          </span>
+                        </div>
+
+                        <h3 className="text-lg font-serif font-semibold text-eatpur-dark mb-1 leading-tight line-clamp-2">
+                          {product.name}
+                        </h3>
+
+                        {/* Health Score Meter */}
+                        <div className="mt-4 mb-1 w-full bg-eatpur-yellow-light/40 rounded-full h-1.5 shadow-inner overflow-hidden">
+                          <div
+                            className="h-full bg-eatpur-green-dark rounded-full"
+                            style={{ width: `${healthScore}%` }}
+                          ></div>
+                        </div>
+                        <div className="text-[10px] text-eatpur-text flex justify-between mb-4">
+                          <span className="font-medium text-eatpur-green-dark">
+                            Eatpur Health Score
+                          </span>
+                          <span className="font-bold">{healthScore}/100</span>
+                        </div>
+
+                        <div className="mt-auto flex items-end justify-between pt-4 border-t border-eatpur-gray-light">
+                          <div className="flex flex-col">
+                            {Number(product.fixed_price) >
+                              Number(product.discounted_price) && (
+                              <div className="flex items-start gap-1.5 mb-0.5">
+                                <span className="relative text-sm font-sans text-eatpur-text-light font-medium">
+                                  ₹{product.fixed_price}
+                                  <span className="absolute top-1/2 left-[-10%] w-[120%] h-[1.2px] bg-rose-700 -rotate-[15deg] origin-center"></span>
+                                </span>
+                              </div>
+                            )}
+                            <span className="text-2xl font-bold text-eatpur-green-dark">
+                              ₹{product.discounted_price}
+                            </span>
+                          </div>
+
+                          <button
+                            onClick={() =>
+                              dispatch({ type: "ADD_ITEM", payload: product })
+                            }
+                            className="w-10 h-10 rounded-full bg-eatpur-white-warm border border-eatpur-green-light text-eatpur-green-dark flex items-center justify-center hover:scale-110 hover:bg-eatpur-green-dark hover:text-white hover:border-eatpur-green-dark transition-all shadow-sm"
+                            title="Add to Cart"
+                          >
+                            <FaCartShopping size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+            </motion.div>
+          )}
+        </div>
       </div>
 
-      {/* Quick View Modal */}
+      {/* QUICK VIEW MODAL */}
       <AnimatePresence>
         {quickViewProduct && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#2E2410]/60 backdrop-blur-sm"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
             onClick={() => setQuickViewProduct(null)}
           >
             <motion.div
@@ -237,57 +289,103 @@ export default function ProductsPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-[#FFFDF8] w-full max-w-4xl max-h-[90vh] overflow-y-auto relative flex flex-col md:flex-row rounded-2xl shadow-2xl border border-[#D4C4A8]/40"
+              className="bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto relative flex flex-col md:flex-row rounded-2xl shadow-2xl border border-eatpur-gray-light"
             >
               <button
                 onClick={() => setQuickViewProduct(null)}
-                className="absolute top-4 right-4 z-10 text-[#5C4F3A] hover:text-[#2E2410] p-2 bg-white/80 rounded-full shadow-md transition-colors"
+                className="absolute top-4 right-4 z-10 text-eatpur-text-light hover:text-eatpur-dark p-2 bg-white/90 rounded-full shadow-md transition-colors"
               >
                 <FaXmark size={20} />
               </button>
 
-              <div className="md:w-1/2 p-8 bg-[#F4EEE0] flex justify-center items-center">
-                <img
-                  src={quickViewProduct.image}
-                  alt={quickViewProduct.name}
-                  className="max-h-[400px] w-full object-contain mix-blend-multiply drop-shadow-xl"
-                />
+              <div className="md:w-1/2 p-8 bg-eatpur-white-warm flex justify-center items-center">
+                {quickViewProduct.cover_image ? (
+                  <img
+                    src={quickViewProduct.cover_image}
+                    alt={quickViewProduct.name}
+                    className="max-h-[400px] w-full object-contain mix-blend-multiply drop-shadow-xl"
+                  />
+                ) : (
+                  <div className="text-eatpur-text-light">
+                    No Image Available
+                  </div>
+                )}
               </div>
-              <div className="md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-white">
-                <span className="text-[#6B8E23] font-sans font-bold text-xs tracking-widest uppercase mb-3 px-3 py-1 bg-[#A8C686]/10 rounded inline-block w-fit">
-                  {quickViewProduct.category}
-                </span>
-                <h2 className="text-3xl md:text-4xl font-serif text-[#2E2410] font-bold mb-4">
-                  {quickViewProduct.name}
-                </h2>
 
-                <div className="flex items-baseline gap-3 mb-6 border-b border-[#D4C4A8]/20 pb-4">
-                  <span className="text-3xl font-bold text-[#3A5A1C]">
-                    ₹{Math.round(quickViewProduct.price * 0.7)}
+              <div className="md:w-1/2 p-8 flex flex-col justify-center bg-white">
+                <div className="flex gap-2 mb-3">
+                  <span className="text-eatpur-green-dark font-sans font-bold text-[10px] tracking-widest uppercase px-3 py-1 bg-eatpur-green-light/20 rounded inline-block">
+                    {quickViewProduct.category_name}
                   </span>
-                  <span className="relative text-lg font-sans text-[#5C4F3A]/40">
-                    ₹{quickViewProduct.price}
-                    <span className="absolute top-1/2 left-[-5%] w-[110%] h-[1.5px] bg-[#8B3A2A] -rotate-[12deg] origin-center"></span>
-                  </span>
-                  <span className="text-[#8B3A2A] font-bold text-xs uppercase tracking-tighter bg-[#8B3A2A]/10 px-2 py-0.5 rounded">
-                    30% Savings
+                  <span className="text-eatpur-text font-sans font-bold text-[10px] tracking-widest uppercase px-3 py-1 bg-slate-100 rounded inline-block">
+                    {quickViewProduct.size_name} ({quickViewProduct.weight}
+                    {quickViewProduct.unit})
                   </span>
                 </div>
 
-                <p className="text-[#5C4F3A] font-sans leading-relaxed mb-8">
-                  {quickViewProduct.description} This premium product ensures
-                  you get all the natural health benefits of pure millet without
-                  any artificial additives. Perfect for a balanced, modern
-                  lifestyle.
+                <h2 className="text-3xl font-display text-eatpur-dark font-bold mb-2">
+                  {quickViewProduct.name}
+                </h2>
+                <p className="text-xs font-mono text-eatpur-text-light mb-4">
+                  PID: {quickViewProduct.pid}
                 </p>
 
-                <div className="mb-8 p-5 border border-[#6B8E23]/10 rounded-xl bg-[#A8C686]/5">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="font-serif font-semibold text-[#2E2410]">Eatpur Health Score</span>
-                    <span className="font-bold text-[#6B8E23]">{quickViewProduct.healthScore}/100</span>
+                <div className="flex items-baseline gap-3 mb-6 border-b border-eatpur-gray-light pb-4">
+                  <span className="text-4xl font-bold text-eatpur-green-dark">
+                    ₹{quickViewProduct.discounted_price}
+                  </span>
+                  {Number(quickViewProduct.fixed_price) >
+                    Number(quickViewProduct.discounted_price) && (
+                    <>
+                      <span className="relative text-xl font-sans text-eatpur-text-light font-medium">
+                        ₹{quickViewProduct.fixed_price}
+                        <span className="absolute top-1/2 left-[-5%] w-[110%] h-[2px] bg-rose-700 -rotate-[12deg] origin-center"></span>
+                      </span>
+                      <span className="text-rose-700 font-bold text-xs uppercase tracking-wider bg-rose-50 border border-rose-200 px-2 py-0.5 rounded">
+                        {quickViewProduct.discount_percentage}% OFF
+                      </span>
+                    </>
+                  )}
+                </div>
+
+                <p className="text-eatpur-text font-sans leading-relaxed mb-6 text-sm">
+                  {quickViewProduct.description ||
+                    "A pure, healthy product crafted for your wellbeing. Perfect for a balanced, modern lifestyle."}
+                </p>
+
+                {/* Macro Nutrients Grid */}
+                <div className="grid grid-cols-4 gap-2 mb-6">
+                  <div className="bg-eatpur-white-warm p-2 text-center rounded border border-eatpur-gray-light">
+                    <div className="text-[10px] font-bold text-eatpur-text-light uppercase">
+                      Protein
+                    </div>
+                    <div className="font-mono text-sm text-eatpur-dark">
+                      {quickViewProduct.protein || 0}g
+                    </div>
                   </div>
-                  <div className="w-full bg-white rounded-full h-2 shadow-inner overflow-hidden border border-[#D4C4A8]/20">
-                    <div className="h-full bg-[#6B8E23] rounded-full" style={{ width: `${quickViewProduct.healthScore}%` }}></div>
+                  <div className="bg-eatpur-white-warm p-2 text-center rounded border border-eatpur-gray-light">
+                    <div className="text-[10px] font-bold text-eatpur-text-light uppercase">
+                      Carbs
+                    </div>
+                    <div className="font-mono text-sm text-eatpur-dark">
+                      {quickViewProduct.carbohydrates || 0}g
+                    </div>
+                  </div>
+                  <div className="bg-eatpur-white-warm p-2 text-center rounded border border-eatpur-gray-light">
+                    <div className="text-[10px] font-bold text-eatpur-text-light uppercase">
+                      Fibre
+                    </div>
+                    <div className="font-mono text-sm text-eatpur-dark">
+                      {quickViewProduct.fibre || 0}g
+                    </div>
+                  </div>
+                  <div className="bg-eatpur-white-warm p-2 text-center rounded border border-eatpur-gray-light">
+                    <div className="text-[10px] font-bold text-eatpur-text-light uppercase">
+                      Calories
+                    </div>
+                    <div className="font-mono text-sm text-eatpur-dark">
+                      {quickViewProduct.calories || 0}
+                    </div>
                   </div>
                 </div>
 
@@ -296,7 +394,7 @@ export default function ProductsPage() {
                     dispatch({ type: "ADD_ITEM", payload: quickViewProduct });
                     setQuickViewProduct(null);
                   }}
-                  className="bg-[#6B8E23] hover:bg-[#3A5A1C] text-white w-full flex justify-center items-center gap-3 py-4 text-lg font-sans font-bold rounded-xl transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  className="bg-eatpur-green-dark hover:bg-[#55721c] text-white w-full flex justify-center items-center gap-3 py-3.5 text-base font-display font-bold rounded-xl transition-all shadow-md transform hover:-translate-y-0.5"
                 >
                   <FaCartShopping /> Add to Cart
                 </button>

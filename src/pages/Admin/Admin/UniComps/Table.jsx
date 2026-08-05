@@ -118,6 +118,9 @@ export default function EatpurTable({
         >
           <thead>
             <tr className="border-b border-[--color-eatpur-yellow-light] bg-[--color-eatpur-white-warm]">
+              <th className="px-6 py-4 text-xs font-semibold tracking-wider uppercase text-[--color-eatpur-dark] w-16">
+                S.No.
+              </th>
               {columns.map((col, idx) => (
                 <th
                   key={idx}
@@ -141,6 +144,9 @@ export default function EatpurTable({
                   key={rowIdx}
                   className="hover:bg-[--color-eatpur-white-warm]/40 transition-colors duration-150 border-b border-[--color-eatpur-yellow-light] last:border-none"
                 >
+                  <td className="px-6 py-3.5 text-sm font-semibold text-[--color-eatpur-dark]">
+                    {rowIdx + 1}
+                  </td>
                   {columns.map((col, colIdx) => (
                     <td
                       key={colIdx}
@@ -172,7 +178,7 @@ export default function EatpurTable({
             ) : (
               <tr>
                 <td
-                  colSpan={columns.length + (showActions ? 1 : 0)}
+                  colSpan={columns.length + 1 + (showActions ? 1 : 0)}
                   className="px-6 py-12 text-center text-sm font-medium text-[--color-eatpur-text-light]"
                 >
                   No data records available to display.

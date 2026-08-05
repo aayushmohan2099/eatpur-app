@@ -11,11 +11,13 @@ import { apiFetch } from "./client";
  * @param {Object} params - e.g. { page: 1, category: 5, size: 2, tags: "vegan" }
  */
 export const getProducts = (params = {}) => {
-    // Convert param object to query string
-    const queryString = new URLSearchParams(params).toString();
-    const url = queryString ? `/inventory/products/?${queryString}` : "/inventory/products/";
+  // Convert param object to query string
+  const queryString = new URLSearchParams(params).toString();
+  const url = queryString
+    ? `/inventory/products/?${queryString}`
+    : "/inventory/products/";
 
-    return apiFetch(url, { method: "GET" });
+  return apiFetch(url, { method: "GET" });
 };
 
 /**
@@ -23,7 +25,7 @@ export const getProducts = (params = {}) => {
  * @param {number} id - The primary key of the product
  */
 export const getProductById = (id) => {
-    return apiFetch(`/inventory/products/${id}/`, { method: "GET" });
+  return apiFetch(`/inventory/products/${id}/`, { method: "GET" });
 };
 
 // ===========================================================================
@@ -37,14 +39,14 @@ export const getProductById = (id) => {
  * @param {FormData} formData - Built FormData object containing variants JSON and file uploads
  */
 export const createProduct = (formData) => {
-    return apiFetch("/inventory/products/", {
-        method: "POST",
-        body: formData,
-        headers: {
-            // Deleting Content-Type forces the browser to set it automatically with the correct multipart boundary
-            "Content-Type": undefined,
-        },
-    });
+  return apiFetch("/inventory/products/", {
+    method: "POST",
+    body: formData,
+    headers: {
+      // Deleting Content-Type forces the browser to set it automatically with the correct multipart boundary
+      "Content-Type": undefined,
+    },
+  });
 };
 
 // ===========================================================================
@@ -58,13 +60,13 @@ export const createProduct = (formData) => {
  * @param {FormData} formData - Built FormData object
  */
 export const updateProduct = (id, formData) => {
-    return apiFetch(`/inventory/products/${id}/`, {
-        method: "PATCH",
-        body: formData,
-        headers: {
-            "Content-Type": undefined,
-        },
-    });
+  return apiFetch(`/inventory/products/${id}/`, {
+    method: "PATCH",
+    body: formData,
+    headers: {
+      "Content-Type": undefined,
+    },
+  });
 };
 
 // ===========================================================================
@@ -76,7 +78,7 @@ export const updateProduct = (id, formData) => {
  * @param {number} id - The primary key of the product
  */
 export const deleteProduct = (id) => {
-    return apiFetch(`/inventory/products/${id}/`, { method: "DELETE" });
+  return apiFetch(`/inventory/products/${id}/`, { method: "DELETE" });
 };
 
 // ===========================================================================
@@ -88,9 +90,9 @@ export const deleteProduct = (id) => {
  * @param {number} id - The primary key of the product
  */
 export const toggleTrending = (id) => {
-    return apiFetch(`/inventory/products/${id}/toggle-trending/`, {
-        method: "POST"
-    });
+  return apiFetch(`/inventory/products/${id}/toggle-trending/`, {
+    method: "POST",
+  });
 };
 
 // ===========================================================================
@@ -102,7 +104,7 @@ export const toggleTrending = (id) => {
  * @param {number} id - The primary key of the product
  */
 export const getProductVariants = (id) => {
-    return apiFetch(`/inventory/products/${id}/variants/`, { method: "GET" });
+  return apiFetch(`/inventory/products/${id}/variants/`, { method: "GET" });
 };
 
 // ===========================================================================
@@ -115,13 +117,13 @@ export const getProductVariants = (id) => {
  * @param {string} newStatus - "OUT_OF_STOCK" or "REJECTED"
  */
 export const bulkReviewAction = (productIds, newStatus) => {
-    return apiFetch("/inventory/products/bulk-review-action/", {
-        method: "POST",
-        body: JSON.stringify({
-            product_ids: productIds,
-            status: newStatus,
-        }),
-    });
+  return apiFetch("/inventory/products/bulk-review-action/", {
+    method: "POST",
+    body: JSON.stringify({
+      product_ids: productIds,
+      status: newStatus,
+    }),
+  });
 };
 
 // ===========================================================================
@@ -129,16 +131,16 @@ export const bulkReviewAction = (productIds, newStatus) => {
 // ===========================================================================
 
 /**
- * Update the exact stock count for a product variant. 
+ * Update the exact stock count for a product variant.
  * Automatically shifts status between LOW, OUT_OF_STOCK, and IN_STOCK.
  * @param {number} id - The primary key of the product
  * @param {number} quantity - The exact new integer quantity
  */
 export const updateProductQuantity = (id, quantity) => {
-    return apiFetch(`/inventory/products/${id}/update-quantity/`, {
-        method: "POST",
-        body: JSON.stringify({ quantity }),
-    });
+  return apiFetch(`/inventory/products/${id}/update-quantity/`, {
+    method: "POST",
+    body: JSON.stringify({ quantity }),
+  });
 };
 
 // ===========================================================================
@@ -146,23 +148,41 @@ export const updateProductQuantity = (id, quantity) => {
 // ===========================================================================
 
 export const getCategories = () => {
-    return apiFetch("/inventory/categories/", { method: "GET" });
+  return apiFetch("/inventory/categories/", { method: "GET" });
 };
 
 export const createCategory = (data) => {
-    return apiFetch("/inventory/categories/", {
-        method: "POST",
-        body: JSON.stringify(data),
-    });
+  return apiFetch("/inventory/categories/", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
 };
 
 export const updateCategory = (id, data) => {
-    return apiFetch(`/inventory/categories/${id}/`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
-    });
+  return apiFetch(`/inventory/categories/${id}/`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
 };
 
 export const deleteCategory = (id) => {
-    return apiFetch(`/inventory/categories/${id}/`, { method: "DELETE" });
+  return apiFetch(`/inventory/categories/${id}/`, { method: "DELETE" });
+};
+
+// ===========================================================================
+// 10. PRODUCT CATALOG (PUBLIC)
+// ===========================================================================
+
+export const ProductCatalog = (params = {}) => {
+  // Clean out empty strings and nulls to keep the URL clean
+  const cleanParams = Object.fromEntries(
+    Object.entries(params).filter(
+      ([_, v]) => v !== "" && v !== null && v !== undefined,
+    ),
+  );
+  const queryString = new URLSearchParams(cleanParams).toString();
+  const url = queryString
+    ? `/inventory/public-catalog/?${queryString}`
+    : "/inventory/public-catalog/";
+  return apiFetch(url, { method: "GET" });
 };
