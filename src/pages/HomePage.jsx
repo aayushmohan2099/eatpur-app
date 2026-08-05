@@ -19,6 +19,9 @@ import { useCart } from "../context/CartContext";
 import Chatbot from "../components/Chatbot";
 import FloatingImagesBackground from "./FloatingBG/floatingBG";
 import DistortedGallery from "../components/DistortedGallery";
+import FssaiLogo from "../assets/Img/fssailogo.png";
+import StartupIndiaLogo from "../assets/Img/startupindlogo.png";
+import NutrihubLogo from "../assets/Img/nutrihublogo.jpeg";
 
 const heroImages = [
   "/home/home-carousel/pic1.jpeg",
@@ -78,7 +81,7 @@ export default function HomePage() {
         const res = await HomeAnalytics();
         const rawData = res.data?.results || res.data || res;
         const data = fixUrlsDeep(rawData);
-        
+
         // 1. Map Top Blogs
         if (data.top_blogs) setTopBlogs(data.top_blogs);
 
@@ -184,6 +187,67 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Trusted & Certified */}
+      <section className="bg-white border-y border-gray-100 py-8 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 mb-8 text-center">
+          <h2 className="text-3xl md:text-4xl font-display text-eatpur-dark font-semibold">
+            Trusted & Certified
+          </h2>
+
+          <p className="text-eatpur-text mt-2">
+            Recognized and certified by leading organizations
+          </p>
+        </div>
+
+        <div className="relative overflow-hidden">
+          <div className="flex w-max animate-certifications">
+            {[...Array(2)].map((_, index) => (
+              <div key={index} className="flex items-center gap-28 px-12">
+                {/* FSSAI */}
+                <div className="flex flex-col items-center min-w-[220px]">
+                  <img
+                    src={FssaiLogo}
+                    alt="FSSAI"
+                    className="h-24 w-auto object-contain"
+                  />
+                  <h3 className="mt-4 text-lg font-semibold text-eatpur-dark text-center">
+                    FSSAI Certified
+                  </h3>
+                </div>
+
+                {/* Startup India */}
+                <div className="flex flex-col items-center min-w-[220px]">
+                  <img
+                    src={StartupIndiaLogo}
+                    alt="Startup India"
+                    className="h-24 w-auto object-contain"
+                  />
+                  <h3 className="mt-4 text-lg font-semibold text-eatpur-dark text-center">
+                    Recognised by
+                    <br />
+                    Startup India
+                  </h3>
+                </div>
+
+                {/* Nutrihub */}
+                <div className="flex flex-col items-center min-w-[220px]">
+                  <img
+                    src={NutrihubLogo}
+                    alt="Nutrihub"
+                    className="h-24 w-auto object-contain"
+                  />
+                  <h3 className="mt-4 text-lg font-semibold text-eatpur-dark text-center">
+                    Supported by
+                    <br />
+                    Nutrihub
+                  </h3>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Shop by Need Section */}
       <section className="py-12 px-6 relative border-t border-black/5 bg-white/30">
         <div className="max-w-7xl mx-auto">
@@ -281,7 +345,7 @@ export default function HomePage() {
                               ((product.fixed_price -
                                 product.discounted_price) /
                                 product.fixed_price) *
-                                100,
+                              100,
                             )}
                             % OFF
                           </div>
@@ -397,7 +461,7 @@ export default function HomePage() {
       </section>
 
       {/* Featured Blogs Section (Live API Data) */}
-      <section className="py-24 px-6 bg-white relative border-t border-black/5">
+      {/* <section className="py-24 px-6 bg-white relative border-t border-black/5">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display text-eatpur-dark mb-4">
@@ -472,10 +536,10 @@ export default function HomePage() {
             </Link>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* NEW SECTION: Verified User Reviews (Live API Data) */}
-      <section className="py-24 px-6 bg-eatpur-white-warm relative border-t border-black/5 overflow-hidden">
+      <section className="py-24 px-6 bg-white relative border-t border-black/5 overflow-hidden">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="text-center mb-16">
@@ -537,8 +601,8 @@ export default function HomePage() {
       </section>
 
       {/* Special Offer Banner / Section */}
-      <section className="py-20 px-6 relative bg-transparent text-center">
-        {/* The Dark Green Vintage Card */}
+
+      {/* <section className="py-20 px-6 relative bg-transparent text-center">
         <div className="max-w-4xl mx-auto relative z-10 border border-[#D4C4A8]/40 p-8 md:p-14 rounded-[12px] bg-[#3A5A1C] shadow-[0_8px_30px_rgba(58,40,10,0.15)]">
           <div className="text-[#C8922A] text-sm tracking-[0.3em] mb-4">
             ✦ ─── ─── ✦
@@ -559,7 +623,7 @@ export default function HomePage() {
             View Deals
           </Link>
         </div>
-      </section>
+      </section> */}
 
       {/* Quick View Modal */}
       <AnimatePresence>

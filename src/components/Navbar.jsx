@@ -95,7 +95,9 @@ export default function Navbar() {
     { label: "Home", path: "/" },
     { label: "Products", path: "/products" },
     { label: "About Us", path: "/about" },
-    { label: "Blogs / Recipes", path: "/blogs" },
+    { label: "Recipes", path: "/recipes" },
+    { label: "Blogs", path: "/blogs" },
+    { label: "News", path: "/news" }, // 
     { label: "Contact", path: "/contact" },
   ];
 
@@ -141,10 +143,9 @@ export default function Navbar() {
                 key={idx}
                 to={item.path}
                 className={({ isActive }) =>
-                  `relative text-[14px] xl:text-[15px] font-serif tracking-wide transition-colors duration-300 group ${
-                    isActive
-                      ? "text-[#6B8E23] font-medium"
-                      : "text-[#2E2410] hover:text-[#6B8E23]"
+                  `relative text-[14px] xl:text-[15px] font-serif tracking-wide transition-colors duration-300 group ${isActive
+                    ? "text-[#6B8E23] font-medium"
+                    : "text-[#2E2410] hover:text-[#6B8E23]"
                   }`
                 }
               >
@@ -152,9 +153,8 @@ export default function Navbar() {
                   <>
                     {item.label}
                     <span
-                      className={`absolute -bottom-1.5 left-1/2 h-[1.5px] bg-[#6B8E23] transition-all duration-300 ease-out -translate-x-1/2 ${
-                        isActive ? "w-full" : "w-0 group-hover:w-full"
-                      }`}
+                      className={`absolute -bottom-1.5 left-1/2 h-[1.5px] bg-[#6B8E23] transition-all duration-300 ease-out -translate-x-1/2 ${isActive ? "w-full" : "w-0 group-hover:w-full"
+                        }`}
                     ></span>
                   </>
                 )}
@@ -324,10 +324,9 @@ export default function Navbar() {
                   to={item.path}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={({ isActive }) =>
-                    `text-xl font-serif tracking-wide transition-colors py-2 ${
-                      isActive
-                        ? "text-[#6B8E23]"
-                        : "text-[#5C4F3A] hover:text-[#6B8E23]"
+                    `text-xl font-serif tracking-wide transition-colors py-2 ${isActive
+                      ? "text-[#6B8E23]"
+                      : "text-[#5C4F3A] hover:text-[#6B8E23]"
                     }`
                   }
                 >

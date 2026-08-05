@@ -11,6 +11,10 @@ import ProductsPage from "./pages/ProductsPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import EatpurSurveyPage from "./pages/MilletSurvey/EatpurSurveyPage";
 
+// News Page Import
+import NewsPage from "../src/pages/News/NewsPage";
+
+
 // Login now
 import LoginPage from "./pages/LoginPage";
 
@@ -64,6 +68,9 @@ export default function AppRoutes() {
         <Route path="/preview-blog" element={<PreviewBlog />} />
         <Route path="/preview-blog/:id" element={<PreviewBlog />} />
 
+        {/* News Page Route */}
+        <Route path="/news" element={<NewsPage />} />
+
         {/* Login */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<LoginPage />} />
@@ -86,5 +93,6 @@ export default function AppRoutes() {
       <Route path="/feedback" element={<FeedbackRedirect />} />
       <Route path="/survey" element={<EatpurSurveyPage />} />
     </Routes>
+
   );
 }
