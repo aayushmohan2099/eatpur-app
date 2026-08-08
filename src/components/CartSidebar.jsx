@@ -1,3 +1,4 @@
+// src/components/CartSidebar.jsx
 import React from "react";
 import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
@@ -35,9 +36,7 @@ export default function CartSidebar() {
             className="fixed top-0 right-0 h-full w-full max-w-md bg-eatpur-white-warm backdrop-blur-[30px] border-l border-black/5 z-[9999] flex flex-col shadow-2xl"
           >
             <div className="p-6 flex items-center justify-between border-b border-black/5 bg-white">
-              <h2
-                className="text-3xl text-eatpur-dark font-display tracking-tight"
-              >
+              <h2 className="text-3xl text-eatpur-dark font-display tracking-tight">
                 Your Cart
               </h2>
               <button
@@ -57,7 +56,10 @@ export default function CartSidebar() {
                 </div>
               ) : (
                 state.items.map((item) => (
-                  <div key={item.id} className="flex gap-4 items-center bg-white p-3 rounded-xl border border-black/5 shadow-sm">
+                  <div
+                    key={item.id}
+                    className="flex gap-4 items-center bg-white p-3 rounded-xl border border-black/5 shadow-sm"
+                  >
                     <img
                       src={item.image || "/placeholder.png"}
                       alt={item.name}
@@ -67,7 +69,9 @@ export default function CartSidebar() {
                       <h3 className="text-eatpur-dark font-display font-medium text-lg leading-tight mb-1">
                         {item.name}
                       </h3>
-                      <p className="text-eatpur-green-dark font-serif font-semibold">₹{item.price}</p>
+                      <p className="text-eatpur-green-dark font-serif font-semibold">
+                        ₹{item.price}
+                      </p>
 
                       <div className="flex items-center gap-3 mt-3">
                         <button
@@ -122,7 +126,9 @@ export default function CartSidebar() {
             {state.items.length > 0 && (
               <div className="p-6 border-t border-black/5 bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.03)]">
                 <div className="flex justify-between items-center mb-6">
-                  <span className="text-eatpur-dark font-serif italic text-lg">Subtotal</span>
+                  <span className="text-eatpur-dark font-serif italic text-lg">
+                    Subtotal
+                  </span>
                   <span className="text-2xl text-eatpur-green-dark font-serif font-semibold">
                     ₹{subtotal.toFixed(2)}
                   </span>

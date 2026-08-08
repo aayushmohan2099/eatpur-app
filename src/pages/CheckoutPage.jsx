@@ -1,12 +1,26 @@
+// src/pages/CheckoutPage.jsx
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { FaCheck } from "react-icons/fa6";
 import { useCart } from "../context/CartContext";
+import { checkoutOrder, verifyPayment } from "../api/shop";
+
+// Helper to dynamically load the Razorpay script
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
 
 export default function CheckoutPage() {
   const { state, dispatch } = useCart();
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const subtotal = state.items.reduce(
     (total, item) => total + item.price * item.quantity,
@@ -16,16 +30,95 @@ export default function CheckoutPage() {
   const handleQuantityChange = (id, delta, currentQty) => {
     const newQty = currentQty + delta;
     if (newQty <= 0) {
-      dispatch({ type: "REMOVE_ITEM", payload: id });
+      dispatch({ type: "REMOVE_ITEM", payload: { id } });
     } else {
       dispatch({ type: "UPDATE_QUANTITY", payload: { id, quantity: newQty } });
     }
   };
 
-  const handlePlaceOrder = (e) => {
+  const handlePlaceOrder = async (e) => {
     e.preventDefault();
-    setIsSuccess(true);
-    dispatch({ type: "CLEAR_CART" });
+    if (state.items.length === 0) return;
+
+    setIsProcessing(true);
+
+    // 1. Load Razorpay Script Dynamically
+    const res = await loadRazorpayScript();
+    if (!res) {
+      alert("Razorpay SDK failed to load. Are you online?");
+      setIsProcessing(false);
+      return;
+    }
+
+    // 2. Build the exact payload Django expects
+    const payload = {
+      items: state.items.map((item) => ({
+        product_id: item.id, // Ensure your CartContext uses the real DB 'id'
+        quantity: item.quantity,
+      })),
+      // coupon_code: "" // Add this later if you implement front-end coupon input
+    };
+
+    try {
+      // 3. Call our Django Phase 2 Checkout API
+      const orderData = await checkoutOrder(payload);
+
+      // 4. Initialize Razorpay Options
+      const options = {
+        key: orderData.key_id,
+        amount: orderData.amount, // In paise
+        currency: orderData.currency,
+        name: "EatPur",
+        description: "Premium Millet Foods",
+        image: "/logo.png", // Add actual logo path if you have one
+        order_id: orderData.razorpay_order_id,
+        prefill: {
+          name: orderData.customer.name,
+          email: orderData.customer.email,
+          contact: orderData.customer.contact,
+        },
+        theme: {
+          color: "#6B8E23", // EatPur Green Dark
+        },
+        // 5. The Handler - Fires EXACTLY when payment succeeds
+        handler: async function (response) {
+          try {
+            // PHASE 4 Call: Verify the signature on Django server
+            await verifyPayment({
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+
+            // If verification passes, show success!
+            setIsSuccess(true);
+            dispatch({ type: "CLEAR_CART" });
+          } catch (verifyError) {
+            alert(
+              verifyError.message ||
+                "Payment verification failed. Please contact support.",
+            );
+          }
+        },
+      };
+
+      // 6. Open the Razorpay Modal
+      const rzp = new window.Razorpay(options);
+
+      rzp.on("payment.failed", function (response) {
+        alert(`Payment Failed: ${response.error.description}`);
+      });
+
+      rzp.open();
+    } catch (err) {
+      console.error(err);
+      alert(
+        err.message ||
+          "Failed to initialize checkout. Please check stock or login status.",
+      );
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (isSuccess) {
@@ -51,7 +144,10 @@ export default function CheckoutPage() {
           <p className="text-eatpur-text font-serif italic mb-8">
             Thank you! Your premium millet foods will arrive soon.
           </p>
-          <Link to="/products" className="btn-primary font-medium tracking-wide">
+          <Link
+            to="/products"
+            className="btn-primary font-medium tracking-wide"
+          >
             Continue Shopping
           </Link>
         </motion.div>
@@ -85,7 +181,6 @@ export default function CheckoutPage() {
         {/* Single Combined Form Container */}
         <div className="vintage-card bg-white border border-black/5 p-8 md:p-12 rounded-2xl shadow-sm">
           <form onSubmit={handlePlaceOrder} className="space-y-12 font-sans">
-
             {/* SECTION 1: Delivery Details */}
             <div className="space-y-6">
               <h3 className="text-2xl font-display text-eatpur-dark border-b border-black/10 pb-3">
@@ -143,7 +238,7 @@ export default function CheckoutPage() {
                     >
                       <div className="flex items-center gap-4 w-full sm:w-auto">
                         <img
-                          src={item.image}
+                          src={item.image || "/placeholder.png"}
                           alt={item.name}
                           className="w-16 h-16 rounded-lg object-cover mix-blend-multiply border border-black/5"
                         />
@@ -162,7 +257,9 @@ export default function CheckoutPage() {
                         <div className="flex items-center border border-black/10 rounded-lg bg-white overflow-hidden shadow-inner">
                           <button
                             type="button"
-                            onClick={() => handleQuantityChange(item.id, -1, item.quantity)}
+                            onClick={() =>
+                              handleQuantityChange(item.id, -1, item.quantity)
+                            }
                             className="px-3 py-1 text-eatpur-dark hover:bg-black/5 transition-colors font-bold"
                           >
                             -
@@ -172,7 +269,9 @@ export default function CheckoutPage() {
                           </span>
                           <button
                             type="button"
-                            onClick={() => handleQuantityChange(item.id, 1, item.quantity)}
+                            onClick={() =>
+                              handleQuantityChange(item.id, 1, item.quantity)
+                            }
                             className="px-3 py-1 text-eatpur-dark hover:bg-black/5 transition-colors font-bold"
                           >
                             +
@@ -189,7 +288,9 @@ export default function CheckoutPage() {
                 )}
               </div>
               <div className="flex justify-between items-center text-xl pt-2">
-                <span className="text-eatpur-dark font-display font-medium">Subtotal</span>
+                <span className="text-eatpur-dark font-display font-medium">
+                  Subtotal
+                </span>
                 <span className="text-eatpur-green-dark font-semibold font-serif text-2xl">
                   ₹{subtotal.toFixed(2)}
                 </span>
@@ -212,21 +313,42 @@ export default function CheckoutPage() {
               <p className="text-4xl text-eatpur-green-dark font-semibold mb-4 font-serif">
                 ₹{subtotal.toFixed(2)}
               </p>
-              <p className="text-eatpur-text-light text-sm mb-8 italic font-serif">
-                This is a mock payment screen. No actual transaction will occur.
-              </p>
 
               <div className="flex justify-end pt-4 border-t border-black/10">
                 <button
                   type="submit"
-                  disabled={state.items.length === 0}
-                  className="btn-primary w-full md:w-auto px-12 font-medium tracking-wide"
+                  disabled={state.items.length === 0 || isProcessing}
+                  className={`btn-primary w-full md:w-auto px-12 font-medium tracking-wide flex justify-center items-center gap-2 ${isProcessing ? "opacity-75 cursor-wait" : ""}`}
                 >
-                  Place Order
+                  {isProcessing ? (
+                    <>
+                      <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Processing...
+                    </>
+                  ) : (
+                    "Place Secure Order"
+                  )}
                 </button>
               </div>
             </div>
-
           </form>
         </div>
       </div>
