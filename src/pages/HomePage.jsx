@@ -23,6 +23,8 @@ import FssaiLogo from "../assets/Img/fssailogo.png";
 import StartupIndiaLogo from "../assets/Img/startupindlogo.png";
 import NutrihubLogo from "../assets/Img/nutrihublogo.jpeg";
 
+import MilletButton from "../components/MilletButton";
+
 const heroImages = [
   "/home/home-carousel/pic1.jpeg",
   "/home/home-carousel/pic2.jpeg",
@@ -154,7 +156,7 @@ export default function HomePage() {
           >
             <div className="inline-flex items-center gap-2 bg-eatpur-green-dark/10 text-eatpur-dark px-4 py-1.5 rounded-full text-sm font-medium mb-6 backdrop-blur-sm border border-eatpur-green-dark/20 shadow-sm">
               <FaLeaf className="text-eatpur-green-dark" />
-              <span>100% Natural • No Maida • High Fiber</span>
+              <span>Natural • No Maida • High Fiber</span>
             </div>
 
             <h1 className="text-5xl md:text-7xl font-display text-eatpur-dark leading-tight mb-6 tracking-tight drop-shadow-sm">
@@ -168,27 +170,19 @@ export default function HomePage() {
               Smart nutrition for modern life – ready in minutes. Pure,
               wholesome, and tradition-rich grains.
             </p>
-
-            <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-              {/* <Link
+            {/* <Link
                 to="/products"
                 className="btn-primary flex items-center gap-2 shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
               >
                 Shop Now
               </Link> */}
-              <Link
-                to="/recipes"
-                className="btn-ghost bg-black/50 backdrop-blur-sm border border-eatpur-dark/20 text-white hover:text-white hover:!bg-[#cf7324] hover:border-[#cf7324] shadow-md hover:shadow-xl transition-all duration-300"
-              >
-                Explore Recipes
-              </Link>
-            </div>
+            <MilletButton>Explore Recipes</MilletButton>
           </motion.div>
         </div>
       </section>
 
       {/* Trusted & Certified */}
-      <section className="bg-white border-y border-gray-100 py-8 overflow-hidden">
+      <section className="bg-white py-8 overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 mb-8 text-center">
           <h2 className="text-3xl md:text-4xl font-display text-eatpur-dark font-semibold">
             Trusted & Certified
@@ -249,7 +243,7 @@ export default function HomePage() {
       </section>
 
       {/* Shop by Need Section */}
-      <section className="py-12 px-6 relative border-t border-black/5 bg-white/30">
+      <section className="py-12 px-6 relative bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16 flex flex-col items-center">
             <h2 className="text-3xl md:text-4xl font-display text-eatpur-dark flex items-center gap-4">
@@ -282,12 +276,8 @@ export default function HomePage() {
                 key={i}
                 className="vintage-card w-40 h-44 md:w-48 md:h-52 flex flex-col items-center justify-center p-4 hover:-translate-y-2 transition-transform duration-300"
               >
-                <div className="w-16 h-16 rounded-full bg-eatpur-green-light/20 flex items-center justify-center text-eatpur-green-dark mb-4 group-[.hover]:bg-eatpur-green-light/40">
-                  <cat.icon size={32} />
-                </div>
-                <h3 className="font-display font-medium text-eatpur-dark text-center text-[15px] leading-tight">
-                  {cat.title}
-                </h3>
+                <cat.icon size={32} />
+                {cat.title}
               </Link>
             ))}
           </div>
@@ -295,11 +285,11 @@ export default function HomePage() {
       </section>
 
       {/* Featured Products (Live API Data) */}
-      <section className="py-24 relative border-t border-black/5 overflow-hidden">
+      <section className="py-24 relative overflow-hidden bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display text-eatpur-dark mb-4">
-              Trending Products
+              Bestsellers
             </h2>
             <p className="text-eatpur-text font-serif italic">
               Crafted from nature's finest grains.
@@ -309,8 +299,8 @@ export default function HomePage() {
 
         {/* --- PREMIUM SCROLLING CAROUSEL START --- */}
         <div className="relative w-full max-w-[100vw] overflow-hidden group">
-          <div className="absolute top-0 left-0 w-16 md:w-32 h-full bg-gradient-to-r from-eatpur-white-warm to-transparent z-10 pointer-events-none"></div>
-          <div className="absolute top-0 right-0 w-16 md:w-32 h-full bg-gradient-to-l from-eatpur-white-warm to-transparent z-10 pointer-events-none"></div>
+          <div className="absolute top-0 left-0 w-16 md:w-32 h-full  z-10 pointer-events-none"></div>
+          <div className="absolute top-0 right-0 w-16 md:w-32 h-full  z-10 pointer-events-none"></div>
 
           {isLoading ? (
             <div className="w-full py-20 text-center text-eatpur-text italic font-serif animate-pulse">
@@ -345,7 +335,7 @@ export default function HomePage() {
                               ((product.fixed_price -
                                 product.discounted_price) /
                                 product.fixed_price) *
-                              100,
+                                100,
                             )}
                             % OFF
                           </div>
@@ -539,7 +529,7 @@ export default function HomePage() {
       </section> */}
 
       {/* NEW SECTION: Verified User Reviews (Live API Data) */}
-      <section className="py-24 px-6 bg-white relative border-t border-black/5 overflow-hidden">
+      <section className="py-24 px-6 bg-white relative overflow-hidden">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="text-center mb-16">

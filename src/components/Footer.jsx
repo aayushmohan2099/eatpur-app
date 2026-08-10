@@ -14,7 +14,7 @@ import Logo from "../assets/Logo3D.png";
 import FssaiLicense from "../certificates/EATPURFssaiLicense.pdf";
 export default function Footer() {
   return (
-    <footer className="bg-eatpur-white-warm border-t border-black/5 pt-16 pb-8 z-10 relative mt-auto">
+    <footer className="bg-eatpur-white-warm pt-16 pb-8 z-10 relative mt-auto">
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
         {/* Column 1: Brand */}
         <div className="space-y-6">

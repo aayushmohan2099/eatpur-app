@@ -393,7 +393,7 @@ export default function ProductEditorModal({
                 </div>
                 <div className="md:col-span-1">
                   <label className="block text-xs font-medium text-slate-500 mb-1">
-                    Category
+                    Product Type
                   </label>
                   <select
                     name="category_id"
@@ -402,13 +402,33 @@ export default function ProductEditorModal({
                     className="w-full px-3 py-2 rounded border border-slate-300 focus:border-[--color-eatpur-green-dark] outline-none text-sm bg-white"
                   >
                     <option value="" disabled>
-                      Select Category
+                      Select Type
                     </option>
                     {categories.map((cat) => (
                       <option key={cat.id} value={cat.id}>
                         {cat.name}
                       </option>
                     ))}
+                  </select>
+                </div>
+                <div className="md:col-span-1">
+                  <label className="block text-xs font-medium text-slate-500 mb-1">
+                    Category by Need
+                  </label>
+                  <select
+                    name="need_category_id"
+                    value={baseDetails.need_category_id}
+                    onChange={handleBaseChange}
+                    className="w-full px-3 py-2 rounded border border-slate-300 focus:border-[--color-eatpur-green-dark] outline-none text-sm bg-white"
+                  >
+                    <option value="" disabled>
+                      Select Category
+                    </option>
+                    <option value="">Kids Nutrition</option>
+                    <option value="">Fitness & Weight Loss</option>
+                    <option value="">Daily Family Staples</option>
+                    <option value="">Quick Meals</option>
+                    <option value="">Organic Living</option>
                   </select>
                 </div>
                 <div className="md:col-span-3">

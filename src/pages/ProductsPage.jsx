@@ -111,13 +111,13 @@ export default function ProductsPage() {
       <div className="max-w-7xl mx-auto px-4 md:px-6 flex flex-col lg:flex-row gap-8">
         {/* LEFT SIDEBAR: Filters */}
         <div className="lg:w-1/4 w-full">
-          <div className="sticky top-24">
+          {/* <div className="sticky top-24">
             <ProductFilters
               filters={filters}
               setFilters={setFilters}
               categories={categories}
             />
-          </div>
+          </div> */}
         </div>
 
         {/* RIGHT AREA: Sort Bar & Grid */}
