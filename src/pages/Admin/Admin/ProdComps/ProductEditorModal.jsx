@@ -262,18 +262,28 @@ export default function ProductEditorModal({
       !window.confirm(
         "Are you sure you want to delete this specific size/variant?",
       )
-    )
+    ) {
       return;
+    }
+
     try {
       await deleteProduct(variantId);
-      if (variants.length <= 1) {
-        onClose();
-      } else {
-        fetchVariants(product.id);
-      }
-      onRefresh();
+
+      alert("Product variant deleted successfully.");
+
+      window.location.href = "/admin/dashboard/products/all-products";
     } catch (err) {
-      alert("Failed to delete variant.");
+      // 404 after soft-delete is expected — do not show an error.
+      if (err?.response?.status === 404) {
+        alert("Product variant deleted successfully.");
+
+        window.location.href = "/admin/dashboard/products/all-products";
+
+        return;
+      }
+
+      console.error("Delete variant error:", err);
+      alert("Failed to delete variant. Please try again.");
     }
   };
 
@@ -282,15 +292,30 @@ export default function ProductEditorModal({
       !window.confirm(
         "CRITICAL: Delete ALL sizes and variants of this product?",
       )
-    )
+    ) {
       return;
+    }
+
     try {
       const promises = variants.map((v) => deleteProduct(v.id));
+
       await Promise.all(promises);
-      onClose();
-      onRefresh();
+
+      alert("Product and all its variants deleted successfully.");
+
+      window.location.href = "/admin/dashboard/products/all-products";
     } catch (err) {
-      alert("Failed to delete entire product collection.");
+      // 404 after soft-delete is expected — do not show an error.
+      if (err?.response?.status === 404) {
+        alert("Product and all its variants deleted successfully.");
+
+        window.location.href = "/admin/dashboard/products/all-products";
+
+        return;
+      }
+
+      console.error("Delete entire product error:", err);
+      alert("Failed to delete entire product collection. Please try again.");
     }
   };
 
