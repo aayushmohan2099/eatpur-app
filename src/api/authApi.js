@@ -19,6 +19,13 @@ export const registerUser = (data) => {
   });
 };
 
+export const socialAuth = (data) => {
+  return apiFetch("/auth/social/", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+};
+
 export const refreshToken = (refresh) => {
   return apiFetch("/auth/refresh/", {
     method: "POST",

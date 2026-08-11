@@ -3,17 +3,144 @@ import React, { useEffect, useState } from "react";
 import { getMe } from "../../api/authApi"; // Ensure your path is correct
 import Header from "./Components/Header";
 import Sidebar, { SUB_MENUS } from "./Components/Sidebar";
+import MilletBg from "../../assets/user/millet_user_bg.png";
+
+// ===========================================================================
+// ICONS FOR FORMS
+// ===========================================================================
+const ICONS = {
+  User: (
+    <>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
+      />
+      <circle
+        cx="12"
+        cy="7"
+        r="4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </>
+  ),
+  Mail: (
+    <>
+      <rect
+        x="2"
+        y="4"
+        width="20"
+        height="16"
+        rx="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M22 7l-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"
+      />
+    </>
+  ),
+  Phone: (
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"
+    />
+  ),
+  Calendar: (
+    <>
+      <rect
+        x="3"
+        y="4"
+        width="18"
+        height="18"
+        rx="2"
+        ry="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <line
+        x1="16"
+        y1="2"
+        x2="16"
+        y2="6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <line
+        x1="8"
+        y1="2"
+        x2="8"
+        y2="6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <line
+        x1="3"
+        y1="10"
+        x2="21"
+        y2="10"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </>
+  ),
+};
 
 // ===========================================================================
 // PLACEHOLDER COMPONENTS FOR THE HERO SECTION
 // ===========================================================================
 
-const PageHeader = ({ title, subtitle }) => (
-  <div className="mb-6 md:mb-8">
-    <h1 className="text-2xl md:text-3xl font-bold text-[--color-eatpur-dark] font-[family-name:var(--font-display)]">
-      {title}
-    </h1>
-    <p className="text-[--color-eatpur-text-light] mt-1">{subtitle}</p>
+const DashboardField = ({ label, value, icon }) => (
+  <div className="flex flex-col gap-2">
+    <span className="text-[11px] font-bold uppercase tracking-wider text-[--color-eatpur-text-light]">
+      {label}
+    </span>
+    <div className="flex items-center gap-3 p-3.5 rounded-xl border border-[#DCDFD9] bg-white shadow-[0_2px_10px_rgba(0,0,0,0.01)] hover:border-[--color-eatpur-green-light] transition-colors">
+      <svg
+        className="w-5 h-5 text-[--color-eatpur-green-dark]"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.5}
+        viewBox="0 0 24 24"
+      >
+        {ICONS[icon]}
+      </svg>
+      <span className="text-sm font-medium text-[--color-eatpur-dark]">
+        {value || "N/A"}
+      </span>
+    </div>
+  </div>
+);
+
+const PageHeader = ({ title, activeModule }) => (
+  <div className="flex items-center gap-6 mb-10">
+    <div className="w-24 h-24 rounded-full bg-[--color-eatpur-green-pale] flex items-center justify-center border border-[#DCDFD9] shadow-sm shrink-0">
+      <svg
+        className="w-10 h-10 text-[--color-eatpur-green-dark]"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.5}
+        viewBox="0 0 24 24"
+      >
+        {ICONS.User}
+      </svg>
+    </div>
+    <div>
+      <h1 className="text-3xl md:text-4xl font-bold text-[--color-eatpur-dark] font-display mb-1.5 tracking-tight">
+        {title}
+      </h1>
+      <p className="text-[--color-eatpur-text-light] text-sm md:text-base font-serif">
+        Manage your{" "}
+        <span className="text-[--color-eatpur-green-dark] font-medium">
+          {activeModule.toLowerCase()}
+        </span>{" "}
+        &gt; {title.toLowerCase()} here.
+      </p>
+    </div>
   </div>
 );
 
@@ -25,91 +152,82 @@ const HeroPlaceholder = ({ activeModule, activeSubMenu, user }) => {
     activeSubMenu;
 
   return (
-    <div className="max-w-5xl mx-auto w-full animate-fade-in">
-      <PageHeader
-        title={subMenuLabel}
-        subtitle={`Manage your ${activeModule.toLowerCase()} > ${subMenuLabel.toLowerCase()} here.`}
-      />
+    <div className="max-w-5xl mx-auto w-full animate-fade-in pb-10">
+      <PageHeader title={subMenuLabel} activeModule={activeModule} />
 
-      <div className="bg-[--color-eatpur-card] p-6 md:p-8 rounded-[--radius-card] shadow-[var(--shadow-card)] border border-[--color-eatpur-border]">
-        {/* If on Profile -> Personal Info, show the user details */}
-        {activeModule === "Profile" && activeSubMenu === "personal_info" ? (
-          <div>
-            <h3 className="text-lg font-semibold text-[--color-eatpur-dark] mb-6 border-b border-[--color-eatpur-border] pb-2">
-              Your Details
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-[--color-eatpur-text-light] mb-1">
-                  Username
-                </p>
-                <p className="text-[--color-eatpur-text] font-medium bg-[--color-eatpur-bg-light] px-3 py-2 rounded-[--radius-button] border border-[--color-eatpur-border]">
-                  {user?.username || "N/A"}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-[--color-eatpur-text-light] mb-1">
-                  Email Address
-                </p>
-                <p className="text-[--color-eatpur-text] font-medium bg-[--color-eatpur-bg-light] px-3 py-2 rounded-[--radius-button] border border-[--color-eatpur-border]">
-                  {user?.email || "N/A"}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-[--color-eatpur-text-light] mb-1">
-                  Mobile Number
-                </p>
-                <p className="text-[--color-eatpur-text] font-medium bg-[--color-eatpur-bg-light] px-3 py-2 rounded-[--radius-button] border border-[--color-eatpur-border]">
-                  {user?.mobile || "N/A"}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-[--color-eatpur-text-light] mb-1">
-                  Age
-                </p>
-                <p className="text-[--color-eatpur-text] font-medium bg-[--color-eatpur-bg-light] px-3 py-2 rounded-[--radius-button] border border-[--color-eatpur-border]">
-                  {user?.age || "N/A"}
-                </p>
-              </div>
-            </div>
-          </div>
-        ) : (
-          /* Generic Placeholder for all other pages */
-          <div className="h-48 md:h-64 flex flex-col items-center justify-center text-center border-2 border-dashed border-[--color-eatpur-green-light] rounded-[--radius-card] bg-[--color-eatpur-green-pale] opacity-80">
+      {/* If on Profile -> Personal Info, show the user details */}
+      {activeModule === "Profile" && activeSubMenu === "personal_info" ? (
+        <div className="bg-white/75 p-8 md:p-10 rounded-3xl shadow-sm border-r md:border border-[#DCDFD9]">
+          <div className="flex items-center gap-3 border-b border-[#DCDFD9] pb-5 mb-8">
             <svg
-              className="w-12 h-12 text-[--color-eatpur-green] mb-3 opacity-50"
+              className="w-6 h-6 text-[--color-eatpur-green-dark]"
               fill="none"
               stroke="currentColor"
-              strokeWidth={1.5}
+              strokeWidth={2}
               viewBox="0 0 24 24"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-              />
+              {ICONS.User}
             </svg>
-            <p className="text-lg font-medium text-[--color-eatpur-green-dark]">
-              {subMenuLabel} Workspace
-            </p>
-            <p className="text-sm text-[--color-eatpur-text] mt-1 max-w-sm">
-              Component for{" "}
-              <span className="font-bold">
-                {activeModule} &gt; {activeSubMenu}
-              </span>{" "}
-              will be rendered here.
-            </p>
+            <h3 className="text-xl font-bold text-[--color-eatpur-dark] font-display">
+              Your Details
+            </h3>
           </div>
-        )}
-      </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-8 gap-x-8">
+            <DashboardField
+              label="USERNAME"
+              value={user?.username}
+              icon="User"
+            />
+            <DashboardField
+              label="EMAIL ADDRESS"
+              value={user?.email}
+              icon="Mail"
+            />
+            <DashboardField
+              label="MOBILE NUMBER"
+              value={user?.mobile}
+              icon="Phone"
+            />
+            <DashboardField label="AGE" value={user?.age} icon="Calendar" />
+          </div>
+        </div>
+      ) : (
+        /* Generic Placeholder for all other pages */
+        <div className="h-64 flex flex-col items-center justify-center text-center border-2 border-dashed border-[#DCDFD9] rounded-[24px] bg-white/50 opacity-90">
+          <svg
+            className="w-12 h-12 text-[--color-eatpur-green-dark] mb-4 opacity-50"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.5}
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+            />
+          </svg>
+          <p className="text-xl font-display font-bold text-[--color-eatpur-dark]">
+            {subMenuLabel} Workspace
+          </p>
+          <p className="text-sm font-serif text-[--color-eatpur-text-light] mt-2 max-w-sm">
+            Component for{" "}
+            <span className="font-bold text-[--color-eatpur-green-dark]">
+              {activeModule} &gt; {activeSubMenu}
+            </span>{" "}
+            will be rendered here.
+          </p>
+        </div>
+      )}
 
       {/* Tailwind basic animation definition */}
       <style>{`
         @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(5px); }
+          from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
       `}</style>
     </div>
   );
@@ -156,18 +274,23 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[--color-eatpur-bg-light] text-[--color-eatpur-text]">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-4 border-[--color-eatpur-green-soft] border-t-[--color-eatpur-green] rounded-full animate-spin"></div>
-          <p className="font-medium animate-pulse">Loading profile...</p>
+      <div className="min-h-screen flex items-center justify-center bg-[--color-eatpur-white-warm] text-[--color-eatpur-text]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-4 border-[--color-eatpur-green-light] border-t-[--color-eatpur-green-dark] rounded-full animate-spin"></div>
+          <p className="font-display font-medium text-lg animate-pulse text-[--color-eatpur-dark]">
+            Loading dashboard...
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-[--color-eatpur-bg-light] font-[family-name:var(--font-sans)] overflow-hidden">
-      {/* 1. Sidebar (Controlled by Dashboard State) */}
+    <div
+      className="flex h-screen bg-cover bg-center bg-no-repeat font-[family-name:var(--font-sans)] overflow-hidden bg-[--color-eatpur-white-warm]"
+      style={{ backgroundImage: `url(${MilletBg})` }}
+    >
+      {/* 1. Sidebar */}
       <Sidebar
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
@@ -176,8 +299,9 @@ export default function Dashboard() {
         setActiveSubMenu={setActiveSubMenu}
       />
 
-      <div className="flex flex-col flex-1 min-w-0">
-        {/* 2. Header (Controls activeModule) */}
+      {/* 2. Main Content Wrapper (Floating Glass Effect) */}
+      <div className="flex flex-col flex-1 min-w-0 md:rounded-3xl md:my-6 md:mr-6 md:ml-6 bg-white/75 border-r md:border border-[#DCDFD9] shadow-[0_8px_30px_rgba(0,0,0,0.04)] overflow-hidden relative z-10">
+        {/* Header (Controls activeModule) */}
         <Header
           onMenuClick={() => setIsSidebarOpen(true)}
           user={user}
@@ -186,7 +310,7 @@ export default function Dashboard() {
         />
 
         {/* 3. Main Hero Content Area */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-[--color-eatpur-bg-light]">
+        <main className="flex-1 overflow-y-auto px-6 md:px-12 pt-8 md:pt-10">
           <HeroPlaceholder
             activeModule={activeModule}
             activeSubMenu={activeSubMenu}

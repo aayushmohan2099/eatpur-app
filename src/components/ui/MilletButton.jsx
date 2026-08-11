@@ -163,11 +163,11 @@ const MilletButton = ({
                     padding: 0 40px;
                     border: 1px solid rgba(255, 255, 255, 0.12);
                     border-radius: 22px;
-                    background: linear-gradient(135deg, #7B8F2A 0%, #667A20 100%);
+                    background: transparent;
                     box-shadow: 
                         0 10px 24px rgba(45, 65, 15, 0.18),
                         inset 0 1px 2px rgba(255, 255, 255, 0.25);
-                    color: #F9FBE7;
+                    color: linear-gradient(135deg, #7B8F2A 0%, #667A20 100%);
                     font-family: system-ui, -apple-system, sans-serif;
                     font-size: 1.15rem;
                     font-weight: 600;
@@ -180,6 +180,7 @@ const MilletButton = ({
                 .millet-btn-wrapper:hover .millet-btn {
                     transform: translateY(-2px);
                     background: linear-gradient(135deg, #859A2F 0%, #6E8423 100%);
+                    color: #fff;
                     box-shadow: 
                         0 16px 34px rgba(45, 65, 15, 0.28),
                         inset 0 1px 2px rgba(255, 255, 255, 0.3);

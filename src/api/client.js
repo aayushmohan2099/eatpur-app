@@ -16,11 +16,12 @@ const processQueue = (error, token = null) => {
 };
 
 export async function apiFetch(endpoint, options = {}) {
-  const NO_AUTH_ENDPOINTS = [
+const NO_AUTH_ENDPOINTS = [
     "/global/captcha/",
     "/auth/login/",
     "/auth/register/",
     "/auth/refresh/",
+    "/auth/social/",
   ];
 
   try {

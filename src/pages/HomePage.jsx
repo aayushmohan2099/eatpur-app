@@ -22,8 +22,17 @@ import DistortedGallery from "../components/DistortedGallery";
 import FssaiLogo from "../assets/Img/fssailogo.png";
 import StartupIndiaLogo from "../assets/Img/startupindlogo.png";
 import NutrihubLogo from "../assets/Img/nutrihublogo.jpeg";
-
-import MilletButton from "../components/MilletButton";
+import MSMELogo from "../assets/Img/MSME_Logo_India.png";
+import {
+  ThreeDScrollTriggerContainer,
+  ThreeDScrollTriggerRow,
+} from "../components/ui/ThreeDScrollTrigger";
+import LeafButton from "../components/ui/LeafButton";
+import DraggableGrid from "../components/ui/DraggableGrid";
+import FssaiLicense from "../certificates/EATPURFssaiLicense.pdf";
+import MSMECertificate from "../certificates/EATPUR _ Udyam Registration Certificate.pdf";
+import StartupMOU from "../certificates/EATPURFssaiLicense.pdf";
+import NutriDoc from "../certificates/EATPURFssaiLicense.pdf";
 
 const heroImages = [
   "/home/home-carousel/pic1.jpeg",
@@ -176,77 +185,153 @@ export default function HomePage() {
               >
                 Shop Now
               </Link> */}
-            <MilletButton>Explore Recipes</MilletButton>
+            <LeafButton>Explore Recipes</LeafButton>
           </motion.div>
         </div>
       </section>
 
       {/* Trusted & Certified */}
-      <section className="bg-white py-8 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 mb-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-display text-eatpur-dark font-semibold">
+      <section className="bg-white py-16 overflow-hidden relative">
+        <div className="max-w-7xl mx-auto px-6 mb-12 text-center">
+          <h2 className="text-3xl md:text-5xl font-display font-semibold text-eatpur-dark mb-4 tracking-tight">
             Trusted & Certified
           </h2>
-
-          <p className="text-eatpur-text mt-2">
-            Recognized and certified by leading organizations
+          <p className="text-eatpur-text font-serif italic text-lg md:text-xl opacity-90">
+            Recognized and certified by leading organizations.
           </p>
         </div>
 
-        <div className="relative overflow-hidden">
-          <div className="flex w-max animate-certifications">
-            {[...Array(2)].map((_, index) => (
-              <div key={index} className="flex items-center gap-28 px-12">
-                {/* FSSAI */}
-                <div className="flex flex-col items-center min-w-[220px]">
-                  <img
-                    src={FssaiLogo}
-                    alt="FSSAI"
-                    className="h-24 w-auto object-contain"
-                  />
-                  <h3 className="mt-4 text-lg font-semibold text-eatpur-dark text-center">
-                    FSSAI Certified
-                  </h3>
-                </div>
+        <ThreeDScrollTriggerContainer className="w-full pt-8 pb-8 overflow-visible">
+          {/* Base velocity controls speed. Direction 1 scrolls Right */}
+          <ThreeDScrollTriggerRow baseVelocity={2} direction={1}>
+            {/* FSSAI */}
+            <div className="flex flex-col items-center min-w-[220px] mx-14 md:mx-20">
+              <a
+                href={FssaiLicense}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="
+                  flex flex-col items-center
+                  min-w-[220px]
+                  mx-14 md:mx-20
+                  cursor-pointer
+                  hover:-translate-y-2
+                  transition-transform
+                  duration-300
+                "
+              >
+                <img
+                  src={FssaiLogo}
+                  alt="FSSAI"
+                  className="h-24 w-auto object-contain drop-shadow-sm mix-blend-multiply"
+                />
 
-                {/* Startup India */}
-                <div className="flex flex-col items-center min-w-[220px]">
-                  <img
-                    src={StartupIndiaLogo}
-                    alt="Startup India"
-                    className="h-24 w-auto object-contain"
-                  />
-                  <h3 className="mt-4 text-lg font-semibold text-eatpur-dark text-center">
-                    Recognised by
-                    <br />
-                    Startup India
-                  </h3>
-                </div>
+                <h3 className="mt-5 text-lg font-display font-semibold text-eatpur-dark text-center">
+                  FSSAI Certified
+                </h3>
+              </a>
+            </div>
 
-                {/* Nutrihub */}
-                <div className="flex flex-col items-center min-w-[220px]">
-                  <img
-                    src={NutrihubLogo}
-                    alt="Nutrihub"
-                    className="h-24 w-auto object-contain"
-                  />
-                  <h3 className="mt-4 text-lg font-semibold text-eatpur-dark text-center">
-                    Supported by
-                    <br />
-                    Nutrihub
-                  </h3>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+            {/* Startup India */}
+            <div className="flex flex-col items-center min-w-[220px] mx-14 md:mx-20">
+              <a
+                href={StartupMOU}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="
+                  flex flex-col items-center
+                  min-w-[220px]
+                  mx-14 md:mx-20
+                  cursor-pointer
+                  hover:-translate-y-2
+                  transition-transform
+                  duration-300
+                "
+              >
+                <img
+                  src={StartupIndiaLogo}
+                  alt="Startup India"
+                  className="h-24 w-auto object-contain drop-shadow-sm mix-blend-multiply"
+                />
+
+                <h3 className="mt-5 text-lg font-display font-semibold text-eatpur-dark text-center">
+                  Recognised by
+                  <br />
+                  <span className="text-eatpur-green-dark">Startup India</span>
+                </h3>
+              </a>
+            </div>
+
+            {/* Nutrihub */}
+            <div className="flex flex-col items-center min-w-[220px] mx-14 md:mx-20">
+              <a
+                href={NutriDoc}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="
+                  flex flex-col items-center
+                  min-w-[220px]
+                  mx-14 md:mx-20
+                  cursor-pointer
+                  hover:-translate-y-2
+                  transition-transform
+                  duration-300
+                "
+              >
+                <img
+                  src={NutrihubLogo}
+                  alt="Nutrihub"
+                  className="h-24 w-auto object-contain drop-shadow-sm mix-blend-multiply"
+                />
+
+                <h3 className="mt-5 text-lg font-display font-semibold text-eatpur-dark text-center">
+                  Supported by
+                  <br />
+                  <span className="text-eatpur-green-dark">Nutrihub</span>
+                </h3>
+              </a>
+            </div>
+
+            {/* MSME */}
+            <div className="flex flex-col items-center min-w-[220px] mx-14 md:mx-20">
+              <a
+                href={MSMECertificate}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="
+                  flex flex-col items-center
+                  min-w-[220px]
+                  mx-14 md:mx-20
+                  cursor-pointer
+                  hover:-translate-y-2
+                  transition-transform
+                  duration-300
+                "
+              >
+                <img
+                  src={MSMELogo}
+                  alt="MSME"
+                  className="h-24 w-auto object-contain drop-shadow-sm mix-blend-multiply"
+                />
+
+                <h3 className="mt-5 text-lg font-display font-semibold text-eatpur-dark text-center">
+                  Recognised by
+                  <br />
+                  <span className="text-eatpur-green-dark">
+                    MSME Division, GOI
+                  </span>
+                </h3>
+              </a>
+            </div>
+          </ThreeDScrollTriggerRow>
+        </ThreeDScrollTriggerContainer>
       </section>
 
       {/* Shop by Need Section */}
       <section className="py-12 px-6 relative bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16 flex flex-col items-center">
-            <h2 className="text-3xl md:text-4xl font-display text-eatpur-dark flex items-center gap-4">
+            <h2 className="text-3xl md:text-5xl font-display font-semibold text-eatpur-dark mb-4 tracking-tight">
               <img
                 src="/icons/flourish-left.png"
                 alt="~"
@@ -288,10 +373,10 @@ export default function HomePage() {
       <section className="py-24 relative overflow-hidden bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-display text-eatpur-dark mb-4">
+            <h2 className="text-3xl md:text-5xl font-display font-semibold text-eatpur-dark mb-4 tracking-tight">
               Bestsellers
             </h2>
-            <p className="text-eatpur-text font-serif italic">
+            <p className="text-eatpur-text font-serif italic text-lg md:text-xl opacity-90">
               Crafted from nature's finest grains.
             </p>
           </div>
@@ -529,10 +614,10 @@ export default function HomePage() {
       </section> */}
 
       {/* NEW SECTION: Verified User Reviews (Live API Data) */}
-      <section className="py-24 px-6 bg-white relative overflow-hidden">
-        <div className="max-w-7xl mx-auto">
+      <section className="py-5 bg-white relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6">
           {/* Header */}
-          <div className="text-center mb-16">
+          <div className="text-center mb-5">
             <h2 className="text-3xl md:text-5xl font-display font-semibold text-eatpur-dark mb-4 tracking-tight">
               What Our Family Says
             </h2>
@@ -540,54 +625,80 @@ export default function HomePage() {
               Real feedback from the EatPur community.
             </p>
           </div>
-
-          {isLoading ? (
-            <div className="text-center italic font-serif text-eatpur-text text-lg animate-pulse">
-              Loading reviews...
-            </div>
-          ) : userReviews.length > 0 ? (
-            <div className="flex flex-wrap justify-center gap-6 md:gap-8">
-              {userReviews.map((review, i) => (
-                <motion.figure
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                  key={review.id || i}
-                  className="relative bg-white rounded-lg border-t-[5px] border-[#E37A2C] shadow-[0_6px_20px_rgba(0,0,0,0.08)] text-[#555] font-sans min-w-[260px] max-w-[340px] w-full text-center mt-[40px] mb-[10px] inline-block transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-xl"
-                >
-                  <figcaption className="px-6 pt-14 pb-8">
-                    {/* Quote Icon */}
-                    <div className="absolute left-1/2 -top-[32px] -translate-x-1/2 bg-white rounded-full shadow-md text-[#E37A2C] w-[64px] h-[64px] flex items-center justify-center text-2xl">
-                      <FaQuoteLeft />
-                    </div>
-
-                    {/* Review Text */}
-                    <blockquote className="mb-6 text-eatpur-dark text-[16px] md:text-[17px] leading-relaxed font-medium">
-                      <p className="opacity-90">
-                        “{review.response_description}”
-                      </p>
-                    </blockquote>
-
-                    {/* Name */}
-                    <h3 className="text-eatpur-dark text-xl md:text-2xl font-display font-semibold leading-tight mb-1">
-                      {review.name}
-                    </h3>
-
-                    {/* Subtitle */}
-                    <h4 className="text-sm md:text-base font-medium tracking-wide text-eatpur-green-dark opacity-80">
-                      Verified Customer
-                    </h4>
-                  </figcaption>
-                </motion.figure>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center italic font-serif text-eatpur-text text-lg">
-              No reviews yet. Be the first to share your experience!
-            </div>
-          )}
         </div>
+
+        {isLoading ? (
+          <div className="text-center italic font-serif text-eatpur-text text-lg animate-pulse">
+            Loading reviews...
+          </div>
+        ) : userReviews.length > 0 ? (
+          <ThreeDScrollTriggerContainer className="w-full">
+            {/* Base velocity controls speed. Direction -1 scrolls Left */}
+            <ThreeDScrollTriggerRow baseVelocity={2.5} direction={-1}>
+              {/* Inner wrapper to handle spacing and layout inside the scrolling row */}
+              <div className="flex gap-6 md:gap-8 px-4 pr-6 md:pr-8 py-8 items-center">
+                {userReviews.map((review, i) => (
+                  <figure
+                    key={review.id || i}
+                    className="
+                      relative
+                      bg-white
+                      rounded-lg
+                      border-t-[5px]
+                      border-[#E37A2C]
+                      shadow-[0_6px_20px_rgba(0,0,0,0.08)]
+                      text-[#555]
+                      font-sans
+                      shrink-0
+
+                      w-[320px]
+                      md:w-[340px]
+                      h-[360px]
+
+                      text-center
+                      inline-block
+
+                      transition-all
+                      duration-300
+                      ease-out
+                      hover:-translate-y-2
+                      hover:shadow-xl
+                      cursor-pointer
+                    "
+                  >
+                    <figcaption className="px-6 pt-14 pb-8 whitespace-normal">
+                      {/* Quote Icon */}
+                      <div className="absolute left-1/2 -top-[32px] -translate-x-1/2 bg-white rounded-full shadow-md text-[#E37A2C] w-[64px] h-[64px] flex items-center justify-center text-2xl">
+                        <FaQuoteLeft />
+                      </div>
+
+                      {/* Review Text */}
+                      <blockquote className="mb-6 text-eatpur-dark text-[16px] md:text-[17px] leading-relaxed font-medium">
+                        <p className="opacity-90">
+                          “{review.response_description}”
+                        </p>
+                      </blockquote>
+
+                      {/* Name */}
+                      <h3 className="text-eatpur-dark text-xl md:text-2xl font-display font-semibold leading-tight mb-1">
+                        {review.name}
+                      </h3>
+
+                      {/* Subtitle */}
+                      <h4 className="text-sm md:text-base font-medium tracking-wide text-eatpur-green-dark opacity-80">
+                        Verified Customer
+                      </h4>
+                    </figcaption>
+                  </figure>
+                ))}
+              </div>
+            </ThreeDScrollTriggerRow>
+          </ThreeDScrollTriggerContainer>
+        ) : (
+          <div className="text-center italic font-serif text-eatpur-text text-lg">
+            No reviews yet. Be the first to share your experience!
+          </div>
+        )}
       </section>
 
       {/* Special Offer Banner / Section */}

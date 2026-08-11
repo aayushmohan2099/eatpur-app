@@ -12,6 +12,8 @@ import {
 } from "react-icons/fa6";
 import Logo from "../assets/Logo3D.png";
 import FssaiLicense from "../certificates/EATPURFssaiLicense.pdf";
+import PolicyModal from "./PolicyModal";
+
 export default function Footer() {
   return (
     <footer className="bg-eatpur-white-warm pt-16 pb-8 z-10 relative mt-auto">
@@ -180,45 +182,43 @@ export default function Footer() {
             </li>
           </ul>
         </div>
-        {/* Column 5: Licences & Certifications */}
-        <div>
-          <h4 className="text-eatpur-dark font-display font-bold text-lg mb-6 tracking-wide">
-            Licences & Certifications
-          </h4>
-
-          <ul className="space-y-3">
-            <li>
-              <a
-                href={FssaiLicense}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-eatpur-text hover:text-eatpur-green-dark transition-colors text-sm underline"
-              >
-                FSSAI License
-              </a>
-            </li>
-          </ul>
-        </div>
       </div>
 
       {/* Copyright & Links Row */}
       <div className="max-w-7xl mx-auto px-6 border-t border-black/5 pt-6 pb-6 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-eatpur-text-light">
-        <p>
+        <p className="text-center md:text-left">
           © {new Date().getFullYear()} Eatpur Naturals LLP. All rights reserved.
         </p>
-        <div className="flex gap-6">
-          <Link
-            to="#"
-            className="hover:text-eatpur-green-dark transition-colors"
-          >
-            Privacy Policy
-          </Link>
-          <Link
-            to="#"
-            className="hover:text-eatpur-green-dark transition-colors"
-          >
-            Terms of Service
-          </Link>
+        <div className="flex flex-wrap justify-center md:justify-end gap-x-6 gap-y-3">
+          <PolicyModal policyId={1}>
+            <span className="hover:text-eatpur-green-dark transition-colors cursor-pointer">
+              Terms of Service
+            </span>
+          </PolicyModal>
+
+          <PolicyModal policyId={5}>
+            <span className="hover:text-eatpur-green-dark transition-colors cursor-pointer">
+              Privacy Policy
+            </span>
+          </PolicyModal>
+
+          <PolicyModal policyId={3}>
+            <span className="hover:text-eatpur-green-dark transition-colors cursor-pointer">
+              Refunds & Returns
+            </span>
+          </PolicyModal>
+
+          <PolicyModal policyId={4}>
+            <span className="hover:text-eatpur-green-dark transition-colors cursor-pointer">
+              Shipping Policy
+            </span>
+          </PolicyModal>
+
+          <PolicyModal policyId={2}>
+            <span className="hover:text-eatpur-green-dark transition-colors cursor-pointer">
+              Health Disclaimer
+            </span>
+          </PolicyModal>
         </div>
       </div>
 

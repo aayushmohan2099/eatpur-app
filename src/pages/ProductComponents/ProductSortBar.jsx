@@ -16,7 +16,7 @@ export default function ProductSortBar({ sort, setSort, totalCount }) {
   ];
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-eatpur-gray-light p-4 flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+    <div className="bg-white rounded-xl shadow-sm p-4 flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
       <div className="text-eatpur-text text-sm">
         Showing <span className="font-bold text-eatpur-dark">{totalCount}</span>{" "}
         products

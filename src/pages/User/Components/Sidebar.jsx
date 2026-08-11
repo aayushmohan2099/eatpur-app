@@ -132,47 +132,60 @@ export default function Sidebar({
       {/* Mobile Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-[--color-eatpur-overlay-dark] backdrop-blur-sm z-40 md:hidden transition-opacity"
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden transition-opacity"
           onClick={onClose}
         ></div>
       )}
 
-      {/* Sidebar Container */}
+      {/* Sidebar Container (Floating on Desktop, Semi-Transparent Glass) */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-[--color-eatpur-card] border-r border-[--color-eatpur-border] transform transition-transform duration-[--transition-medium] flex flex-col md:translate-x-0 md:static md:flex-shrink-0 ${
-          isOpen
-            ? "translate-x-0 shadow-[var(--shadow-premium)]"
-            : "-translate-x-full"
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 w-72
+        bg-white/75
+          border-r md:border border-[#DCDFD9]
+          transform transition-transform duration-300
+          flex flex-col
+          md:translate-x-0 md:static md:flex-shrink-0
+          md:rounded-3xl md:my-6 md:ml-6
+          md:h-[calc(100vh-3rem)]
+          shadow-[0_8px_30px_rgba(0,0,0,0.04)]
+          overflow-hidden
+          ${isOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"}`}
       >
-        {/* Desktop Title / Mobile Close Area */}
-        <div className="h-16 flex items-center justify-between px-6 border-b border-[--color-eatpur-border] bg-[--color-eatpur-bg-light]">
-          <span className="text-lg font-bold text-[--color-eatpur-dark] font-[family-name:var(--font-display)] tracking-wide">
-            {activeModule} Menu
-          </span>
-          {/* Mobile Close Button */}
-          <button
-            onClick={onClose}
-            className="md:hidden text-[--color-eatpur-text-light] hover:text-[--color-eatpur-clay] transition-colors"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              viewBox="0 0 24 24"
+        {/* Top Area: Title & Close */}
+        <div className="pt-10 px-8 pb-8 bg-transparent relative">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-[--color-eatpur-dark] font-display tracking-wide">
+                {activeModule} Menu
+              </h2>
+              {/* Green Title Underline matching the reference image */}
+              <div className="w-6 h-0.5 bg-[--color-eatpur-green-dark] mt-3 rounded-full"></div>
+            </div>
+
+            {/* Mobile Close Button */}
+            <button
+              onClick={onClose}
+              className="md:hidden text-[--color-eatpur-text-light] hover:text-[--color-eatpur-dark] bg-white rounded-full p-2 shadow-sm border border-slate-100 transition-colors"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* Dynamic Navigation Links */}
-        <nav className="flex-1 overflow-y-auto p-4 space-y-2">
+        <nav className="flex-1 overflow-y-auto px-5 pb-8 space-y-1.5 hide-scrollbar">
           {currentSubMenus.map((menu) => {
             const isActive = activeSubMenu === menu.id;
             return (
@@ -182,16 +195,17 @@ export default function Sidebar({
                   setActiveSubMenu(menu.id);
                   if (window.innerWidth < 768) onClose(); // Auto-close on mobile after selection
                 }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-[--radius-button] font-medium transition-all duration-[--transition-fast] text-left ${
+                className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl font-sans font-medium transition-all duration-200 text-left ${
                   isActive
-                    ? "bg-[--color-eatpur-green-pale] text-[--color-eatpur-dark] shadow-sm border border-[--color-eatpur-green-soft]"
-                    : "text-[--color-eatpur-text-light] hover:bg-[--color-eatpur-gray-light] hover:text-[--color-eatpur-text] border border-transparent"
+                    ? "bg-[--color-eatpur-white-warm] text-[--color-eatpur-green-dark] shadow-sm border border-[--color-eatpur-green-light]/20"
+                    : "text-[--color-eatpur-dark] hover:bg-black/5 border border-transparent"
                 }`}
               >
-                <Icon
-                  name={menu.icon}
-                  className={`w-5 h-5 ${isActive ? "text-[--color-eatpur-green]" : "text-[--color-eatpur-text-light]"}`}
-                />
+                <div
+                  className={`flex items-center justify-center ${isActive ? "text-[--color-eatpur-green-dark]" : "text-[--color-eatpur-dark]"}`}
+                >
+                  <Icon name={menu.icon} className="w-5 h-5" />
+                </div>
                 {menu.label}
               </button>
             );

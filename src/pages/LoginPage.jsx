@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { getCaptcha, loginUser, registerUser } from "../api/authApi";
+import {
+  getCaptcha,
+  loginUser,
+  registerUser,
+  socialAuth,
+} from "../api/authApi";
 import { useNavigate, useLocation } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
 
 export default function AuthPage() {
   const [captcha, setCaptcha] = useState(null);
@@ -8,6 +14,7 @@ export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(location.pathname !== "/signup");
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
+  const [isEmailLocked, setIsEmailLocked] = useState(false);
 
   const [form, setForm] = useState({
     username: "",
@@ -29,6 +36,38 @@ export default function AuthPage() {
   useEffect(() => {
     fetchCaptcha();
   }, []);
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const res = await socialAuth({
+        provider: "google",
+        token: credentialResponse.credential,
+      });
+
+      if (res && res.access) {
+        // Direct Login: User already exists!
+        localStorage.setItem("access", res.access);
+        localStorage.setItem("refresh", res.refresh);
+        localStorage.setItem("role", res.user?.role_name || "CUSTOMER");
+
+        setErrors({});
+        setSuccessMessage("Google Login successful! Redirecting...");
+        setTimeout(() => navigate("/"), 1500);
+      } else if (res && res.action === "requires_registration") {
+        // Requires Registration: Route to signup & lock email
+        setIsLogin(false);
+        setForm((prev) => ({ ...prev, email: res.email }));
+        setIsEmailLocked(true);
+        setErrors({});
+        setSuccessMessage(
+          "Google email verified! Please complete your details to register.",
+        );
+      }
+    } catch (err) {
+      console.error(err);
+      setErrors({ detail: "Google authentication failed or server error." });
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -259,6 +298,7 @@ export default function AuthPage() {
             <button
               onClick={() => {
                 setIsLogin(true);
+                setIsEmailLocked(false);
                 navigate("/login");
               }}
               className={`w-1/2 py-2.5 text-sm font-medium rounded-lg transition-all ${
@@ -272,6 +312,7 @@ export default function AuthPage() {
             <button
               onClick={() => {
                 setIsLogin(false);
+                setIsEmailLocked(false);
                 navigate("/signup");
               }}
               className={`w-1/2 py-2.5 text-sm font-medium rounded-lg transition-all ${
@@ -284,9 +325,29 @@ export default function AuthPage() {
             </button>
           </div>
 
-          <h2 className="text-3xl font-display text-eatpur-dark mb-8 text-center tracking-tight">
+          <h2 className="text-3xl font-display text-eatpur-dark mb-6 text-center tracking-tight">
             {isLogin ? "Welcome Back" : "Create Account"}
           </h2>
+
+          {/* GOOGLE OAUTH BUTTON */}
+          <div className="flex justify-center mb-6">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setErrors({ detail: "Google Login Failed" })}
+              theme="outline"
+              size="large"
+              shape="rectangular"
+              text={isLogin ? "signin_with" : "signup_with"}
+            />
+          </div>
+
+          <div className="flex items-center gap-3 mb-6">
+            <hr className="w-full border-black/10" />
+            <span className="text-xs text-eatpur-text-light font-medium uppercase tracking-wider">
+              OR
+            </span>
+            <hr className="w-full border-black/10" />
+          </div>
 
           {/* SUCCESS MESSAGE */}
           {successMessage && (
@@ -385,7 +446,13 @@ export default function AuthPage() {
                   <input
                     type="email"
                     placeholder="Email"
-                    className="w-full p-3.5 rounded-xl bg-eatpur-white-warm border border-black/10 focus:border-eatpur-green-dark outline-none text-eatpur-dark placeholder:text-eatpur-text-light shadow-inner font-serif transition-colors"
+                    value={form.email}
+                    readOnly={isEmailLocked}
+                    className={`w-full p-3.5 rounded-xl outline-none text-eatpur-dark placeholder:text-eatpur-text-light shadow-inner font-serif transition-colors ${
+                      isEmailLocked
+                        ? "bg-green-50 border border-eatpur-green-dark/50 text-eatpur-green-dark font-medium cursor-not-allowed"
+                        : "bg-eatpur-white-warm border border-black/10 focus:border-eatpur-green-dark"
+                    }`}
                     onChange={(e) =>
                       setForm({ ...form, email: e.target.value })
                     }
