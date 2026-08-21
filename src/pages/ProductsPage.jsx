@@ -628,8 +628,18 @@ export default function ProductsPage() {
                 <div className="mt-auto pt-4">
                   <CartButton
                     onClick={() => {
-                      dispatch({ type: "ADD_ITEM", payload: quickViewProduct });
-                      setTimeout(() => setQuickViewProduct(null), 1500);
+                      dispatch({
+                        type: "ADD_ITEM",
+                        payload: quickViewProduct,
+                      });
+                    }}
+                    onAnimationComplete={() => {
+                      setQuickViewProduct(null);
+
+                      // Open cart AFTER button animation
+                      dispatch({
+                        type: "OPEN_CART",
+                      });
                     }}
                   />
                 </div>

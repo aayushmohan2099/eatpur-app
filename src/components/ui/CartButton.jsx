@@ -4,6 +4,7 @@ import { FaCartShopping, FaBox } from "react-icons/fa6";
 
 export default function CartButton({
   onClick,
+  onAnimationComplete,
   className = "",
   disabled = false,
   text = "Add to Cart",
@@ -14,15 +15,17 @@ export default function CartButton({
   const handleClick = (e) => {
     if (disabled || isClicked) return;
 
-    // Trigger CSS Animation
     setIsClicked(true);
 
-    // Execute actual add to cart logic immediately
+    // Add item immediately
     if (onClick) onClick(e);
 
-    // Reset button state after animation finishes (1.5s matches CSS)
     setTimeout(() => {
       setIsClicked(false);
+
+      if (onAnimationComplete) {
+        onAnimationComplete();
+      }
     }, 1500);
   };
 

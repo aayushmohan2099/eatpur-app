@@ -23,14 +23,11 @@ function cartReducer(state, action) {
     case "ADD_ITEM": {
       const payload = action.payload;
 
-      // 🔥 SURGICAL FIX: Normalize Django API fields to Cart expected fields
       const cartItem = {
         ...payload,
-        // Force the API string to a Float so math operations don't return NaN
         price: parseFloat(
           payload.discounted_price || payload.fixed_price || payload.price || 0,
         ),
-        // Map the Django cover_image to the image prop the Cart expects
         image: payload.cover_image || payload.image,
       };
 
@@ -44,14 +41,20 @@ function cartReducer(state, action) {
               ? { ...item, quantity: item.quantity + 1 }
               : item,
           ),
-          isOpen: true,
+          // ❌ Don't open sidebar here
         };
       }
 
       return {
         ...state,
-        items: [...state.items, { ...cartItem, quantity: 1 }],
-        isOpen: true,
+        items: [
+          ...state.items,
+          {
+            ...cartItem,
+            quantity: 1,
+          },
+        ],
+        // ❌ Don't open sidebar here
       };
     }
 
@@ -76,6 +79,9 @@ function cartReducer(state, action) {
 
     case "CLEAR_CART":
       return { ...state, items: [] };
+
+    case "OPEN_CART":
+      return { ...state, isOpen: true };
 
     default:
       return state;
