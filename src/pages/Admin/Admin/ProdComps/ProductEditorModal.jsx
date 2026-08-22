@@ -25,6 +25,9 @@ export default function ProductEditorModal({
   const [baseDetails, setBaseDetails] = useState({
     name: "",
     description: "",
+    ingredients: "",
+    cooking_instructions: "",
+    highlights: "",
     category_id: "",
   });
 
@@ -33,6 +36,9 @@ export default function ProductEditorModal({
       setBaseDetails({
         name: product.name || "",
         description: product.description || "",
+        ingredients: product.ingredients || "",
+        cooking_instructions: product.cooking_instructions || "",
+        highlights: product.highlights || "",
         category_id: "", // Pre-filled dynamically when variants fetch
       });
       fetchVariants(product.id);
@@ -64,6 +70,9 @@ export default function ProductEditorModal({
         setBaseDetails({
           name: rawData[0].name || "",
           description: rawData[0].description || "",
+          ingredients: rawData[0].ingredients || "",
+          cooking_instructions: rawData[0].cooking_instructions || "",
+          highlights: rawData[0].highlights || "",
           category_id: rawData[0].category?.id || "",
         });
       }
@@ -225,6 +234,9 @@ export default function ProductEditorModal({
       const formData = new FormData();
       formData.append("name", baseDetails.name);
       formData.append("description", baseDetails.description);
+      formData.append("ingredients", baseDetails.ingredients);
+      formData.append("cooking_instructions", baseDetails.cooking_instructions);
+      formData.append("highlights", baseDetails.highlights);
       formData.append("fixed_price", variant.fixed_price || 0);
       formData.append("category_id", baseDetails.category_id);
       formData.append("discounted_price", variant.discounted_price || 0);
@@ -371,7 +383,7 @@ export default function ProductEditorModal({
             <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-4">
               <div className="flex justify-between items-center mb-2">
                 <h4 className="font-semibold text-slate-800">
-                  Global Product Settings
+                  Base Product Settings
                 </h4>
                 <span className="text-xs font-mono bg-slate-200 px-2 py-1 rounded text-slate-600">
                   Category: {product.category_name}
@@ -440,6 +452,42 @@ export default function ProductEditorModal({
                     value={baseDetails.description}
                     onChange={handleBaseChange}
                     rows="3"
+                    className="w-full px-3 py-2 rounded border border-slate-300 focus:border-[--color-eatpur-green-dark] outline-none text-sm bg-white"
+                  ></textarea>
+                </div>
+                <div className="md:col-span-3">
+                  <label className="block text-xs font-medium text-slate-500 mb-1">
+                    Ingredients
+                  </label>
+                  <textarea
+                    name="ingredients"
+                    value={baseDetails.ingredients}
+                    onChange={handleBaseChange}
+                    rows="2"
+                    className="w-full px-3 py-2 rounded border border-slate-300 focus:border-[--color-eatpur-green-dark] outline-none text-sm bg-white"
+                  ></textarea>
+                </div>
+                <div className="md:col-span-3">
+                  <label className="block text-xs font-medium text-slate-500 mb-1">
+                    Cooking Instructions
+                  </label>
+                  <textarea
+                    name="cooking_instructions"
+                    value={baseDetails.cooking_instructions}
+                    onChange={handleBaseChange}
+                    rows="3"
+                    className="w-full px-3 py-2 rounded border border-slate-300 focus:border-[--color-eatpur-green-dark] outline-none text-sm bg-white"
+                  ></textarea>
+                </div>
+                <div className="md:col-span-3">
+                  <label className="block text-xs font-medium text-slate-500 mb-1">
+                    Produt Meta Description (Highlights)
+                  </label>
+                  <textarea
+                    name="highlights"
+                    value={baseDetails.highlights}
+                    onChange={handleBaseChange}
+                    rows="1"
                     className="w-full px-3 py-2 rounded border border-slate-300 focus:border-[--color-eatpur-green-dark] outline-none text-sm bg-white"
                   ></textarea>
                 </div>
