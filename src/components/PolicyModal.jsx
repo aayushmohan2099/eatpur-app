@@ -58,6 +58,10 @@ const POLICIES = {
         subtitle: "1.4. Mandatory Binding Arbitration & Class Action Waiver",
         text: "Any claims, controversies, or disputes arising from website use or product consumption shall be resolved exclusively through individual binding arbitration. By using this site, you waive any right to participate in class-action lawsuits.",
       },
+      {
+        subtitle: "1.5. Allergen, Health & Dietary Disclaimers",
+        text: "1. Medical & Nutritional Disclaimer: Any dietary, nutritional, or health information regarding our millet products provided on the EatPur platform is for general informational purposes only and does not constitute medical advice. Consumers with celiac disease, gluten sensitivity, or severe food allergies should consult a physician before consuming our products.\n\n2. Shared Facility & Cross-Contact Warning: While millets are naturally gluten-free grains, our products are processed and packaged in a facility that also handles wheat, gluten, peanuts, tree nuts, soy, milk, and sesame. Although we follow strict Current Good Manufacturing Practices (cGMP) to prevent cross-contamination, a 100% allergen-free environment cannot be guaranteed.\n\n3. Product Formulation Variations & Packaging Governance: Ingredient sourcing and formulation for our millet foods may be updated periodically. While we strive to keep website listings accurate, physical product packaging and labels always serve as the final, governing source for accurate ingredient and allergen declarations. Always inspect the physical label before consumption.",
+      },
     ],
   },
   2: {

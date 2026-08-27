@@ -7,8 +7,13 @@ import {
   FaLeaf,
   FaHeartPulse,
   FaAward,
+  FaQuoteLeft,
 } from "react-icons/fa6";
-
+import { HomeAnalytics } from "../api/homepage";
+import {
+  ThreeDScrollTriggerContainer,
+  ThreeDScrollTriggerRow,
+} from "../components/ui/ThreeDScrollTrigger";
 const TEAM = [
   {
     name: "Lovelesh Kumar Srivastava",
@@ -59,6 +64,52 @@ const getFallbackAvatar = (name, size = 200) => {
 export default function AboutPage() {
   const [carouselWidth, setCarouselWidth] = useState(0);
   const carouselRef = useRef(null);
+  const [userReviews, setUserReviews] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const BASE_URL = "https://eatpur.in";
+
+  const fixUrlsDeep = (data) => {
+    if (typeof data === "string") {
+      return data
+        .replace(/https?:\/\/66\.116\.207\.88/g, BASE_URL)
+        .replace(/https?:\/\/eatpur\.in/g, BASE_URL);
+    }
+
+    if (Array.isArray(data)) {
+      return data.map(fixUrlsDeep);
+    }
+
+    if (typeof data === "object" && data !== null) {
+      const newObj = {};
+      for (const key in data) {
+        newObj[key] = fixUrlsDeep(data[key]);
+      }
+      return newObj;
+    }
+
+    return data;
+  };
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        setIsLoading(true);
+        const res = await HomeAnalytics();
+        const rawData = res.data?.results || res.data || res;
+        const data = fixUrlsDeep(rawData);
+
+        if (data.google_form_responses) {
+          setUserReviews(data.google_form_responses);
+        }
+      } catch (err) {
+        console.error("Error fetching reviews for about page", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchReviews();
+  }, []);
 
   useEffect(() => {
     if (carouselRef.current) {
@@ -350,6 +401,94 @@ export default function AboutPage() {
             ))}
           </div>
         </div>
+      </section>
+
+      {/* NEW SECTION: Verified User Reviews (Live API Data) */}
+      <section className="py-8 bg-white relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6">
+          {/* Header */}
+          <div className="text-center mb-5">
+            <h2 className="text-3xl md:text-5xl font-display font-semibold text-eatpur-dark mb-4 tracking-tight">
+              What Our Family Says
+            </h2>
+            <p className="text-eatpur-text font-serif italic text-lg md:text-xl opacity-90">
+              Real feedback from the EatPur community.
+            </p>
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div className="text-center italic font-serif text-eatpur-text text-lg animate-pulse">
+            Loading reviews...
+          </div>
+        ) : userReviews.length > 0 ? (
+          <ThreeDScrollTriggerContainer className="w-full">
+            {/* Base velocity controls speed. Direction -1 scrolls Left */}
+            <ThreeDScrollTriggerRow baseVelocity={2.5} direction={-1}>
+              {/* Inner wrapper to handle spacing and layout inside the scrolling row */}
+              <div className="flex gap-6 md:gap-8 px-4 pr-6 md:pr-8 py-8 items-center">
+                {userReviews.map((review, i) => (
+                  <figure
+                    key={review.id || i}
+                    className="
+                      relative
+                      bg-white
+                      rounded-lg
+                      border-t-[5px]
+                      border-[#E37A2C]
+                      shadow-[0_6px_20px_rgba(0,0,0,0.08)]
+                      text-[#555]
+                      font-sans
+                      shrink-0
+
+                      w-[320px]
+                      md:w-[340px]
+                      h-[360px]
+
+                      text-center
+                      inline-block
+
+                      transition-all
+                      duration-300
+                      ease-out
+                      hover:-translate-y-2
+                      hover:shadow-xl
+                      cursor-pointer
+                    "
+                  >
+                    <figcaption className="px-6 pt-14 pb-8 whitespace-normal">
+                      {/* Quote Icon */}
+                      <div className="absolute left-1/2 -top-[32px] -translate-x-1/2 bg-white rounded-full shadow-md text-[#E37A2C] w-[64px] h-[64px] flex items-center justify-center text-2xl">
+                        <FaQuoteLeft />
+                      </div>
+
+                      {/* Review Text */}
+                      <blockquote className="mb-6 text-eatpur-dark text-[16px] md:text-[17px] leading-relaxed font-medium">
+                        <p className="opacity-90">
+                          “{review.response_description}”
+                        </p>
+                      </blockquote>
+
+                      {/* Name */}
+                      <h3 className="text-eatpur-dark text-xl md:text-2xl font-display font-semibold leading-tight mb-1">
+                        {review.name}
+                      </h3>
+
+                      {/* Subtitle */}
+                      <h4 className="text-sm md:text-base font-medium tracking-wide text-eatpur-green-dark opacity-80">
+                        Verified Customer
+                      </h4>
+                    </figcaption>
+                  </figure>
+                ))}
+              </div>
+            </ThreeDScrollTriggerRow>
+          </ThreeDScrollTriggerContainer>
+        ) : (
+          <div className="text-center italic font-serif text-eatpur-text text-lg">
+            No reviews yet. Be the first to share your experience!
+          </div>
+        )}
       </section>
     </div>
   );

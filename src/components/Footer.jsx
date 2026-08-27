@@ -177,7 +177,8 @@ export default function Footer() {
             <li className="flex items-center gap-3">
               <FaEnvelope className="text-eatpur-green-dark" size={14} />
               <span className="text-eatpur-text text-sm">
-                eatpurnaturals@gmail.com
+                {/* eatpurnaturals@gmail.com */}
+                contact@eatpur.in
               </span>
             </li>
           </ul>
@@ -228,6 +229,11 @@ export default function Footer() {
           Powered by
           <span className="flex items-center gap-1 font-medium text-eatpur-text">
             TechnoHorizon
+          </span>
+          <br></br>
+          <span>
+            1st Floor, Shiva Plaza Engineering College Chauraha, Sector B,
+            Jankipuram, Lucknow, Uttar Pradesh 226021
           </span>
         </p>
       </div>
