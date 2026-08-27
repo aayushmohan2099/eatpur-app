@@ -31,8 +31,8 @@ import LeafButton from "../components/ui/LeafButton";
 import DraggableGrid from "../components/ui/DraggableGrid";
 import FssaiLicense from "../certificates/EATPURFssaiLicense.pdf";
 import MSMECertificate from "../certificates/EATPUR _ Udyam Registration Certificate.pdf";
-import StartupMOU from "../certificates/EATPURFssaiLicense.pdf";
-import NutriDoc from "../certificates/EATPURFssaiLicense.pdf";
+import StartupMOU from "../certificates/Startup certificate.pdf";
+import NutriDoc from "../certificates/EATPUR NATURALS LLP MoU with Nutrihub,ICAR-IIMR soft copy_signed.pdf";
 
 const heroImages = [
   "/home/home-carousel/pic1.jpeg",
@@ -328,7 +328,7 @@ export default function HomePage() {
       </section>
 
       {/* Shop by Need Section */}
-      <section className="py-12 px-6 relative bg-white">
+      {/* <section className="py-12 px-6 relative bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16 flex flex-col items-center">
             <h2 className="text-3xl md:text-5xl font-display font-semibold text-eatpur-dark mb-4 tracking-tight">
@@ -367,6 +367,63 @@ export default function HomePage() {
             ))}
           </div>
         </div>
+      </section> */}
+      <section className="py-16 md:py-24 px-6 relative bg-[#FAFAF7]">
+        {/* Subtle radial luxury glow in background */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-emerald-100/30 blur-[120px] rounded-full pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="text-center mb-16 flex flex-col items-center">
+            <h2 className="text-3xl md:text-5xl font-display font-semibold text-eatpur-dark mb-4 tracking-tight flex items-center justify-center gap-3">
+              <img
+                src="/icons/flourish-left.png"
+                alt="~"
+                className="h-6 opacity-60 hidden md:block"
+                onError={(e) => (e.target.style.display = "none")}
+              />
+              🌿 Shop by Need 🌿
+              <img
+                src="/icons/flourish-right.png"
+                alt="~"
+                className="h-6 opacity-60 hidden md:block"
+                onError={(e) => (e.target.style.display = "none")}
+              />
+            </h2>
+          </div>
+
+          {/* Responsive grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 md:gap-8 justify-items-center">
+            {[
+              { title: "Kids Nutrition", icon: FaChild },
+              { title: "Fitness & Weight Loss", icon: FaDumbbell },
+              { title: "Daily Family Staples", icon: FaHouseUser },
+              { title: "Quick Meals (2-5 min)", icon: FaBowlFood },
+              { title: "Organic Living", icon: FaSeedling },
+            ].map((cat, i) => (
+              <Link
+                to={`/products?need=${cat.title.toLowerCase().replace(/ & | /g, "-")}`}
+                key={i}
+                className="group w-full max-w-[210px] aspect-[4/5] bg-[#FCFDF9] rounded-3xl border border-emerald-700/20 shadow-[0_4px_24px_rgba(20,83,45,0.05)] hover:border-emerald-600 hover:ring-2 hover:ring-emerald-500/20 hover:shadow-[0_16px_36px_rgba(16,185,129,0.18)] flex flex-col items-center justify-center p-6 text-center transition-all duration-300 ease-out hover:-translate-y-2 relative overflow-hidden"
+              >
+                {/* Subtle warm green shimmer overlay on hover */}
+                <div className="absolute inset-0 bg-gradient-to-b from-emerald-100/35 via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+                {/* Premium Icon Badge with Defined Green Ring */}
+                <div className="w-14 h-14 rounded-2xl bg-[#F4F7F2] border border-emerald-700/25 flex items-center justify-center mb-5 group-hover:bg-emerald-600 group-hover:border-emerald-600 shadow-sm transition-all duration-300 text-eatpur-dark group-hover:text-white">
+                  <cat.icon
+                    size={22}
+                    className="transition-transform duration-300 group-hover:scale-110"
+                  />
+                </div>
+
+                {/* Typography */}
+                <span className="text-sm md:text-base font-semibold text-eatpur-dark leading-snug tracking-tight group-hover:text-emerald-950 transition-colors duration-200">
+                  {cat.title}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* Featured Products (Live API Data) */}
@@ -384,8 +441,8 @@ export default function HomePage() {
 
         {/* --- PREMIUM SCROLLING CAROUSEL START --- */}
         <div className="relative w-full max-w-[100vw] overflow-hidden group">
-          <div className="absolute top-0 left-0 w-16 md:w-32 h-full  z-10 pointer-events-none"></div>
-          <div className="absolute top-0 right-0 w-16 md:w-32 h-full  z-10 pointer-events-none"></div>
+          <div className="absolute top-0 left-0 w-16 md:w-32 h-full z-10 pointer-events-none"></div>
+          <div className="absolute top-0 right-0 w-16 md:w-32 h-full z-10 pointer-events-none"></div>
 
           {isLoading ? (
             <div className="w-full py-20 text-center text-eatpur-text italic font-serif animate-pulse">
@@ -411,7 +468,14 @@ export default function HomePage() {
                     return (
                       <div
                         key={`${loopIndex}-${product.id}`}
-                        className="vintage-card w-[280px] md:w-[320px] shrink-0 overflow-hidden flex flex-col group/card relative transition-transform duration-300 hover:-translate-y-2 hover:shadow-xl bg-white"
+                        onClick={() =>
+                          setQuickViewProduct({
+                            ...product,
+                            image: displayImg,
+                            healthScore,
+                          })
+                        }
+                        className="vintage-card w-[280px] md:w-[320px] shrink-0 overflow-hidden flex flex-col group/card relative transition-transform duration-300 hover:-translate-y-2 hover:shadow-xl bg-white cursor-pointer"
                       >
                         {/* Top Right Discount Tag */}
                         {product.discounted_price && product.fixed_price && (
@@ -435,20 +499,6 @@ export default function HomePage() {
                             className="h-full object-contain drop-shadow-md rounded-t-xl mix-blend-multiply"
                             loading="lazy"
                           />
-                          <button
-                            onClick={() =>
-                              setQuickViewProduct({
-                                ...product,
-                                image: displayImg,
-                                healthScore,
-                              })
-                            }
-                            className="absolute inset-0 bg-eatpur-white-warm/80 flex items-center justify-center opacity-0 group-hover/card:opacity-100 transition-opacity backdrop-blur-sm"
-                          >
-                            <span className="flex items-center gap-2 border border-eatpur-dark text-eatpur-dark px-6 py-3 rounded-full font-display hover:bg-eatpur-dark hover:text-white transition-colors">
-                              <FaEye /> Quick View
-                            </span>
-                          </button>
                         </div>
 
                         <div className="p-6 flex flex-col flex-1 border-t border-black/5">
@@ -495,7 +545,8 @@ export default function HomePage() {
                             </div>
 
                             <button
-                              onClick={() =>
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 dispatch({
                                   type: "ADD_ITEM",
                                   payload: {
@@ -505,8 +556,8 @@ export default function HomePage() {
                                       product.discounted_price ||
                                       product.fixed_price,
                                   },
-                                })
-                              }
+                                });
+                              }}
                               className="w-10 h-10 rounded-full border border-eatpur-dark/20 flex items-center justify-center text-eatpur-dark hover:bg-eatpur-green-dark hover:border-eatpur-green-dark hover:text-white transition-all transform hover:scale-105"
                               aria-label="Add to cart"
                             >

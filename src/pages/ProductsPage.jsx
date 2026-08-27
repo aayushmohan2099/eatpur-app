@@ -121,6 +121,7 @@ export default function ProductsPage() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
+  const [activeTab, setActiveTab] = useState("nutrition");
 
   // Filter & Sort State
   const [filters, setFilters] = useState({
@@ -296,7 +297,9 @@ export default function ProductsPage() {
                       exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ duration: 0.4, delay: i * 0.05 }}
                       key={product.id}
-                      className="vintage-card overflow-hidden flex flex-col group relative bg-white transition-all duration-300 hover:shadow-xl hover:-translate-y-1 rounded-2xl border border-eatpur-border"
+                      onClick={() => setQuickViewProduct(product)}
+                      className="vintage-card overflow-hidden flex flex-col group relative bg-white transition-all duration-300 hover:shadow-xl hover:-translate-y-1 rounded-2xl border border-eatpur-border cursor-pointer"
+                      // className="vintage-card overflow-hidden flex flex-col group relative bg-white transition-all duration-300 hover:shadow-xl hover:-translate-y-1 rounded-2xl border border-eatpur-border"
                     >
                       {/* Top Badges */}
                       <div className="absolute top-4 left-4 right-4 z-30 flex justify-between items-start pointer-events-none">
@@ -375,7 +378,7 @@ export default function ProductsPage() {
                             </span>
                           </div>
 
-                          <button
+                          {/* <button
                             onClick={(e) => {
                               e.stopPropagation();
                               setQuickViewProduct(product);
@@ -384,7 +387,7 @@ export default function ProductsPage() {
                             aria-label="Quick View"
                           >
                             <FaEye size={16} className="-ml-0.5" />
-                          </button>
+                          </button> */}
                         </div>
                       </div>
                     </motion.div>
@@ -423,7 +426,7 @@ export default function ProductsPage() {
               </button>
 
               {/* Left Side: Images */}
-              <div className="md:w-1/2 p-6 md:p-10 bg-eatpur-green-dark flex flex-col">
+              <div className="md:w-1/2 p-2 md:p-2 bg-eatpur-green-dark flex flex-col">
                 <div className="flex-1 min-h-[300px] md:min-h-[400px] relative rounded-2xl overflow-hidden bg-white shadow-sm border border-slate-100">
                   <ImageCarousel
                     images={quickViewProduct.cover_image}
@@ -453,179 +456,158 @@ export default function ProductsPage() {
               </div>
 
               {/* Right Side: Details */}
-              <div className="md:w-1/2 p-8 md:p-10 flex flex-col justify-center bg-white relative">
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <span className="text-eatpur-green-dark font-sans font-bold text-[10px] tracking-widest uppercase px-3 py-1 bg-eatpur-green-light/20 rounded">
-                    {quickViewProduct.category_name}
-                  </span>
-                  <span className="text-eatpur-text font-sans font-bold text-[10px] tracking-widest uppercase px-3 py-1 bg-slate-100 rounded">
-                    {quickViewProduct.size_name} ({quickViewProduct.weight}
-                    {quickViewProduct.unit})
-                  </span>
-                  {quickViewProduct.is_trending && (
-                    <span className="text-eatpur-gold-dark font-sans font-bold text-[10px] tracking-widest uppercase px-3 py-1 bg-eatpur-gold-light/20 rounded">
-                      Trending
+
+              {/* Right Side: Details */}
+              <div className="md:w-1/2 p-8 md:p-10 flex flex-col justify-between bg-white relative">
+                <div>
+                  {/* Tab Buttons (Replaces Badges) */}
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("nutrition")}
+                      className={`font-sans font-bold text-xs uppercase tracking-wider px-3.5 py-1.5 rounded-lg transition-all ${
+                        activeTab === "nutrition"
+                          ? "bg-eatpur-green-dark text-white shadow-sm"
+                          : "bg-slate-100 text-eatpur-text hover:bg-slate-200"
+                      }`}
+                    >
+                      Nutrition Value
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("instructions")}
+                      className={`font-sans font-bold text-xs uppercase tracking-wider px-3.5 py-1.5 rounded-lg transition-all ${
+                        activeTab === "instructions"
+                          ? "bg-eatpur-green-dark text-white shadow-sm"
+                          : "bg-slate-100 text-eatpur-text hover:bg-slate-200"
+                      }`}
+                    >
+                      Instruction
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("ingredients")}
+                      className={`font-sans font-bold text-xs uppercase tracking-wider px-3.5 py-1.5 rounded-lg transition-all ${
+                        activeTab === "ingredients"
+                          ? "bg-eatpur-green-dark text-white shadow-sm"
+                          : "bg-slate-100 text-eatpur-text hover:bg-slate-200"
+                      }`}
+                    >
+                      Ingredients
+                    </button>
+
+                    {quickViewProduct.is_trending && (
+                      <span className="text-eatpur-gold-dark font-sans font-bold text-[10px] tracking-widest uppercase px-3 py-1.5 bg-eatpur-gold-light/20 rounded-lg self-center">
+                        Trending
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Title & PID */}
+                  <h2 className="text-3xl md:text-4xl font-serif text-eatpur-dark font-bold mb-2 leading-tight">
+                    {quickViewProduct.name}
+                  </h2>
+                  <p className="text-xs font-mono text-eatpur-text-light mb-6">
+                    PID: {quickViewProduct.pid}
+                  </p>
+
+                  {/* Price Section */}
+                  <div className="flex items-baseline gap-4 mb-6 border-b border-eatpur-gray-light pb-6">
+                    <span className="text-5xl font-bold text-eatpur-dark tracking-tight">
+                      ₹{quickViewProduct.discounted_price}
                     </span>
+                    {Number(quickViewProduct.fixed_price) >
+                      Number(quickViewProduct.discounted_price) && (
+                      <div className="flex flex-col items-start">
+                        <span className="relative text-xl font-sans text-eatpur-text-light font-medium">
+                          ₹{quickViewProduct.fixed_price}
+                          <span className="absolute top-1/2 left-[-5%] w-[110%] h-[2px] bg-rose-500/80 -rotate-[12deg]"></span>
+                        </span>
+                        <span className="text-rose-600 font-bold text-xs uppercase tracking-wider bg-rose-50 px-2 py-0.5 rounded mt-1">
+                          Save {quickViewProduct.discount_percentage}%
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* TAB CONTENT SWITCHER */}
+                  {activeTab === "nutrition" && (
+                    <div>
+                      <p className="text-eatpur-text font-sans leading-relaxed mb-6 text-sm md:text-base">
+                        {quickViewProduct.description ||
+                          "A pure, healthy product crafted for your wellbeing. Perfect for a balanced, modern lifestyle."}
+                      </p>
+
+                      {/* Macro Nutrients Grid */}
+                      <div className="flex md:grid grid-cols-4 gap-3 mb-6 overflow-x-auto md:overflow-visible pb-2 md:pb-0 hide-scrollbar snap-x snap-mandatory">
+                        <div className="bg-[#FAFCFA] p-3 text-center rounded-xl border border-eatpur-gray-light shadow-sm min-w-[110px] md:min-w-0 shrink-0 snap-start">
+                          <div className="text-[10px] font-bold text-eatpur-text-light uppercase tracking-wider mb-1 whitespace-nowrap">
+                            Protein
+                          </div>
+                          <div className="font-mono text-base font-bold text-eatpur-dark whitespace-nowrap">
+                            {quickViewProduct.protein || 0}g
+                          </div>
+                        </div>
+
+                        <div className="bg-[#FAFCFA] p-3 text-center rounded-xl border border-eatpur-gray-light shadow-sm min-w-[110px] md:min-w-0 shrink-0 snap-start">
+                          <div className="text-[10px] font-bold text-eatpur-text-light uppercase tracking-wider mb-1 whitespace-nowrap">
+                            Carbs
+                          </div>
+                          <div className="font-mono text-base font-bold text-eatpur-dark whitespace-nowrap">
+                            {quickViewProduct.carbohydrates || 0}g
+                          </div>
+                        </div>
+
+                        <div className="bg-[#FAFCFA] p-3 text-center rounded-xl border border-eatpur-gray-light shadow-sm min-w-[110px] md:min-w-0 shrink-0 snap-start">
+                          <div className="text-[10px] font-bold text-eatpur-text-light uppercase tracking-wider mb-1 whitespace-nowrap">
+                            Fibre
+                          </div>
+                          <div className="font-mono text-base font-bold text-eatpur-dark whitespace-nowrap">
+                            {quickViewProduct.fibre || 0}g
+                          </div>
+                        </div>
+
+                        <div className="bg-[#FAFCFA] p-3 text-center rounded-xl border border-eatpur-gray-light shadow-sm min-w-[110px] md:min-w-0 shrink-0 snap-start">
+                          <div className="text-[10px] font-bold text-eatpur-text-light uppercase tracking-wider mb-1 whitespace-nowrap">
+                            Calories
+                          </div>
+                          <div className="font-mono text-base font-bold text-eatpur-dark whitespace-nowrap">
+                            {quickViewProduct.calories || 0}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === "instructions" && (
+                    <div className="mb-6 p-4 bg-[#FAFCFA] rounded-2xl border border-eatpur-gray-light text-sm font-sans text-eatpur-text leading-relaxed min-h-[140px]">
+                      {quickViewProduct.instructions ||
+                        quickViewProduct.how_to_use ||
+                        quickViewProduct.cooking_instructions || (
+                          <p className="italic text-eatpur-text-light">
+                            Store in a cool, dry place. Follow packet
+                            instructions for best preparation results.
+                          </p>
+                        )}
+                    </div>
+                  )}
+
+                  {activeTab === "ingredients" && (
+                    <div className="mb-6 p-4 bg-[#FAFCFA] rounded-2xl border border-eatpur-gray-light text-sm font-sans text-eatpur-text leading-relaxed min-h-[140px]">
+                      {quickViewProduct.ingredients || (
+                        <p className="italic text-eatpur-text-light">
+                          100% natural and clean ingredients without artificial
+                          additives or preservatives.
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
 
-                <h2 className="text-3xl md:text-4xl font-serif text-eatpur-dark font-bold mb-2 leading-tight">
-                  {quickViewProduct.name}
-                </h2>
-                <p className="text-xs font-mono text-eatpur-text-light mb-6">
-                  PID: {quickViewProduct.pid}
-                </p>
-
-                <div className="flex items-baseline gap-4 mb-8 border-b border-eatpur-gray-light pb-6">
-                  <span className="text-5xl font-bold text-eatpur-dark tracking-tight">
-                    ₹{quickViewProduct.discounted_price}
-                  </span>
-                  {Number(quickViewProduct.fixed_price) >
-                    Number(quickViewProduct.discounted_price) && (
-                    <div className="flex flex-col items-start">
-                      <span className="relative text-xl font-sans text-eatpur-text-light font-medium">
-                        ₹{quickViewProduct.fixed_price}
-                        <span className="absolute top-1/2 left-[-5%] w-[110%] h-[2px] bg-rose-500/80 -rotate-[12deg]"></span>
-                      </span>
-                      <span className="text-rose-600 font-bold text-xs uppercase tracking-wider bg-rose-50 px-2 py-0.5 rounded mt-1">
-                        Save {quickViewProduct.discount_percentage}%
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                <p className="text-eatpur-text font-sans leading-relaxed mb-8 text-sm md:text-base">
-                  {quickViewProduct.description ||
-                    "A pure, healthy product crafted for your wellbeing. Perfect for a balanced, modern lifestyle."}
-                </p>
-
-                {/* Macro Nutrients Grid */}
-                <div
-                  className="
-                    flex md:grid
-                    grid-cols-4
-                    gap-3
-                    mb-8
-
-                    overflow-x-auto
-                    md:overflow-visible
-                    pb-2
-                    md:pb-0
-                    hide-scrollbar
-                    snap-x
-                    snap-mandatory
-                  "
-                >
-                  {/* Protein */}
-                  <div
-                    className="
-                      bg-[#FAFCFA]
-                      p-3
-                      text-center
-                      rounded-xl
-                      border border-eatpur-gray-light
-                      shadow-sm
-                      hover:border-eatpur-green-light
-                      transition-colors
-
-                      min-w-[110px]
-                      md:min-w-0
-                      shrink-0
-                      snap-start
-                    "
-                  >
-                    <div className="text-[10px] font-bold text-eatpur-text-light uppercase tracking-wider mb-1 whitespace-nowrap">
-                      Protein
-                    </div>
-
-                    <div className="font-mono text-base font-bold text-eatpur-dark whitespace-nowrap">
-                      {quickViewProduct.protein || 0}g
-                    </div>
-                  </div>
-
-                  {/* Carbs */}
-                  <div
-                    className="
-                      bg-[#FAFCFA]
-                      p-3
-                      text-center
-                      rounded-xl
-                      border border-eatpur-gray-light
-                      shadow-sm
-                      hover:border-eatpur-green-light
-                      transition-colors
-
-                      min-w-[110px]
-                      md:min-w-0
-                      shrink-0
-                      snap-start
-                    "
-                  >
-                    <div className="text-[10px] font-bold text-eatpur-text-light uppercase tracking-wider mb-1 whitespace-nowrap">
-                      Carbs
-                    </div>
-
-                    <div className="font-mono text-base font-bold text-eatpur-dark whitespace-nowrap">
-                      {quickViewProduct.carbohydrates || 0}g
-                    </div>
-                  </div>
-
-                  {/* Fibre */}
-                  <div
-                    className="
-                      bg-[#FAFCFA]
-                      p-3
-                      text-center
-                      rounded-xl
-                      border border-eatpur-gray-light
-                      shadow-sm
-                      hover:border-eatpur-green-light
-                      transition-colors
-
-                      min-w-[110px]
-                      md:min-w-0
-                      shrink-0
-                      snap-start
-                    "
-                  >
-                    <div className="text-[10px] font-bold text-eatpur-text-light uppercase tracking-wider mb-1 whitespace-nowrap">
-                      Fibre
-                    </div>
-
-                    <div className="font-mono text-base font-bold text-eatpur-dark whitespace-nowrap">
-                      {quickViewProduct.fibre || 0}g
-                    </div>
-                  </div>
-
-                  {/* Calories */}
-                  <div
-                    className="
-                      bg-[#FAFCFA]
-                      p-3
-                      text-center
-                      rounded-xl
-                      border border-eatpur-gray-light
-                      shadow-sm
-                      hover:border-eatpur-green-light
-                      transition-colors
-
-                      min-w-[110px]
-                      md:min-w-0
-                      shrink-0
-                      snap-start
-                    "
-                  >
-                    <div className="text-[10px] font-bold text-eatpur-text-light uppercase tracking-wider mb-1 whitespace-nowrap">
-                      Calories
-                    </div>
-
-                    <div className="font-mono text-base font-bold text-eatpur-dark whitespace-nowrap">
-                      {quickViewProduct.calories || 0}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-auto pt-4">
+                {/* Add To Cart CTA */}
+                <div className="mt-4 pt-4">
                   <CartButton
                     onClick={() => {
                       dispatch({
@@ -635,8 +617,6 @@ export default function ProductsPage() {
                     }}
                     onAnimationComplete={() => {
                       setQuickViewProduct(null);
-
-                      // Open cart AFTER button animation
                       dispatch({
                         type: "OPEN_CART",
                       });

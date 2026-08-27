@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createProduct, getCategories } from "../../../../api/inventory";
+import { inputRegex } from "@tiptap/extension-image";
 
 // Icon Helpers
 const CheckIcon = () => (
@@ -60,6 +61,9 @@ export default function ProductAddScreen() {
   const [baseDetails, setBaseDetails] = useState({
     name: "",
     description: "",
+    ingredients: "",
+    cooking_instructions: "",
+    highlights: "",
     category_id: "",
   });
 
@@ -198,6 +202,9 @@ export default function ProductAddScreen() {
       // 1. Core Fields
       formData.append("name", baseDetails.name);
       formData.append("description", baseDetails.description);
+      formData.append("ingredients", baseDetails.ingredients);
+      formData.append("cooking_instructions", baseDetails.cooking_instructions);
+      formData.append("highlights", baseDetails.highlights);
       formData.append("category_id", baseDetails.category_id);
 
       // 2. Variants (Clean out the temp IDs before sending)
@@ -337,12 +344,63 @@ export default function ProductAddScreen() {
 
               <div className="md:col-span-2">
                 <label className="block text-sm font-semibold text-eatpur-text mb-1.5">
-                  Global Description
+                  Base Product Description
+                </label>
+                <textarea
+                  rows="2"
+                  placeholder="Write a compelling description that applies to all sizes of this product..."
+                  value={baseDetails.description}
+                  onChange={(e) =>
+                    setBaseDetails({
+                      ...baseDetails,
+                      description: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-2.5 rounded-[--radius-button] border border-slate-300 focus:border-eatpur-green focus:ring-1 focus:ring-eatpur-green-soft outline-none transition-all bg-eatpur-bg-light resize-y"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-eatpur-text mb-1.5">
+                  Product Ingredients
+                </label>
+                <textarea
+                  rows="2"
+                  placeholder="Describe the ingredients of this product..."
+                  value={baseDetails.ingredients}
+                  onChange={(e) =>
+                    setBaseDetails({
+                      ...baseDetails,
+                      description: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-2.5 rounded-[--radius-button] border border-slate-300 focus:border-eatpur-green focus:ring-1 focus:ring-eatpur-green-soft outline-none transition-all bg-eatpur-bg-light resize-y"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-eatpur-text mb-1.5">
+                  Instructions for cooking this product
                 </label>
                 <textarea
                   rows="4"
-                  placeholder="Write a compelling description that applies to all sizes of this product..."
-                  value={baseDetails.description}
+                  placeholder="Write instructions for cooking this product, that applies to all sizes of this product..."
+                  value={baseDetails.cooking_instructions}
+                  onChange={(e) =>
+                    setBaseDetails({
+                      ...baseDetails,
+                      description: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-2.5 rounded-[--radius-button] border border-slate-300 focus:border-eatpur-green focus:ring-1 focus:ring-eatpur-green-soft outline-none transition-all bg-eatpur-bg-light resize-y"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-eatpur-text mb-1.5">
+                  Product Highlights (Meta Description)
+                </label>
+                <textarea
+                  rows="1"
+                  placeholder="Write all compelling highlights that applies to all sizes of this product..."
+                  value={baseDetails.highlights}
                   onChange={(e) =>
                     setBaseDetails({
                       ...baseDetails,
