@@ -186,3 +186,42 @@ export const ProductCatalog = (params = {}) => {
     : "/inventory/public-catalog/";
   return apiFetch(url, { method: "GET" });
 };
+
+// ===========================================================================
+// 11. PRODUCT LIKES (PUBLIC)
+// ===========================================================================
+
+/**
+ * Toggles a like on a product. Works for both authenticated and anonymous (IP-based) users.
+ * @param {string} pid - The unique PID of the product
+ */
+export const toggleProductLike = (pid) => {
+  return apiFetch(`/inventory/products/${pid}/like/`, { method: "POST" });
+};
+
+// ===========================================================================
+// 12. PRODUCT COMMENTS & REVIEWS (AUTHENTICATED)
+// ===========================================================================
+
+/**
+ * Fetches all approved reviews/comments for a specific product.
+ * @param {string} pid - The unique PID of the product
+ */
+export const getProductComments = (pid) => {
+  return apiFetch(`/inventory/products/${pid}/comments/`, { method: "GET" });
+};
+
+/**
+ * Submits a new review with up to 3 attached images using FormData.
+ * @param {string} pid - The unique PID of the product
+ * @param {FormData} formData - Contains 'content', 'rating', and multiple 'images' files.
+ */
+export const createProductComment = (pid, formData) => {
+  return apiFetch(`/inventory/products/${pid}/comments/`, {
+    method: "POST",
+    body: formData,
+    headers: {
+      "Content-Type": undefined, // Forces browser to set multipart/form-data with correct boundary
+    },
+  });
+};

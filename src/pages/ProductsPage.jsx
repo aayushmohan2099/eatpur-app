@@ -7,10 +7,18 @@ import {
   FaXmark,
   FaChevronLeft,
   FaChevronRight,
+  FaHeart,
+  FaRegHeart,
+  FaStar,
 } from "react-icons/fa6";
 import { useCart } from "../context/CartContext";
-import { ProductCatalog, getCategories } from "../api/inventory";
-import ProductFilters from "./ProductComponents/ProductFilters";
+import {
+  ProductCatalog,
+  getCategories,
+  toggleProductLike,
+  getProductComments,
+  createProductComment,
+} from "../api/inventory";
 import ProductSortBar from "./ProductComponents/ProductSortBar";
 import CartButton from "../components/ui/CartButton";
 
@@ -135,7 +143,17 @@ export default function ProductsPage() {
   });
   const [sort, setSort] = useState("");
 
-  // NEW: Sidebar state (Auto collapse on mobile)
+  // Reviews State
+  const [reviews, setReviews] = useState([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
+  const [reviewForm, setReviewForm] = useState({
+    rating: 5,
+    content: "",
+    images: [],
+  });
+  const [submittingReview, setSubmittingReview] = useState(false);
+
+  // Sidebar state (Auto collapse on mobile)
   const [isFilterOpen, setIsFilterOpen] = useState(true);
 
   useEffect(() => {
@@ -178,6 +196,74 @@ export default function ProductsPage() {
     loadProducts();
   }, [debouncedFilters, sort]);
 
+  // Handle Product Like Toggle
+  const handleToggleLike = async (e, product, index) => {
+    e.stopPropagation();
+    try {
+      const res = await toggleProductLike(product.pid);
+      const updatedProducts = [...products];
+      updatedProducts[index] = {
+        ...updatedProducts[index],
+        total_likes: res.total_likes,
+        is_liked: res.liked, // Assume backend returns liked status, fallback local mapping
+      };
+      setProducts(updatedProducts);
+    } catch (err) {
+      console.error("Failed to toggle like", err);
+    }
+  };
+
+  // Fetch Reviews when Tab Switches
+  useEffect(() => {
+    if (activeTab === "reviews" && quickViewProduct) {
+      fetchReviews();
+    }
+  }, [activeTab, quickViewProduct]);
+
+  const fetchReviews = async () => {
+    setLoadingReviews(true);
+    try {
+      const data = await getProductComments(quickViewProduct.pid);
+      setReviews(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingReviews(false);
+    }
+  };
+
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length > 3) {
+      alert("Maximum 3 images allowed per review.");
+      return;
+    }
+    setReviewForm((prev) => ({ ...prev, images: files }));
+  };
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    if (!reviewForm.content.trim()) return;
+
+    setSubmittingReview(true);
+    const formData = new FormData();
+    formData.append("rating", reviewForm.rating);
+    formData.append("content", reviewForm.content);
+    reviewForm.images.forEach((file) => {
+      formData.append("images", file);
+    });
+
+    try {
+      await createProductComment(quickViewProduct.pid, formData);
+      setReviewForm({ rating: 5, content: "", images: [] });
+      fetchReviews(); // Refresh the list
+    } catch (err) {
+      alert(err.message || "Failed to submit review. Are you logged in?");
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
   // Health Score Calculator
   const calculateHealthScore = (product) => {
     if (!product || (!product.protein && !product.fibre)) return 85;
@@ -217,22 +303,6 @@ export default function ProductsPage() {
 
       {/* Main Layout - Full Width Spanning */}
       <div className="w-full px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row gap-8 items-start">
-        {/* LEFT SIDEBAR: Filters (Collapsible width) */}
-        {/* <motion.div
-          layout
-          className={`w-full shrink-0 z-40 transition-all duration-300 ease-in-out ${isFilterOpen ? "lg:w-[320px]" : "lg:w-[220px]"}`}
-        >
-          <div className="sticky top-24">
-            <ProductFilters
-              filters={filters}
-              setFilters={setFilters}
-              categories={categories}
-              isOpen={isFilterOpen}
-              setIsOpen={setIsFilterOpen}
-            />
-          </div>
-        </motion.div> */}
-
         {/* RIGHT AREA: Sort Bar & Fluid Grid */}
         <motion.div layout className="flex-1 min-w-0 flex flex-col gap-6">
           {/* Top Sort Bar - Spans full remaining width */}
@@ -297,20 +367,14 @@ export default function ProductsPage() {
                       exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ duration: 0.4, delay: i * 0.05 }}
                       key={product.id}
-                      onClick={() => setQuickViewProduct(product)}
+                      onClick={() => {
+                        setQuickViewProduct(product);
+                        setActiveTab("nutrition"); // Reset tab on open
+                      }}
                       className="vintage-card overflow-hidden flex flex-col group relative bg-white transition-all duration-300 hover:shadow-xl hover:-translate-y-1 rounded-2xl border border-eatpur-border cursor-pointer"
-                      // className="vintage-card overflow-hidden flex flex-col group relative bg-white transition-all duration-300 hover:shadow-xl hover:-translate-y-1 rounded-2xl border border-eatpur-border"
                     >
-                      {/* Top Badges */}
+                      {/* Top Badges & Like Button */}
                       <div className="absolute top-4 left-4 right-4 z-30 flex justify-between items-start pointer-events-none">
-                        {/* Trending Tag */}
-                        <div>
-                          {product.is_trending && (
-                            <span className="bg-eatpur-gold-dark text-white font-sans text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded shadow-md inline-block">
-                              Trending
-                            </span>
-                          )}
-                        </div>
                         {/* Discount Tag */}
                         <div>
                           {discountPct > 0 && (
@@ -319,10 +383,31 @@ export default function ProductsPage() {
                             </span>
                           )}
                         </div>
+
+                        {/* Like Button */}
+                        <button
+                          onClick={(e) => handleToggleLike(e, product, i)}
+                          className="pointer-events-auto w-10 h-10 bg-white/90 backdrop-blur rounded-full shadow-md flex items-center justify-center hover:scale-110 transition-transform group/like relative border border-slate-100"
+                        >
+                          {product.is_liked ? (
+                            <FaHeart className="text-rose-500" size={16} />
+                          ) : (
+                            <FaRegHeart
+                              className="text-eatpur-text-light group-hover/like:text-rose-400"
+                              size={16}
+                            />
+                          )}
+                          {/* Like Counter Badge */}
+                          {(product.total_likes || 0) > 0 && (
+                            <span className="absolute -bottom-1 -right-1 bg-eatpur-dark text-white text-[9px] font-bold w-[18px] h-[18px] rounded-full flex items-center justify-center shadow-sm">
+                              {product.total_likes}
+                            </span>
+                          )}
+                        </button>
                       </div>
 
                       {/* Image Area with Slideshow */}
-                      <div className="h-64 relative bg-[#FAFCFA] p-6 flex justify-center items-center overflow-hidden">
+                      <div className="h-64 relative bg-[#FAFCFA] p-6 flex justify-center items-center overflow-hidden border-b border-eatpur-gray-light/50">
                         <ImageCarousel
                           images={product.cover_image}
                           alt={product.name}
@@ -361,7 +446,7 @@ export default function ProductsPage() {
                           <span className="font-bold">{healthScore}/100</span>
                         </div>
 
-                        {/* Price & Action Footer */}
+                        {/* Price Footer */}
                         <div className="mt-auto flex items-end justify-between pt-4">
                           <div className="flex flex-col">
                             {Number(product.fixed_price) >
@@ -377,17 +462,6 @@ export default function ProductsPage() {
                               ₹{product.discounted_price}
                             </span>
                           </div>
-
-                          {/* <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setQuickViewProduct(product);
-                            }}
-                            className="w-12 h-12 rounded-full bg-eatpur-green-dark text-white flex items-center justify-center transform hover:scale-110 hover:bg-eatpur-dark transition-all shadow-md active:scale-95"
-                            aria-label="Quick View"
-                          >
-                            <FaEye size={16} className="-ml-0.5" />
-                          </button> */}
                         </div>
                       </div>
                     </motion.div>
@@ -400,7 +474,7 @@ export default function ProductsPage() {
       </div>
 
       {/* =========================================================================== */}
-      {/* QUICK VIEW MODAL */}
+      {/* QUICK VIEW MODAL (WITH REVIEWS) */}
       {/* =========================================================================== */}
       <AnimatePresence>
         {quickViewProduct && (
@@ -455,51 +529,32 @@ export default function ProductsPage() {
                   )}
               </div>
 
-              {/* Right Side: Details */}
-
-              {/* Right Side: Details */}
+              {/* Right Side: Details & Tabs */}
               <div className="md:w-1/2 p-8 md:p-10 flex flex-col justify-between bg-white relative">
                 <div>
-                  {/* Tab Buttons (Replaces Badges) */}
+                  {/* Tab Buttons */}
                   <div className="flex flex-wrap gap-2 mb-4">
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("nutrition")}
-                      className={`font-sans font-bold text-xs uppercase tracking-wider px-3.5 py-1.5 rounded-lg transition-all ${
-                        activeTab === "nutrition"
-                          ? "bg-eatpur-green-dark text-white shadow-sm"
-                          : "bg-slate-100 text-eatpur-text hover:bg-slate-200"
-                      }`}
-                    >
-                      Nutrition Value
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("instructions")}
-                      className={`font-sans font-bold text-xs uppercase tracking-wider px-3.5 py-1.5 rounded-lg transition-all ${
-                        activeTab === "instructions"
-                          ? "bg-eatpur-green-dark text-white shadow-sm"
-                          : "bg-slate-100 text-eatpur-text hover:bg-slate-200"
-                      }`}
-                    >
-                      Instruction
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("ingredients")}
-                      className={`font-sans font-bold text-xs uppercase tracking-wider px-3.5 py-1.5 rounded-lg transition-all ${
-                        activeTab === "ingredients"
-                          ? "bg-eatpur-green-dark text-white shadow-sm"
-                          : "bg-slate-100 text-eatpur-text hover:bg-slate-200"
-                      }`}
-                    >
-                      Ingredients
-                    </button>
-
+                    {[
+                      "nutrition",
+                      "instructions",
+                      "ingredients",
+                      "reviews",
+                    ].map((tab) => (
+                      <button
+                        key={tab}
+                        type="button"
+                        onClick={() => setActiveTab(tab)}
+                        className={`font-sans font-bold text-xs uppercase tracking-wider px-3.5 py-1.5 rounded-lg transition-all ${
+                          activeTab === tab
+                            ? "bg-eatpur-green-dark text-white shadow-sm"
+                            : "bg-slate-100 text-eatpur-text hover:bg-slate-200"
+                        }`}
+                      >
+                        {tab.replace("-", " ")}
+                      </button>
+                    ))}
                     {quickViewProduct.is_trending && (
-                      <span className="text-eatpur-gold-dark font-sans font-bold text-[10px] tracking-widest uppercase px-3 py-1.5 bg-eatpur-gold-light/20 rounded-lg self-center">
+                      <span className="text-eatpur-gold-dark font-sans font-bold text-[10px] tracking-widest uppercase px-3 py-1.5 bg-eatpur-gold-light/20 rounded-lg self-center ml-auto">
                         Trending
                       </span>
                     )}
@@ -539,7 +594,6 @@ export default function ProductsPage() {
                         {quickViewProduct.description ||
                           "A pure, healthy product crafted for your wellbeing. Perfect for a balanced, modern lifestyle."}
                       </p>
-
                       {/* Macro Nutrients Grid */}
                       <div className="flex md:grid grid-cols-4 gap-3 mb-6 overflow-x-auto md:overflow-visible pb-2 md:pb-0 hide-scrollbar snap-x snap-mandatory">
                         <div className="bg-[#FAFCFA] p-3 text-center rounded-xl border border-eatpur-gray-light shadow-sm min-w-[110px] md:min-w-0 shrink-0 snap-start">
@@ -550,7 +604,6 @@ export default function ProductsPage() {
                             {quickViewProduct.protein || 0}g
                           </div>
                         </div>
-
                         <div className="bg-[#FAFCFA] p-3 text-center rounded-xl border border-eatpur-gray-light shadow-sm min-w-[110px] md:min-w-0 shrink-0 snap-start">
                           <div className="text-[10px] font-bold text-eatpur-text-light uppercase tracking-wider mb-1 whitespace-nowrap">
                             Carbs
@@ -559,7 +612,6 @@ export default function ProductsPage() {
                             {quickViewProduct.carbohydrates || 0}g
                           </div>
                         </div>
-
                         <div className="bg-[#FAFCFA] p-3 text-center rounded-xl border border-eatpur-gray-light shadow-sm min-w-[110px] md:min-w-0 shrink-0 snap-start">
                           <div className="text-[10px] font-bold text-eatpur-text-light uppercase tracking-wider mb-1 whitespace-nowrap">
                             Fibre
@@ -568,7 +620,6 @@ export default function ProductsPage() {
                             {quickViewProduct.fibre || 0}g
                           </div>
                         </div>
-
                         <div className="bg-[#FAFCFA] p-3 text-center rounded-xl border border-eatpur-gray-light shadow-sm min-w-[110px] md:min-w-0 shrink-0 snap-start">
                           <div className="text-[10px] font-bold text-eatpur-text-light uppercase tracking-wider mb-1 whitespace-nowrap">
                             Calories
@@ -588,7 +639,7 @@ export default function ProductsPage() {
                         quickViewProduct.cooking_instructions || (
                           <p className="italic text-eatpur-text-light">
                             Store in a cool, dry place. Follow packet
-                            instructions for best preparation results.
+                            instructions for best results.
                           </p>
                         )}
                     </div>
@@ -598,28 +649,152 @@ export default function ProductsPage() {
                     <div className="mb-6 p-4 bg-[#FAFCFA] rounded-2xl border border-eatpur-gray-light text-sm font-sans text-eatpur-text leading-relaxed min-h-[140px]">
                       {quickViewProduct.ingredients || (
                         <p className="italic text-eatpur-text-light">
-                          100% natural and clean ingredients without artificial
-                          additives or preservatives.
+                          100% natural ingredients without artificial additives
+                          or preservatives.
                         </p>
                       )}
+                    </div>
+                  )}
+
+                  {/* ========================================= */}
+                  {/* REVIEWS TAB                               */}
+                  {/* ========================================= */}
+                  {activeTab === "reviews" && (
+                    <div className="mb-6 h-[250px] flex flex-col">
+                      {/* Reviews List */}
+                      <div className="flex-1 overflow-y-auto pr-2 mb-4 space-y-4 hide-scrollbar">
+                        {loadingReviews ? (
+                          <p className="text-sm italic text-eatpur-text-light text-center mt-4">
+                            Loading reviews...
+                          </p>
+                        ) : reviews.length === 0 ? (
+                          <p className="text-sm italic text-eatpur-text-light text-center mt-4">
+                            No reviews yet. Be the first to review!
+                          </p>
+                        ) : (
+                          reviews.map((rev) => (
+                            <div
+                              key={rev.id}
+                              className="p-4 bg-slate-50 rounded-xl border border-slate-100 shadow-sm"
+                            >
+                              <div className="flex justify-between items-start mb-2">
+                                <div className="flex items-center gap-2">
+                                  {rev.avatar ? (
+                                    <img
+                                      src={rev.avatar}
+                                      className="w-6 h-6 rounded-full object-cover"
+                                      alt={rev.username}
+                                    />
+                                  ) : (
+                                    <div className="w-6 h-6 rounded-full bg-eatpur-green-dark text-white flex items-center justify-center text-xs font-bold">
+                                      {rev.username?.charAt(0)}
+                                    </div>
+                                  )}
+                                  <span className="font-bold text-sm text-eatpur-dark">
+                                    {rev.username}
+                                  </span>
+                                </div>
+                                <span className="text-xs font-bold text-eatpur-gold-dark flex items-center gap-1">
+                                  <FaStar /> {rev.rating}/5
+                                </span>
+                              </div>
+                              <p className="text-sm text-eatpur-text font-serif">
+                                {rev.content}
+                              </p>
+                              {/* Attached Images */}
+                              {rev.attached_images &&
+                                rev.attached_images.length > 0 && (
+                                  <div className="flex gap-2 mt-3 overflow-x-auto hide-scrollbar">
+                                    {rev.attached_images.map((img) => (
+                                      <img
+                                        key={img.id}
+                                        src={img.image}
+                                        className="w-14 h-14 object-cover rounded-md border border-slate-200"
+                                        alt="Review attachment"
+                                      />
+                                    ))}
+                                  </div>
+                                )}
+                            </div>
+                          ))
+                        )}
+                      </div>
+
+                      {/* Add Review Form */}
+                      <form
+                        onSubmit={handleReviewSubmit}
+                        className="bg-white p-3 rounded-xl border-2 border-eatpur-green-light/30 shadow-sm flex flex-col gap-2 shrink-0"
+                      >
+                        <div className="flex justify-between items-center px-1">
+                          <span className="text-xs font-bold uppercase tracking-wider text-eatpur-dark">
+                            Write a Review
+                          </span>
+                          <div className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded border border-slate-200">
+                            <FaStar
+                              className="text-eatpur-gold-dark"
+                              size={10}
+                            />
+                            <select
+                              value={reviewForm.rating}
+                              onChange={(e) =>
+                                setReviewForm({
+                                  ...reviewForm,
+                                  rating: e.target.value,
+                                })
+                              }
+                              className="text-xs bg-transparent outline-none font-bold"
+                            >
+                              {[5, 4, 3, 2, 1].map((n) => (
+                                <option key={n} value={n}>
+                                  {n} Stars
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                        <textarea
+                          required
+                          rows={2}
+                          placeholder="Share your experience..."
+                          value={reviewForm.content}
+                          onChange={(e) =>
+                            setReviewForm({
+                              ...reviewForm,
+                              content: e.target.value,
+                            })
+                          }
+                          className="w-full text-sm p-2.5 rounded-lg border border-slate-200 bg-slate-50 outline-none focus:border-eatpur-green-dark resize-none font-serif"
+                        />
+                        <div className="flex justify-between items-center px-1">
+                          <input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            onChange={handleImageChange}
+                            className="w-48 text-xs text-slate-500 file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-eatpur-green-light/20 file:text-eatpur-green-dark hover:file:bg-eatpur-green-light/40 cursor-pointer"
+                          />
+                          <button
+                            type="submit"
+                            disabled={submittingReview}
+                            className="bg-eatpur-green-dark text-white font-bold tracking-wider uppercase text-[10px] py-1.5 px-4 rounded-full disabled:opacity-50 hover:bg-eatpur-dark transition-colors"
+                          >
+                            {submittingReview ? "Posting..." : "Post Review"}
+                          </button>
+                        </div>
+                      </form>
                     </div>
                   )}
                 </div>
 
                 {/* Add To Cart CTA */}
-                <div className="mt-4 pt-4">
+                <div className="mt-4 pt-4 border-t border-eatpur-gray-light">
                   <CartButton
                     onClick={() => {
-                      dispatch({
-                        type: "ADD_ITEM",
-                        payload: quickViewProduct,
-                      });
+                      dispatch({ type: "ADD_ITEM", payload: quickViewProduct });
                     }}
                     onAnimationComplete={() => {
                       setQuickViewProduct(null);
-                      dispatch({
-                        type: "OPEN_CART",
-                      });
+                      dispatch({ type: "OPEN_CART" });
                     }}
                   />
                 </div>
