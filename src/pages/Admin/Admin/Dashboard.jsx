@@ -10,6 +10,8 @@ import StaffMgmnt from "./StaffMgmnt";
 import ProductsWorkspace from "./Products";
 import StockMgmnt from "./StockMgmnt";
 import NewsWorkspace from "./News";
+import OrdersWorkspace from "./Orders";
+import LogisticsWorkspace from "./Logistics";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -37,6 +39,11 @@ export default function AdminDashboard() {
     {
       name: "Orders",
       path: "/admin/dashboard/orders/",
+      isExternalPage: false,
+    },
+    {
+      name: "Logistics",
+      path: "/admin/dashboard/logistics/",
       isExternalPage: false,
     },
     {
@@ -77,6 +84,7 @@ export default function AdminDashboard() {
     Products: ["All Products", "Add New Product", "Categories", "Discounts"],
     Inventory: ["Stock Levels", "Warehouses"],
     Orders: ["All Orders", "New Orders", "Processing", "Completed", "Returns"],
+    Logistics: ["Overview", "Financials", "Saved Addresses", "Audit Logs"],
     Customers: ["Customer List", "Customer Segments", "Loyalty Program"],
     Reviews: ["All Reviews", "Pending Approval", "Reported"],
     Grievances: ["Active Tickets", "Resolved", "Automated Responses"],
@@ -87,9 +95,7 @@ export default function AdminDashboard() {
       "Push Blogs",
       "Authors",
     ],
-    News: [
-      "Published news",
-    ],
+    News: ["Published news"],
     "Staff Management": ["All Staff", "Roles & Permissions", "Activity Logs"],
   };
 
@@ -98,36 +104,6 @@ export default function AdminDashboard() {
 
   // Helper arrays for your components to consume cleanly
   const navLinkNames = navRegistry.map((item) => item.name);
-
-  // 2. URL SYNC (Reads real-time location to keep UI tabs active)
-  // useEffect(() => {
-  //   // Check if we are physically on an standalone page route like blogs
-  //   const matchedRegistryItem = navRegistry.find(
-  //     (item) => item.isExternalPage && location.pathname.startsWith(item.path),
-  //   );
-
-  //   if (matchedRegistryItem) {
-  //     setActiveTab(matchedRegistryItem.name);
-  //     // Fallback fallback default layout sub-tab if none selected
-  //     if (!activeSubTab)
-  //       setActiveSubTab(sidebarSubLinks[matchedRegistryItem.name][0]);
-  //   } else if (tab) {
-  //     // Map back standard lowercase url params to UI Title Strings
-  //     const cleanTabName = navLinkNames.find(
-  //       (n) => n.toLowerCase().replace(/\s+/g, "-") === tab,
-  //     );
-  //     if (cleanTabName) {
-  //       setActiveTab(cleanTabName);
-
-  //       if (subTab) {
-  //         const cleanSubName = sidebarSubLinks[cleanTabName].find(
-  //           (s) => s.toLowerCase().replace(/\s+/g, "-") === subTab,
-  //         );
-  //         if (cleanSubName) setActiveSubTab(cleanSubName);
-  //       }
-  //     }
-  //   }
-  // }, [location.pathname, tab, subTab]);
 
   // 2. URL SYNC (Reads real-time location to keep UI tabs active)
   useEffect(() => {
@@ -158,41 +134,6 @@ export default function AdminDashboard() {
     }
   }, [location.pathname, tab, subTab]);
 
-  // 3. CENTRALIZED ROUTING HANDLER
-  // const handleTabChange = (tabName) => {
-  //   const targetRoute = navRegistry.find((item) => item.name === tabName);
-
-  //   if (!targetRoute) return;
-
-  //   if (targetRoute.isExternalPage) {
-  //     setActiveTab(tabName);
-  //     setActiveSubTab(sidebarSubLinks[tabName][0]);
-  //     navigate(targetRoute.path);
-  //   } else {
-  //     // Format pretty, SEO-friendly parameters automatically: "Staff Management" -> "staff-management"
-  //     const urlTab = tabName.toLowerCase().replace(/\s+/g, "-");
-  //     const firstSubTab = sidebarSubLinks[tabName][0];
-  //     const urlSubTab = firstSubTab.toLowerCase().replace(/\s+/g, "-");
-
-  //     setActiveTab(tabName);
-  //     setActiveSubTab(firstSubTab);
-  //     navigate(`/admin/dashboard/${urlTab}/${urlSubTab}`);
-  //   }
-  // };
-
-  // Safe callback modification for internal sidebar link clicks
-  // const handleSubTabChange = (subTabName) => {
-  //   setActiveSubTab(subTabName);
-  //   const urlTab = activeTab.toLowerCase().replace(/\s+/g, "-");
-  //   const urlSubTab = subTabName.toLowerCase().replace(/\s+/g, "-");
-
-  //   // Check if the current layout module handles sub tabs natively or needs route paths updated
-  //   const currentRoute = navRegistry.find((item) => item.name === activeTab);
-  //   if (currentRoute && !currentRoute.isExternalPage) {
-  //     navigate(`/admin/dashboard/${urlTab}/${urlSubTab}`);
-  //   }
-  // };
-
   const handleTabChange = (tabName) => {
     const targetRoute = navRegistry.find((item) => item.name === tabName);
 
@@ -207,7 +148,9 @@ export default function AdminDashboard() {
     } else {
       // Format pretty, SEO-friendly parameters automatically: "Staff Management" -> "staff-management"
       const urlTab = tabName.toLowerCase().replace(/\s+/g, "-");
-      const firstSubTab = sidebarSubLinks[tabName] ? sidebarSubLinks[tabName][0] : "overview";
+      const firstSubTab = sidebarSubLinks[tabName]
+        ? sidebarSubLinks[tabName][0]
+        : "overview";
       const urlSubTab = firstSubTab.toLowerCase().replace(/\s+/g, "-");
 
       setActiveTab(tabName);
@@ -284,11 +227,16 @@ export default function AdminDashboard() {
           {activeTab === "Inventory" && (
             <StockMgmnt activeSubTab={activeSubTab} />
           )}
+          {activeTab === "Orders" && (
+            <OrdersWorkspace activeSubTab={activeSubTab} />
+          )}
+          {activeTab === "Logistics" && (
+            <LogisticsWorkspace activeSubTab={activeSubTab} />
+          )}
           {/* Blogs Workspace Workspace Container */}
           {activeTab === "Blogs" && (
             <BlogsWorkspace activeSubTab={activeSubTab} />
           )}
-
           {/* Staff Management Workspace Container */}
           {activeTab === "Staff Management" && (
             <StaffMgmnt activeSubTab={activeSubTab} />
@@ -395,16 +343,52 @@ function RecentOrdersPlaceholder() {
   const categories = ["Ready to Cook", "Ready to Eat", "Cookies", "Muesli"];
 
   const rawOrders = [
-    { id: 8924, customer: "John Doe", date: "2026-06-15", category: "Ready to Cook", status: "Delivered", amount: "$124.00" },
-    { id: 8925, customer: "Sarah Smith", date: "2026-06-18", category: "Ready to Eat", status: "Delivered", amount: "$89.50" },
-    { id: 8926, customer: "Michael Brown", date: "2026-07-01", category: "Cookies", status: "Delivered", amount: "$210.00" },
-    { id: 8927, customer: "Emily Davis", date: "2026-07-10", category: "Muesli", status: "Delivered", amount: "$54.20" },
-    { id: 8928, customer: "David Wilson", date: "2026-07-20", category: "Ready to Cook", status: "Delivered", amount: "$145.00" },
+    {
+      id: 8924,
+      customer: "John Doe",
+      date: "2026-06-15",
+      category: "Ready to Cook",
+      status: "Delivered",
+      amount: "$124.00",
+    },
+    {
+      id: 8925,
+      customer: "Sarah Smith",
+      date: "2026-06-18",
+      category: "Ready to Eat",
+      status: "Delivered",
+      amount: "$89.50",
+    },
+    {
+      id: 8926,
+      customer: "Michael Brown",
+      date: "2026-07-01",
+      category: "Cookies",
+      status: "Delivered",
+      amount: "$210.00",
+    },
+    {
+      id: 8927,
+      customer: "Emily Davis",
+      date: "2026-07-10",
+      category: "Muesli",
+      status: "Delivered",
+      amount: "$54.20",
+    },
+    {
+      id: 8928,
+      customer: "David Wilson",
+      date: "2026-07-20",
+      category: "Ready to Cook",
+      status: "Delivered",
+      amount: "$145.00",
+    },
   ];
 
   const filteredOrders = useMemo(() => {
     return rawOrders.filter((order) => {
-      const matchesCategory = selectedCategory === "all" || order.category === selectedCategory;
+      const matchesCategory =
+        selectedCategory === "all" || order.category === selectedCategory;
 
       let matchesDate = true;
       if (exactDate) {
@@ -435,7 +419,9 @@ function RecentOrdersPlaceholder() {
         <div className="flex flex-wrap items-center gap-3 flex-1">
           {/* Exact Date Filter */}
           <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-bold text-slate-500 uppercase">Exact Date</label>
+            <label className="text-[11px] font-bold text-slate-500 uppercase">
+              Exact Date
+            </label>
             <input
               type="date"
               value={exactDate}
@@ -450,7 +436,9 @@ function RecentOrdersPlaceholder() {
 
           {/* Date Range - Start */}
           <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-bold text-slate-500 uppercase">Start Date</label>
+            <label className="text-[11px] font-bold text-slate-500 uppercase">
+              Start Date
+            </label>
             <input
               type="date"
               value={startDate}
@@ -464,7 +452,9 @@ function RecentOrdersPlaceholder() {
 
           {/* Date Range - End */}
           <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-bold text-slate-500 uppercase">End Date</label>
+            <label className="text-[11px] font-bold text-slate-500 uppercase">
+              End Date
+            </label>
             <input
               type="date"
               value={endDate}
@@ -478,7 +468,9 @@ function RecentOrdersPlaceholder() {
 
           {/* Category Filter */}
           <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-bold text-slate-500 uppercase">Category</label>
+            <label className="text-[11px] font-bold text-slate-500 uppercase">
+              Category
+            </label>
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
@@ -486,7 +478,9 @@ function RecentOrdersPlaceholder() {
             >
               <option value="all">All Categories</option>
               {categories.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
               ))}
             </select>
           </div>
@@ -546,7 +540,10 @@ function RecentOrdersPlaceholder() {
               ))
             ) : (
               <tr>
-                <td colSpan="6" className="text-center py-8 text-slate-400 text-sm">
+                <td
+                  colSpan="6"
+                  className="text-center py-8 text-slate-400 text-sm"
+                >
                   No orders match your specified date filters or category.
                 </td>
               </tr>

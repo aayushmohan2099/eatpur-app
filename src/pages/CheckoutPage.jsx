@@ -10,6 +10,7 @@ import {
 } from "react-icons/fa6";
 import { useCart } from "../context/CartContext";
 import { checkoutOrder, verifyPayment } from "../api/shop";
+import { getProductById } from "../api/inventory";
 import {
   checkPincodeServiceability,
   getShippingEstimate,
@@ -41,23 +42,28 @@ export default function CheckoutPage() {
   const [shippingEstimate, setShippingEstimate] = useState(null);
   const [isEstimating, setIsEstimating] = useState(false);
 
-  // Delivery Form State
+  // Delivery Form State (Aligned exactly with backend expectations)
   const [deliveryDetails, setDeliveryDetails] = useState({
     firstName: "",
     lastName: "",
     phone: "",
-    address: "",
+    alt_phone: "",
+    address_line: "",
+    city: "",
+    state: "",
+  });
+
+  // Dynamic Aggregated Cart Dimensions State
+  const [cartDimensions, setCartDimensions] = useState({
+    weight: 0,
+    length: 0,
+    height: 0,
+    width: 0,
   });
 
   // Calculate Base Subtotal
   const subtotal = state.items.reduce(
     (total, item) => total + item.price * item.quantity,
-    0,
-  );
-
-  // Calculate Total Weight (assuming default 500g per item if not specified in cart)
-  const totalWeightGrams = state.items.reduce(
-    (weight, item) => weight + (item.weight || 500) * item.quantity,
     0,
   );
 
@@ -68,6 +74,54 @@ export default function CheckoutPage() {
     }
   }, [state.items, navigate, isSuccess]);
 
+  // Fetch actual Dimensions per product on cart load/change
+  useEffect(() => {
+    const calculateAccurateDimensions = async () => {
+      let tWeight = 0;
+      let tLength = 0;
+      let tHeight = 0;
+      let tWidth = 0;
+
+      for (const item of state.items) {
+        try {
+          const productDetail = await getProductById(item.id);
+          const dim = productDetail.shipping_dimension || {
+            weight: 500,
+            length: 10,
+            height: 10,
+            width: 10,
+          };
+
+          tWeight += (Number(dim.weight) || 500) * item.quantity;
+          tLength += Number(dim.length) || 10;
+          tHeight += Number(dim.height) || 10;
+          tWidth += Number(dim.width) || 10;
+        } catch (err) {
+          console.error(
+            `Failed to fetch dimensions for product ${item.id}`,
+            err,
+          );
+          // Fallback if API fails for a specific product
+          tWeight += 500 * item.quantity;
+          tLength += 10;
+          tHeight += 10;
+          tWidth += 10;
+        }
+      }
+
+      setCartDimensions({
+        weight: tWeight,
+        length: tLength,
+        height: tHeight,
+        width: tWidth,
+      });
+    };
+
+    if (state.items.length > 0) {
+      calculateAccurateDimensions();
+    }
+  }, [state.items]);
+
   // Handle Cart Quantity Changes
   const handleQuantityChange = (id, delta, currentQty) => {
     const newQty = currentQty + delta;
@@ -76,10 +130,9 @@ export default function CheckoutPage() {
     } else {
       dispatch({ type: "UPDATE_QUANTITY", payload: { id, quantity: newQty } });
     }
-    // Reset estimates if cart changes
-    if (serviceability) {
-      fetchShippingEstimate(pincode);
-    }
+    // Estimates must be recalculated manually if quantity changes, requires clicking check pincode again
+    setShippingEstimate(null);
+    setServiceability(null);
   };
 
   // Handle Form Inputs
@@ -101,8 +154,18 @@ export default function CheckoutPage() {
 
     try {
       const res = await checkPincodeServiceability(pincode);
-      if (res.is_serviceable) {
+      if (res.is_serviceable || res.status === true) {
         setServiceability(true);
+
+        // Auto-fill City/State if your check API returns it (Optional fallback)
+        if (res.details) {
+          setDeliveryDetails((prev) => ({
+            ...prev,
+            city: res.details.city || prev.city,
+            state: res.details.state || prev.state,
+          }));
+        }
+
         // Automatically fetch shipping estimate upon successful pincode check
         await fetchShippingEstimate(pincode);
       } else {
@@ -116,48 +179,145 @@ export default function CheckoutPage() {
     }
   };
 
-  // Step 2: Fetch Shipping Cost Estimates from Ekart
+  // Step 2: Fetch Accurate Shipping Cost Estimates from Ekart
   const fetchShippingEstimate = async (validPincode) => {
     setIsEstimating(true);
     try {
       const payload = {
-        pickupPincode: 226010, // EatPur Default Warehouse Pincode (Lucknow)
+        pickupPincode: 226022, // EatPur Default Warehouse Pincode (Lucknow)
         dropPincode: parseInt(validPincode),
         invoiceAmount: subtotal,
-        weight: totalWeightGrams,
-        length: 10, // Default minimum dimension (cm)
-        height: 10,
-        width: 10,
+        weight: cartDimensions.weight || 500, // Pass calculated aggregated dimensions
+        length: cartDimensions.length || 10,
+        height: cartDimensions.height || 10,
+        width: cartDimensions.width || 10,
         serviceType: "SURFACE", // Default
-        paymentType: "Prepaid", // Razorpay flow is always prepaid
         codAmount: 0,
+        shippingDirection: "FORWARD",
       };
 
       const res = await getShippingEstimate(payload);
       if (res.success && res.pricing) {
         setShippingEstimate(res.pricing);
+      } else {
+        setShippingEstimate(null);
+        alert(
+          "We couldn't calculate exact shipping charges for this location at this time.",
+        );
       }
     } catch (err) {
       console.error("Failed to fetch shipping estimate:", err);
-      // Fallback/Graceful degradation if estimate fails but pincode is serviceable
-      setShippingEstimate({ shipping_charge: "50.00" });
+      setShippingEstimate(null);
+      alert(
+        "Ekart API failed to return shipping estimates. Please verify details.",
+      );
     } finally {
       setIsEstimating(false);
     }
   };
 
-  // Final Total Calculation
+  // Final Total Calculation (No Default Estimation Fallbacks allowed)
   const shippingCharge = shippingEstimate
     ? parseFloat(shippingEstimate.shipping_charge)
     : 0;
   const finalTotal = subtotal + shippingCharge;
 
-  // Step 3: Handle Place Order (Razorpay)
+  // Helper to compile the payload exactly as the backend VerifyPaymentSerializer expects
+  const buildCheckoutPayload = () => {
+    return {
+      items: state.items.map((item) => ({
+        product_id: item.id,
+        quantity: item.quantity,
+      })),
+      consignee_name: `${deliveryDetails.firstName.trim()} ${deliveryDetails.lastName.trim()}`,
+      consignee_phone: deliveryDetails.phone,
+      consignee_alternate_phone: deliveryDetails.alt_phone,
+      drop_location: deliveryDetails.address_line,
+      drop_city: deliveryDetails.city,
+      drop_state: deliveryDetails.state,
+      drop_pincode: pincode,
+      pickup_location_alias: "Primary Warehouse", // Replace with your exact alias if different
+      service_type: "SURFACE",
+    };
+  };
+
+  // ============================================================
+  // TEST ONLY: Simulate a successful Razorpay payment response
+  // ============================================================
+  const handleTestPayment = async () => {
+    if (state.items.length === 0) return;
+    if (!serviceability || !shippingEstimate) {
+      alert("Please check serviceability to calculate shipping costs first.");
+      return;
+    }
+
+    // Validate Required Backend Fields
+    if (
+      !deliveryDetails.firstName ||
+      !deliveryDetails.address_line ||
+      !deliveryDetails.city ||
+      !deliveryDetails.state
+    ) {
+      alert("Please fill out all required shipping address fields.");
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      // 1. Create the order in Django and store all shipping preferences
+      const payload = buildCheckoutPayload();
+      const orderData = await checkoutOrder(payload);
+
+      // 2. Simulate Razorpay Success using the real backend order ID
+      const fakeRazorpayResponse = {
+        razorpay_payment_id: `pay_TEST_${Date.now()}`,
+        razorpay_order_id: orderData.razorpay_order_id,
+        razorpay_signature: `test_signature_${Date.now()}`,
+      };
+
+      console.log("🧪 SIMULATED RAZORPAY RESPONSE:", fakeRazorpayResponse);
+
+      // 3. Verify on backend (Backend will bypass signature check for 'pay_TEST_' and trigger Auto-Dispatch)
+      await verifyPayment({
+        ...fakeRazorpayResponse,
+        // Re-send core fields needed for the auto-dispatch fallback logic in VerifyPaymentView
+        consignee_name: payload.consignee_name,
+        consignee_alternate_phone: payload.consignee_alternate_phone,
+        drop_location: payload.drop_location,
+        drop_city: payload.drop_city,
+        drop_state: payload.drop_state,
+        drop_pincode: payload.drop_pincode,
+        pickup_location_alias: payload.pickup_location_alias,
+        service_type: payload.service_type,
+      });
+
+      setIsSuccess(true);
+      dispatch({ type: "CLEAR_CART" });
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Test payment failed.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Step 3: Handle Place Order (Real Razorpay Flow)
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
     if (state.items.length === 0) return;
-    if (!serviceability) {
-      alert("Please verify your pincode for delivery first.");
+    if (!serviceability || !shippingEstimate) {
+      alert("Please check serviceability to calculate shipping costs first.");
+      return;
+    }
+
+    // Validate Required Backend Fields
+    if (
+      !deliveryDetails.firstName ||
+      !deliveryDetails.address_line ||
+      !deliveryDetails.city ||
+      !deliveryDetails.state
+    ) {
+      alert("Please fill out all required shipping address fields.");
       return;
     }
 
@@ -171,24 +331,12 @@ export default function CheckoutPage() {
       return;
     }
 
-    // 2. Build Payload
-    const payload = {
-      items: state.items.map((item) => ({
-        product_id: item.id,
-        quantity: item.quantity,
-      })),
-      delivery_details: {
-        ...deliveryDetails,
-        pincode,
-        shipping_charge: shippingCharge,
-      },
-    };
-
     try {
-      // 3. Call Backend Checkout API
+      // 2. Call Backend Checkout API to create SaleOrder & save shipping preferences
+      const payload = buildCheckoutPayload();
       const orderData = await checkoutOrder(payload);
 
-      // 4. Initialize Razorpay
+      // 3. Initialize Razorpay
       const options = {
         key: orderData.key_id,
         amount: orderData.amount, // In paise
@@ -198,20 +346,30 @@ export default function CheckoutPage() {
         image: "/logo.png",
         order_id: orderData.razorpay_order_id,
         prefill: {
-          name: `${deliveryDetails.firstName} ${deliveryDetails.lastName}`,
+          name: payload.consignee_name,
           email: orderData.customer?.email || "",
-          contact: deliveryDetails.phone,
+          contact: payload.consignee_alternate_phone,
         },
         theme: {
           color: "#6B8E23", // EatPur Green Dark
         },
-        // 5. Success Handler
+        // 4. Success Handler
         handler: async function (response) {
           try {
             await verifyPayment({
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_order_id: response.razorpay_order_id,
               razorpay_signature: response.razorpay_signature,
+
+              // Re-send core fields needed for the auto-dispatch fallback logic in VerifyPaymentView
+              consignee_name: payload.consignee_name,
+              consignee_alternate_phone: payload.consignee_alternate_phone,
+              drop_location: payload.drop_location,
+              drop_city: payload.drop_city,
+              drop_state: payload.drop_state,
+              drop_pincode: payload.drop_pincode,
+              pickup_location_alias: payload.pickup_location_alias,
+              service_type: payload.service_type,
             });
 
             setIsSuccess(true);
@@ -307,9 +465,10 @@ export default function CheckoutPage() {
                     setShippingEstimate(null);
                   }}
                   className={`w-full bg-eatpur-white-warm border pl-11 pr-4 py-3 rounded-xl text-eatpur-dark focus:outline-none transition-colors shadow-inner font-mono text-lg tracking-widest ${
-                    serviceability === true
+                    serviceability === true && shippingEstimate
                       ? "border-eatpur-green-dark bg-green-50"
-                      : serviceability === false
+                      : serviceability === false ||
+                          (serviceability === true && !shippingEstimate)
                         ? "border-red-400 bg-red-50"
                         : "border-black/10 focus:border-eatpur-green-dark"
                   }`}
@@ -319,7 +478,11 @@ export default function CheckoutPage() {
               <button
                 type="button"
                 onClick={handleCheckPincode}
-                disabled={isCheckingPincode || pincode.length !== 6}
+                disabled={
+                  isCheckingPincode ||
+                  pincode.length !== 6 ||
+                  state.items.length === 0
+                }
                 className="btn-primary w-full sm:w-1/3 py-3 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
               >
                 {isCheckingPincode ? "Checking..." : "Check Availability"}
@@ -327,7 +490,7 @@ export default function CheckoutPage() {
             </div>
 
             <AnimatePresence mode="wait">
-              {serviceability === true && (
+              {serviceability === true && shippingEstimate && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
@@ -354,7 +517,7 @@ export default function CheckoutPage() {
           {/* ======================================================= */}
           <form
             onSubmit={handlePlaceOrder}
-            className={`space-y-12 font-sans transition-opacity duration-300 ${!serviceability ? "opacity-40 pointer-events-none select-none grayscale-[50%]" : "opacity-100"}`}
+            className={`space-y-12 font-sans transition-opacity duration-300 ${!serviceability || !shippingEstimate ? "opacity-40 pointer-events-none select-none grayscale-[50%]" : "opacity-100"}`}
           >
             {/* Delivery Details */}
             <div className="space-y-6">
@@ -397,18 +560,48 @@ export default function CheckoutPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
                   <label className="block text-eatpur-dark text-sm mb-2 font-medium">
-                    Complete Address <span className="text-red-500">*</span>
+                    Address Line (House, Street, Area){" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <input
                     required
                     type="text"
-                    name="address"
-                    value={deliveryDetails.address}
+                    name="address_line"
+                    value={deliveryDetails.address_line}
                     onChange={handleInputChange}
                     placeholder="House/Flat No., Building, Street, Area"
                     className="w-full bg-eatpur-white-warm border border-black/10 rounded-xl px-4 py-3 text-eatpur-dark focus:outline-none focus:border-eatpur-green-dark transition-colors shadow-inner font-serif"
                   />
                 </div>
+
+                <div>
+                  <label className="block text-eatpur-dark text-sm mb-2 font-medium">
+                    City <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    required
+                    type="text"
+                    name="city"
+                    value={deliveryDetails.city}
+                    onChange={handleInputChange}
+                    className="w-full bg-eatpur-white-warm border border-black/10 rounded-xl px-4 py-3 text-eatpur-dark focus:outline-none focus:border-eatpur-green-dark transition-colors shadow-inner font-serif"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-eatpur-dark text-sm mb-2 font-medium">
+                    State <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    required
+                    type="text"
+                    name="state"
+                    value={deliveryDetails.state}
+                    onChange={handleInputChange}
+                    className="w-full bg-eatpur-white-warm border border-black/10 rounded-xl px-4 py-3 text-eatpur-dark focus:outline-none focus:border-eatpur-green-dark transition-colors shadow-inner font-serif"
+                  />
+                </div>
+
                 <div>
                   <label className="block text-eatpur-dark text-sm mb-2 font-medium">
                     Mobile Number <span className="text-red-500">*</span>
@@ -429,6 +622,29 @@ export default function CheckoutPage() {
                     className="w-full bg-eatpur-white-warm border border-black/10 rounded-xl px-4 py-3 text-eatpur-dark focus:outline-none focus:border-eatpur-green-dark transition-colors shadow-inner font-mono tracking-widest"
                   />
                 </div>
+
+                <div>
+                  <label className="block text-eatpur-dark text-sm mb-2 font-medium">
+                    Alternate Mobile Number{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    required
+                    type="tel"
+                    name="alt_phone"
+                    maxLength={10}
+                    value={deliveryDetails.alt_phone}
+                    onChange={(e) =>
+                      setDeliveryDetails((prev) => ({
+                        ...prev,
+                        alt_phone: e.target.value.replace(/\D/g, ""),
+                      }))
+                    }
+                    placeholder="10-digit number"
+                    className="w-full bg-eatpur-white-warm border border-black/10 rounded-xl px-4 py-3 text-eatpur-dark focus:outline-none focus:border-eatpur-green-dark transition-colors shadow-inner font-mono tracking-widest"
+                  />
+                </div>
+
                 <div>
                   <label className="block text-eatpur-text-light text-sm mb-2 font-medium">
                     Pincode
@@ -548,16 +764,38 @@ export default function CheckoutPage() {
 
             {/* Payment Submission */}
             <div className="pt-8 border-t border-black/10 flex flex-col items-center">
+              {/* ===================================================== */}
+              {/* TEST ONLY: SIMULATE RAZORPAY PAYMENT                 */}
+              {/* ===================================================== */}
+              <button
+                type="button"
+                onClick={handleTestPayment}
+                disabled={
+                  state.items.length === 0 ||
+                  !serviceability ||
+                  !shippingEstimate ||
+                  isEstimating ||
+                  isProcessing
+                }
+                className="w-full md:w-2/3 mb-4 py-3 text-sm font-bold tracking-wider rounded-2xl flex justify-center items-center gap-2 border-2 border-dashed border-eatpur-green-dark text-eatpur-green-dark bg-green-50 hover:bg-green-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                🧪 Simulate Razorpay Payment
+              </button>
+
               <button
                 type="submit"
                 disabled={
                   state.items.length === 0 ||
                   isProcessing ||
                   !serviceability ||
+                  !shippingEstimate ||
                   isEstimating
                 }
                 className={`btn-primary w-full md:w-2/3 py-4 text-lg font-bold tracking-wider rounded-2xl flex justify-center items-center gap-3 shadow-lg transform transition-transform hover:-translate-y-1 ${
-                  isProcessing || !serviceability || isEstimating
+                  isProcessing ||
+                  !serviceability ||
+                  !shippingEstimate ||
+                  isEstimating
                     ? "opacity-75 cursor-wait hover:translate-y-0"
                     : ""
                 }`}

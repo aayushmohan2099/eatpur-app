@@ -167,3 +167,27 @@ export const getApiAuditLogs = (statusCode = null) => {
     method: "GET",
   });
 };
+
+// ===========================================================================
+// 7. WAREHOUSE / ADDRESS MANAGEMENT (ADMIN)
+// ===========================================================================
+
+/**
+ * Fetches all registered Ekart addresses/warehouses and syncs local DB.
+ */
+export const getEkartAddresses = () => {
+  return apiFetch("/logistics/address/", {
+    method: "GET",
+  });
+};
+
+/**
+ * Registers a new warehouse/pickup address with Ekart and local DB.
+ * @param {Object} payload - { alias, phone, address_line1, address_line2, pincode, city, state, country, latitude, longitude }
+ */
+export const createEkartAddress = (payload) => {
+  return apiFetch("/logistics/address/", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+};

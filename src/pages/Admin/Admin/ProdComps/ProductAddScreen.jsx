@@ -1,3 +1,4 @@
+// src/pages/Admin/Admin/ProdComps/ProductAddScreen.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createProduct, getCategories } from "../../../../api/inventory";
@@ -79,6 +80,13 @@ export default function ProductAddScreen() {
       carbohydrates: "",
       fibre: "",
       fats: "",
+    },
+    // Added Ekart Logistics requirements
+    shipping_dimension: {
+      weight: "",
+      length: "",
+      height: "",
+      width: "",
     },
   });
 
@@ -686,6 +694,104 @@ export default function ProductAddScreen() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Shipping Dimensions (Ekart Required) */}
+                    <div className="pt-4 border-t border-slate-100">
+                      <div className="flex justify-between items-center mb-3">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-eatpur-text-light">
+                          Shipping Package Dimensions (Ekart)
+                        </h4>
+                        <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-mono">
+                          Integers Only
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-500 mb-1">
+                            Gross Weight (g) *
+                          </label>
+                          <input
+                            required
+                            type="number"
+                            min="1"
+                            value={variant.shipping_dimension.weight}
+                            onChange={(e) =>
+                              updateVariant(
+                                variant.id,
+                                "weight",
+                                e.target.value,
+                                "shipping_dimension",
+                              )
+                            }
+                            className="w-full px-3 py-2 border border-slate-300 rounded focus:border-eatpur-green outline-none text-sm bg-slate-50"
+                            placeholder="e.g. 550"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-500 mb-1">
+                            Length (cm) *
+                          </label>
+                          <input
+                            required
+                            type="number"
+                            min="1"
+                            value={variant.shipping_dimension.length}
+                            onChange={(e) =>
+                              updateVariant(
+                                variant.id,
+                                "length",
+                                e.target.value,
+                                "shipping_dimension",
+                              )
+                            }
+                            className="w-full px-3 py-2 border border-slate-300 rounded focus:border-eatpur-green outline-none text-sm bg-slate-50"
+                            placeholder="e.g. 15"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-500 mb-1">
+                            Width (cm) *
+                          </label>
+                          <input
+                            required
+                            type="number"
+                            min="1"
+                            value={variant.shipping_dimension.width}
+                            onChange={(e) =>
+                              updateVariant(
+                                variant.id,
+                                "width",
+                                e.target.value,
+                                "shipping_dimension",
+                              )
+                            }
+                            className="w-full px-3 py-2 border border-slate-300 rounded focus:border-eatpur-green outline-none text-sm bg-slate-50"
+                            placeholder="e.g. 10"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-500 mb-1">
+                            Height (cm) *
+                          </label>
+                          <input
+                            required
+                            type="number"
+                            min="1"
+                            value={variant.shipping_dimension.height}
+                            onChange={(e) =>
+                              updateVariant(
+                                variant.id,
+                                "height",
+                                e.target.value,
+                                "shipping_dimension",
+                              )
+                            }
+                            className="w-full px-3 py-2 border border-slate-300 rounded focus:border-eatpur-green outline-none text-sm bg-slate-50"
+                            placeholder="e.g. 5"
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -913,6 +1019,12 @@ export default function ProductAddScreen() {
                           Price: ₹{v.discounted_price || v.fixed_price}
                         </span>
                         <span>Qty: {v.quantity}</span>
+                      </div>
+                      <div className="mt-1 pt-1 border-t border-slate-100 text-xs text-slate-400">
+                        Box: {v.shipping_dimension.length || 0}x
+                        {v.shipping_dimension.width || 0}x
+                        {v.shipping_dimension.height || 0}cm (
+                        {v.shipping_dimension.weight || 0}g)
                       </div>
                     </div>
                   ))}

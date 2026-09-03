@@ -87,6 +87,12 @@ export default function ProductEditorModal({
           fibre: "",
           fats: "",
         },
+        shipping_dimension: v.shipping_dimension || {
+          weight: "",
+          length: "",
+          height: "",
+          width: "",
+        },
         tags: v.tags || [],
         deletedTagIds: [],
         newTags: [],
@@ -244,6 +250,14 @@ export default function ProductEditorModal({
 
       // Nested Profile Data
       formData.append("profile", JSON.stringify(variant.profile));
+
+      // Shipping Dimensions Data
+      if (variant.shipping_dimension) {
+        formData.append(
+          "shipping_dimension",
+          JSON.stringify(variant.shipping_dimension),
+        );
+      }
 
       // Tags Data
       formData.append("delete_tag_ids", JSON.stringify(variant.deletedTagIds));
@@ -692,6 +706,99 @@ export default function ProductEditorModal({
                                     v.id,
                                     "fats",
                                     e.target.value,
+                                  )
+                                }
+                                className="w-full px-2 py-1.5 rounded border border-slate-300 text-sm bg-white outline-none focus:border-[--color-eatpur-green-dark]"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Shipping Dimensions (Ekart Required) */}
+                        <div className="pt-4 border-t border-slate-200">
+                          <h5 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+                            Shipping Dimensions
+                          </h5>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div>
+                              <label className="block text-xs font-medium text-slate-500 mb-1">
+                                Gross Weight (g)
+                              </label>
+                              <input
+                                type="number"
+                                min="1"
+                                value={v.shipping_dimension?.weight || ""}
+                                onChange={(e) =>
+                                  handleVariantChange(
+                                    v.id,
+                                    "shipping_dimension",
+                                    {
+                                      ...v.shipping_dimension,
+                                      weight: e.target.value,
+                                    },
+                                  )
+                                }
+                                className="w-full px-2 py-1.5 rounded border border-slate-300 text-sm bg-white outline-none focus:border-[--color-eatpur-green-dark]"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-slate-500 mb-1">
+                                Length (cm)
+                              </label>
+                              <input
+                                type="number"
+                                min="1"
+                                value={v.shipping_dimension?.length || ""}
+                                onChange={(e) =>
+                                  handleVariantChange(
+                                    v.id,
+                                    "shipping_dimension",
+                                    {
+                                      ...v.shipping_dimension,
+                                      length: e.target.value,
+                                    },
+                                  )
+                                }
+                                className="w-full px-2 py-1.5 rounded border border-slate-300 text-sm bg-white outline-none focus:border-[--color-eatpur-green-dark]"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-slate-500 mb-1">
+                                Width (cm)
+                              </label>
+                              <input
+                                type="number"
+                                min="1"
+                                value={v.shipping_dimension?.width || ""}
+                                onChange={(e) =>
+                                  handleVariantChange(
+                                    v.id,
+                                    "shipping_dimension",
+                                    {
+                                      ...v.shipping_dimension,
+                                      width: e.target.value,
+                                    },
+                                  )
+                                }
+                                className="w-full px-2 py-1.5 rounded border border-slate-300 text-sm bg-white outline-none focus:border-[--color-eatpur-green-dark]"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-slate-500 mb-1">
+                                Height (cm)
+                              </label>
+                              <input
+                                type="number"
+                                min="1"
+                                value={v.shipping_dimension?.height || ""}
+                                onChange={(e) =>
+                                  handleVariantChange(
+                                    v.id,
+                                    "shipping_dimension",
+                                    {
+                                      ...v.shipping_dimension,
+                                      height: e.target.value,
+                                    },
                                   )
                                 }
                                 className="w-full px-2 py-1.5 rounded border border-slate-300 text-sm bg-white outline-none focus:border-[--color-eatpur-green-dark]"
