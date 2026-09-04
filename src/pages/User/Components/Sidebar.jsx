@@ -140,7 +140,7 @@ export default function Sidebar({
       {/* Sidebar Container (Floating on Desktop, Semi-Transparent Glass) */}
       <aside
         className={`fixed inset-y-0 left-0 z-50 w-72
-        bg-white/75
+          bg-white/75
           border-r md:border border-[#DCDFD9]
           transform transition-transform duration-300
           flex flex-col
@@ -158,7 +158,7 @@ export default function Sidebar({
               <h2 className="text-xl font-bold text-[--color-eatpur-dark] font-display tracking-wide">
                 {activeModule} Menu
               </h2>
-              {/* Green Title Underline matching the reference image */}
+              {/* Green Title Underline */}
               <div className="w-6 h-0.5 bg-[--color-eatpur-green-dark] mt-3 rounded-full"></div>
             </div>
 
@@ -193,7 +193,7 @@ export default function Sidebar({
                 key={menu.id}
                 onClick={() => {
                   setActiveSubMenu(menu.id);
-                  if (window.innerWidth < 768) onClose(); // Auto-close on mobile after selection
+                  if (window.innerWidth < 768) onClose(); // Auto-close on mobile
                 }}
                 className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl font-sans font-medium transition-all duration-200 text-left ${
                   isActive

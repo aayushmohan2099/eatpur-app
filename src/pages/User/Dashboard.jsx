@@ -4,6 +4,8 @@ import { getMe } from "../../api/authApi"; // Ensure your path is correct
 import Header from "./Components/Header";
 import Sidebar, { SUB_MENUS } from "./Components/Sidebar";
 import MilletBg from "../../assets/user/millet_user_bg.png";
+import Orders from "./Components/Orders";
+import InvoiceList from "./Components/InvoiceList";
 
 // ===========================================================================
 // ICONS FOR FORMS
@@ -146,7 +148,6 @@ const PageHeader = ({ title, activeModule }) => (
 
 // Generic Wrapper for rendering the active page
 const HeroPlaceholder = ({ activeModule, activeSubMenu, user }) => {
-  // Find the exact label for the UI
   const subMenuLabel =
     SUB_MENUS[activeModule]?.find((s) => s.id === activeSubMenu)?.label ||
     activeSubMenu;
@@ -155,7 +156,7 @@ const HeroPlaceholder = ({ activeModule, activeSubMenu, user }) => {
     <div className="max-w-5xl mx-auto w-full animate-fade-in pb-10">
       <PageHeader title={subMenuLabel} activeModule={activeModule} />
 
-      {/* If on Profile -> Personal Info, show the user details */}
+      {/* Profile -> Personal Info */}
       {activeModule === "Profile" && activeSubMenu === "personal_info" ? (
         <div className="bg-white/75 p-8 md:p-10 rounded-3xl shadow-sm border-r md:border border-[#DCDFD9]">
           <div className="flex items-center gap-3 border-b border-[#DCDFD9] pb-5 mb-8">
@@ -192,8 +193,16 @@ const HeroPlaceholder = ({ activeModule, activeSubMenu, user }) => {
             <DashboardField label="AGE" value={user?.age} icon="Calendar" />
           </div>
         </div>
+      ) : activeModule === "Orders" &&
+        (activeSubMenu === "active_orders" ||
+          activeSubMenu === "order_history") ? (
+        /* Render the Orders component for both Active and History views */
+        <Orders activeSubMenu={activeSubMenu} />
+      ) : activeModule === "Orders" && activeSubMenu === "invoices" ? (
+        /* Render the Invoices component */
+        <InvoiceList />
       ) : (
-        /* Generic Placeholder for all other pages */
+        /* Generic Placeholder for all other unbuilt pages */
         <div className="h-64 flex flex-col items-center justify-center text-center border-2 border-dashed border-[#DCDFD9] rounded-[24px] bg-white/50 opacity-90">
           <svg
             className="w-12 h-12 text-[--color-eatpur-green-dark] mb-4 opacity-50"
@@ -221,7 +230,6 @@ const HeroPlaceholder = ({ activeModule, activeSubMenu, user }) => {
         </div>
       )}
 
-      {/* Tailwind basic animation definition */}
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px); }
