@@ -107,7 +107,7 @@ export default function Navbar() {
         w-full
         sticky
         top-0
-        z-[100]
+        z-[300]
         border-b
         border-[#D4C4A8]/20
         bg-[#FAFDF8]/55

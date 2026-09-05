@@ -1,6 +1,8 @@
 // src/pages/ProductsPage.jsx
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   FaCartShopping,
   FaEye,
@@ -123,6 +125,7 @@ const ImageCarousel = ({ images, alt, onClickView }) => {
 // ===========================================================================
 export default function ProductsPage() {
   const { dispatch } = useCart();
+  const navigate = useNavigate();
 
   // State
   const [products, setProducts] = useState([]);
@@ -147,7 +150,7 @@ export default function ProductsPage() {
   const [reviews, setReviews] = useState([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
   const [reviewForm, setReviewForm] = useState({
-    rating: 5,
+    rating: 0, // Default 0 (blank/unselected)
     content: "",
     images: [],
   });
@@ -205,12 +208,26 @@ export default function ProductsPage() {
       updatedProducts[index] = {
         ...updatedProducts[index],
         total_likes: res.total_likes,
-        is_liked: res.liked, // Assume backend returns liked status, fallback local mapping
+        is_liked: res.liked,
       };
       setProducts(updatedProducts);
     } catch (err) {
       console.error("Failed to toggle like", err);
     }
+  };
+
+  const handleProductClick = (product) => {
+    const isAuthenticated = !!localStorage.getItem("access");
+
+    if (!isAuthenticated) {
+      navigate("/login", {
+        state: { returnTo: "/products" },
+      });
+      return;
+    }
+
+    setQuickViewProduct(product);
+    setActiveTab("nutrition");
   };
 
   // Fetch Reviews when Tab Switches
@@ -243,6 +260,10 @@ export default function ProductsPage() {
 
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
+    if (reviewForm.rating === 0) {
+      alert("Please select a star rating before submitting.");
+      return;
+    }
     if (!reviewForm.content.trim()) return;
 
     setSubmittingReview(true);
@@ -255,7 +276,7 @@ export default function ProductsPage() {
 
     try {
       await createProductComment(quickViewProduct.pid, formData);
-      setReviewForm({ rating: 5, content: "", images: [] });
+      setReviewForm({ rating: 0, content: "", images: [] });
       fetchReviews(); // Refresh the list
     } catch (err) {
       alert(err.message || "Failed to submit review. Are you logged in?");
@@ -277,7 +298,7 @@ export default function ProductsPage() {
   };
 
   return (
-    <div className="w-full min-h-screen pb-32 relative z-10 font-sans text-eatpur-dark bg-eatpur-white-warm overflow-x-hidden">
+    <div className="w-full min-h-screen pb-32 relative z-0 font-sans text-eatpur-dark bg-eatpur-white-warm overflow-x-hidden">
       {/* Hero Banner */}
       <section className="pt-20 pb-16 px-4 md:px-8 relative flex flex-col items-center justify-center text-center">
         <div className="absolute inset-0 bg-gradient-to-b from-eatpur-green-light/20 to-transparent pointer-events-none -z-10" />
@@ -367,10 +388,7 @@ export default function ProductsPage() {
                       exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ duration: 0.4, delay: i * 0.05 }}
                       key={product.id}
-                      onClick={() => {
-                        setQuickViewProduct(product);
-                        setActiveTab("nutrition"); // Reset tab on open
-                      }}
+                      onClick={() => handleProductClick(product)}
                       className="vintage-card overflow-hidden flex flex-col group relative bg-white transition-all duration-300 hover:shadow-xl hover:-translate-y-1 rounded-2xl border border-eatpur-border cursor-pointer"
                     >
                       {/* Top Badges & Like Button */}
@@ -476,13 +494,14 @@ export default function ProductsPage() {
       {/* =========================================================================== */}
       {/* QUICK VIEW MODAL (WITH REVIEWS) */}
       {/* =========================================================================== */}
-      <AnimatePresence>
-        {quickViewProduct && (
-          <motion.div
+      {createPortal(
+        <AnimatePresence>
+          {quickViewProduct && (
+            <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-start md:items-center justify-center p-4 pt-24 md:pt-4 bg-eatpur-dark/70 backdrop-blur-md overflow-y-auto"
+            className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-eatpur-dark/70 backdrop-blur-md overflow-y-auto"
             onClick={() => setQuickViewProduct(null)}
           >
             <motion.div
@@ -490,7 +509,7 @@ export default function ProductsPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white w-full max-w-5xl max-h-[90vh] overflow-y-auto relative flex flex-col md:flex-row rounded-3xl shadow-2xl border border-eatpur-gray-light"
+              className="bg-white w-full max-w-5xl max-h-[90vh] overflow-y-auto relative flex flex-col md:flex-row rounded-3xl shadow-2xl border border-eatpur-gray-light z-[10000000]"
             >
               <button
                 onClick={() => setQuickViewProduct(null)}
@@ -536,8 +555,8 @@ export default function ProductsPage() {
                   <div className="flex flex-wrap gap-2 mb-4">
                     {[
                       "nutrition",
-                      "instructions",
                       "ingredients",
+                      "instructions to cook",
                       "reviews",
                     ].map((tab) => (
                       <button
@@ -632,7 +651,7 @@ export default function ProductsPage() {
                     </div>
                   )}
 
-                  {activeTab === "instructions" && (
+                  {activeTab === "instructions to cook" && (
                     <div className="mb-6 p-4 bg-[#FAFCFA] rounded-2xl border border-eatpur-gray-light text-sm font-sans text-eatpur-text leading-relaxed min-h-[140px]">
                       {quickViewProduct.instructions ||
                         quickViewProduct.how_to_use ||
@@ -657,7 +676,7 @@ export default function ProductsPage() {
                   )}
 
                   {/* ========================================= */}
-                  {/* REVIEWS TAB                               */}
+                  {/* REVIEWS TAB                                 */}
                   {/* ========================================= */}
                   {activeTab === "reviews" && (
                     <div className="mb-6 h-[250px] flex flex-col">
@@ -668,9 +687,43 @@ export default function ProductsPage() {
                             Loading reviews...
                           </p>
                         ) : reviews.length === 0 ? (
-                          <p className="text-sm italic text-eatpur-text-light text-center mt-4">
-                            No reviews yet. Be the first to review!
-                          </p>
+                          <div className="text-center mt-4 space-y-3">
+                            <p className="text-sm italic text-eatpur-text-light">
+                              No reviews yet. Be the first to review!
+                            </p>
+                            {/* Blank to Clickable Star Rating Picker + Rating Text Display */}
+                            <div className="flex flex-col items-center gap-1.5 py-1">
+                              <div className="flex justify-center items-center gap-1.5">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <button
+                                    key={star}
+                                    type="button"
+                                    onClick={() =>
+                                      setReviewForm({
+                                        ...reviewForm,
+                                        rating: star,
+                                      })
+                                    }
+                                    className="focus:outline-none transition-transform hover:scale-125"
+                                  >
+                                    <FaStar
+                                      size={20}
+                                      className={
+                                        star <= reviewForm.rating
+                                          ? "text-yellow-400 fill-yellow-400 drop-shadow-sm"
+                                          : "text-slate-300"
+                                      }
+                                    />
+                                  </button>
+                                ))}
+                              </div>
+                              <span className="text-xs font-bold text-eatpur-dark">
+                                {reviewForm.rating > 0
+                                  ? `${reviewForm.rating}/5 Rating`
+                                  : "Select Rating"}
+                              </span>
+                            </div>
+                          </div>
                         ) : (
                           reviews.map((rev) => (
                             <div
@@ -729,28 +782,6 @@ export default function ProductsPage() {
                           <span className="text-xs font-bold uppercase tracking-wider text-eatpur-dark">
                             Write a Review
                           </span>
-                          <div className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded border border-slate-200">
-                            <FaStar
-                              className="text-eatpur-gold-dark"
-                              size={10}
-                            />
-                            <select
-                              value={reviewForm.rating}
-                              onChange={(e) =>
-                                setReviewForm({
-                                  ...reviewForm,
-                                  rating: e.target.value,
-                                })
-                              }
-                              className="text-xs bg-transparent outline-none font-bold"
-                            >
-                              {[5, 4, 3, 2, 1].map((n) => (
-                                <option key={n} value={n}>
-                                  {n} Stars
-                                </option>
-                              ))}
-                            </select>
-                          </div>
                         </div>
                         <textarea
                           required
@@ -800,9 +831,11 @@ export default function ProductsPage() {
                 </div>
               </div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body,
+      )}
     </div>
   );
 }
