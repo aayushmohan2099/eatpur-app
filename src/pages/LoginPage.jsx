@@ -16,6 +16,10 @@ export default function AuthPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [isEmailLocked, setIsEmailLocked] = useState(false);
 
+  // State to manage password visibility
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const [form, setForm] = useState({
     username: "",
     email: "",
@@ -45,16 +49,16 @@ export default function AuthPage() {
       });
 
       if (res && res.access) {
-        // Direct Login: User already exists!
         localStorage.setItem("access", res.access);
         localStorage.setItem("refresh", res.refresh);
         localStorage.setItem("role", res.user?.role_name || "CUSTOMER");
 
         setErrors({});
         setSuccessMessage("Google Login successful! Redirecting...");
-        setTimeout(() => navigate("/"), 1500);
+        setTimeout(() => {
+          navigate(location.state?.returnTo || "/");
+        }, 1500);
       } else if (res && res.action === "requires_registration") {
-        // Requires Registration: Route to signup & lock email
         setIsLogin(false);
         setForm((prev) => ({ ...prev, email: res.email }));
         setIsEmailLocked(true);
@@ -88,24 +92,19 @@ export default function AuthPage() {
         res = await registerUser(payload);
       }
 
-      // 🔥 SURGICAL FIX: Since native fetch doesn't throw on 400 errors,
-      // the decoded backend error JSON lands right here!
       if (res && (res.errors || res.error || (res.detail && !res.access))) {
         setErrors(res.errors || res.error || { detail: res.detail });
         setSuccessMessage("");
         fetchCaptcha();
-        return; // Stop execution
+        return;
       }
 
       if (res && res.access) {
         localStorage.setItem("access", res.access);
         localStorage.setItem("refresh", res.refresh);
-
-        // Extract role name for UI state (like Navbars)
         const userRole = res.user?.role_name || "CUSTOMER";
         localStorage.setItem("role", userRole);
 
-        // Show success message and clear any errors
         setErrors({});
         setSuccessMessage(
           isLogin
@@ -113,15 +112,12 @@ export default function AuthPage() {
             : "Account created successfully! Redirecting...",
         );
 
-        // Delay redirect by 1.5 seconds so the user can see the message
         setTimeout(() => {
-          navigate("/");
+          navigate(location.state?.returnTo || "/");
         }, 1500);
       }
     } catch (err) {
       let backendErrors = {};
-
-      // Handle pure network crashes or edge-case decoding failures
       const rawBase64 = err?.response?.data?.data || err?.data;
 
       if (typeof rawBase64 === "string") {
@@ -163,22 +159,11 @@ export default function AuthPage() {
   const validateForm = () => {
     const newErrors = {};
 
-    // 1. Common required fields for BOTH Login and Registration
-    if (!form.username) {
-      newErrors.username = "Username is required";
-    }
+    if (!form.username) newErrors.username = "Username is required";
+    if (!form.password) newErrors.password = "Password is required";
+    if (!form.captcha_answer) newErrors.captcha = "Captcha is required";
 
-    if (!form.password) {
-      newErrors.password = "Password is required";
-    }
-
-    if (!form.captcha_answer) {
-      newErrors.captcha = "Captcha is required";
-    }
-
-    // 2. Strict complex validations ONLY active during registration
     if (!isLogin) {
-      // Email checking
       if (!form.email) {
         newErrors.email = "Email is required";
       } else if (
@@ -187,24 +172,20 @@ export default function AuthPage() {
         newErrors.email = "Enter valid email (example@gmail.com)";
       }
 
-      // Mobile checking
       if (!form.mobile) {
         newErrors.mobile = "Mobile number is required";
       } else if (!/^\d{10,15}$/.test(form.mobile)) {
         newErrors.mobile = "Mobile must be 10–15 digits";
       }
 
-      // age checking
       if (!form.age) {
         newErrors.age = "Age is required";
       }
 
-      // Password Confirmation presence
       if (!form.password_confirm) {
         newErrors.password_confirm = "Please confirm password";
       }
 
-      // Password strength complexity checks (Only for registration!)
       if (form.password) {
         if (form.password.length < 8) {
           newErrors.password = "Minimum 8 characters required";
@@ -217,7 +198,6 @@ export default function AuthPage() {
         }
       }
 
-      // Match check
       if (
         form.password &&
         form.password_confirm &&
@@ -252,7 +232,6 @@ export default function AuthPage() {
               <h1 className="text-3xl font-display text-white mb-6 tracking-wide drop-shadow-sm">
                 Create Your Account 🚀
               </h1>
-
               <ul className="text-white/80 space-y-3 font-serif text-[15px]">
                 <li className="flex items-center gap-2">
                   <span className="w-1 h-1 rounded-full bg-white opacity-70"></span>{" "}
@@ -293,7 +272,6 @@ export default function AuthPage() {
 
         {/* RIGHT PANEL */}
         <div className="p-8 md:p-12 bg-white flex flex-col justify-center">
-          {/* Toggle */}
           <div className="flex mb-8 bg-eatpur-white-warm p-1 rounded-xl overflow-hidden border border-black/5 shadow-inner">
             <button
               onClick={() => {
@@ -329,7 +307,6 @@ export default function AuthPage() {
             {isLogin ? "Welcome Back" : "Create Account"}
           </h2>
 
-          {/* GOOGLE OAUTH BUTTON */}
           <div className="flex justify-center mb-6">
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
@@ -349,26 +326,22 @@ export default function AuthPage() {
             <hr className="w-full border-black/10" />
           </div>
 
-          {/* SUCCESS MESSAGE */}
           {successMessage && (
             <div className="mb-6 p-3.5 rounded-xl border border-green-200 bg-green-50 text-green-700 text-sm font-medium flex items-center justify-center gap-2 shadow-sm animate-pulse">
               <span>✅</span> {successMessage}
             </div>
           )}
 
-          {/* GLOBAL ERRORS SUMMARY */}
           {Object.keys(errors).length > 0 && (
             <div className="mb-6 p-4 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm font-medium flex items-start gap-3 shadow-sm">
               <span className="text-lg leading-none mt-0.5">⚠️</span>
               <ul className="flex flex-col gap-1.5 list-disc list-inside w-full">
                 {Object.entries(errors).map(([field, msg]) => {
-                  // Normalize field name
                   const displayField =
                     field === "detail" || field === "non_field_errors"
                       ? "Error"
                       : field.replace(/_/g, " ");
 
-                  // Safely extract string from array or object
                   let displayMsg = msg;
                   if (Array.isArray(msg)) {
                     displayMsg = msg.join(" | ");
@@ -397,7 +370,6 @@ export default function AuthPage() {
                 className="w-full p-3.5 rounded-xl bg-eatpur-white-warm border border-black/10 focus:border-eatpur-green-dark outline-none text-eatpur-dark placeholder:text-eatpur-text-light shadow-inner font-serif transition-colors"
                 onChange={(e) => setForm({ ...form, username: e.target.value })}
               />
-              {/* Note: We handle fields globally above, but keeping this for immediate field context if needed */}
               {errors.username && (
                 <p className="text-red-500 text-xs mt-1.5 ml-1 font-medium">
                   {Array.isArray(errors.username)
@@ -465,15 +437,63 @@ export default function AuthPage() {
                     </p>
                   )}
                 </div>
+
+                {/* Confirm Password Input with Fixed Eye Icon */}
                 <div>
-                  <input
-                    type="password"
-                    placeholder="Confirm Password"
-                    className="w-full p-3.5 rounded-xl bg-eatpur-white-warm border border-black/10 focus:border-eatpur-green-dark outline-none text-eatpur-dark placeholder:text-eatpur-text-light shadow-inner font-serif transition-colors"
-                    onChange={(e) =>
-                      setForm({ ...form, password_confirm: e.target.value })
-                    }
-                  />
+                  <div className="relative w-full">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Confirm Password"
+                      className="w-full p-3.5 pr-12 rounded-xl bg-eatpur-white-warm border border-black/10 focus:border-eatpur-green-dark outline-none text-eatpur-dark placeholder:text-eatpur-text-light shadow-inner font-serif transition-colors"
+                      onChange={(e) =>
+                        setForm({ ...form, password_confirm: e.target.value })
+                      }
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-eatpur-dark focus:outline-none flex items-center justify-center"
+                    >
+                      {showConfirmPassword ? (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth="1.5"
+                          stroke="currentColor"
+                          className="w-5 h-5"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                        </svg>
+                      ) : (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth="1.5"
+                          stroke="currentColor"
+                          className="w-5 h-5"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"
+                          />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                   {errors.password_confirm && (
                     <p className="text-red-500 text-xs mt-1.5 ml-1 font-medium">
                       {Array.isArray(errors.password_confirm)
@@ -485,13 +505,60 @@ export default function AuthPage() {
               </>
             )}
 
+            {/* Password Input with Fixed Eye Icon */}
             <div>
-              <input
-                type="password"
-                placeholder="Password"
-                className="w-full p-3.5 rounded-xl bg-eatpur-white-warm border border-black/10 focus:border-eatpur-green-dark outline-none text-eatpur-dark placeholder:text-eatpur-text-light shadow-inner font-serif transition-colors"
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
-              />
+              <div className="relative w-full">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  className="w-full p-3.5 pr-12 rounded-xl bg-eatpur-white-warm border border-black/10 focus:border-eatpur-green-dark outline-none text-eatpur-dark placeholder:text-eatpur-text-light shadow-inner font-serif transition-colors"
+                  onChange={(e) =>
+                    setForm({ ...form, password: e.target.value })
+                  }
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-eatpur-dark focus:outline-none flex items-center justify-center"
+                >
+                  {showPassword ? (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth="1.5"
+                      stroke="currentColor"
+                      className="w-5 h-5"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth="1.5"
+                      stroke="currentColor"
+                      className="w-5 h-5"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"
+                      />
+                    </svg>
+                  )}
+                </button>
+              </div>
               {errors.password && (
                 <p className="text-red-500 text-xs mt-1.5 ml-1 font-medium">
                   {Array.isArray(errors.password)

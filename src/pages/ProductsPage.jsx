@@ -1,6 +1,8 @@
 // src/pages/ProductsPage.jsx
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   FaCartShopping,
   FaEye,
@@ -123,6 +125,7 @@ const ImageCarousel = ({ images, alt, onClickView }) => {
 // ===========================================================================
 export default function ProductsPage() {
   const { dispatch } = useCart();
+  const navigate = useNavigate();
 
   // State
   const [products, setProducts] = useState([]);
@@ -147,7 +150,7 @@ export default function ProductsPage() {
   const [reviews, setReviews] = useState([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
   const [reviewForm, setReviewForm] = useState({
-    rating: 5,
+    rating: 0, // Default 0 (blank/unselected)
     content: "",
     images: [],
   });
@@ -205,12 +208,26 @@ export default function ProductsPage() {
       updatedProducts[index] = {
         ...updatedProducts[index],
         total_likes: res.total_likes,
-        is_liked: res.liked, // Assume backend returns liked status, fallback local mapping
+        is_liked: res.liked,
       };
       setProducts(updatedProducts);
     } catch (err) {
       console.error("Failed to toggle like", err);
     }
+  };
+
+  const handleProductClick = (product) => {
+    const isAuthenticated = !!localStorage.getItem("access");
+
+    if (!isAuthenticated) {
+      navigate("/login", {
+        state: { returnTo: "/products" },
+      });
+      return;
+    }
+
+    setQuickViewProduct(product);
+    setActiveTab("nutrition");
   };
 
   // Fetch Reviews when Tab Switches
@@ -243,6 +260,10 @@ export default function ProductsPage() {
 
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
+    if (reviewForm.rating === 0) {
+      alert("Please select a star rating before submitting.");
+      return;
+    }
     if (!reviewForm.content.trim()) return;
 
     setSubmittingReview(true);
@@ -255,7 +276,7 @@ export default function ProductsPage() {
 
     try {
       await createProductComment(quickViewProduct.pid, formData);
-      setReviewForm({ rating: 5, content: "", images: [] });
+      setReviewForm({ rating: 0, content: "", images: [] });
       fetchReviews(); // Refresh the list
     } catch (err) {
       alert(err.message || "Failed to submit review. Are you logged in?");
@@ -277,7 +298,7 @@ export default function ProductsPage() {
   };
 
   return (
-    <div className="w-full min-h-screen pb-32 relative z-10 font-sans text-eatpur-dark bg-eatpur-white-warm overflow-x-hidden">
+    <div className="w-full min-h-screen pb-32 relative z-0 font-sans text-eatpur-dark bg-eatpur-white-warm overflow-x-hidden">
       {/* Hero Banner */}
       <section className="pt-20 pb-16 px-4 md:px-8 relative flex flex-col items-center justify-center text-center">
         <div className="absolute inset-0 bg-gradient-to-b from-eatpur-green-light/20 to-transparent pointer-events-none -z-10" />
@@ -367,10 +388,7 @@ export default function ProductsPage() {
                       exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ duration: 0.4, delay: i * 0.05 }}
                       key={product.id}
-                      onClick={() => {
-                        setQuickViewProduct(product);
-                        setActiveTab("nutrition"); // Reset tab on open
-                      }}
+                      onClick={() => handleProductClick(product)}
                       className="vintage-card overflow-hidden flex flex-col group relative bg-white transition-all duration-300 hover:shadow-xl hover:-translate-y-1 rounded-2xl border border-eatpur-border cursor-pointer"
                     >
                       {/* Top Badges & Like Button */}
@@ -476,333 +494,351 @@ export default function ProductsPage() {
       {/* =========================================================================== */}
       {/* QUICK VIEW MODAL (WITH REVIEWS) */}
       {/* =========================================================================== */}
-      <AnimatePresence>
-        {quickViewProduct && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-start md:items-center justify-center p-4 pt-24 md:pt-4 bg-eatpur-dark/70 backdrop-blur-md overflow-y-auto"
-            onClick={() => setQuickViewProduct(null)}
-          >
+      {createPortal(
+        <AnimatePresence>
+          {quickViewProduct && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-white w-full max-w-5xl max-h-[90vh] overflow-y-auto relative flex flex-col md:flex-row rounded-3xl shadow-2xl border border-eatpur-gray-light"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-eatpur-dark/70 backdrop-blur-md overflow-y-auto"
+              onClick={() => setQuickViewProduct(null)}
             >
-              <button
-                onClick={() => setQuickViewProduct(null)}
-                className="absolute top-4 right-4 z-50 text-eatpur-text hover:text-eatpur-dark p-2.5 bg-white/90 rounded-full shadow-lg transition-transform hover:scale-110 border border-slate-100"
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-white w-full max-w-5xl max-h-[90vh] overflow-y-auto relative flex flex-col md:flex-row rounded-3xl shadow-2xl border border-eatpur-gray-light z-[10000000]"
               >
-                <FaXmark size={20} />
-              </button>
+                <button
+                  onClick={() => setQuickViewProduct(null)}
+                  className="absolute top-4 right-4 z-50 text-eatpur-text hover:text-eatpur-dark p-2.5 bg-white/90 rounded-full shadow-lg transition-transform hover:scale-110 border border-slate-100"
+                >
+                  <FaXmark size={20} />
+                </button>
 
-              {/* Left Side: Images */}
-              <div className="md:w-1/2 p-2 md:p-2 bg-eatpur-green-dark flex flex-col">
-                <div className="flex-1 min-h-[300px] md:min-h-[400px] relative rounded-2xl overflow-hidden bg-white shadow-sm border border-slate-100">
-                  <ImageCarousel
-                    images={quickViewProduct.cover_image}
-                    alt={quickViewProduct.name}
-                    onClickView={(e) => e.stopPropagation()}
-                  />
+                {/* Left Side: Images */}
+                <div className="md:w-1/2 p-2 md:p-2 bg-eatpur-green-dark flex flex-col">
+                  <div className="flex-1 min-h-[300px] md:min-h-[400px] relative rounded-2xl overflow-hidden bg-white shadow-sm border border-slate-100">
+                    <ImageCarousel
+                      images={quickViewProduct.cover_image}
+                      alt={quickViewProduct.name}
+                      onClickView={(e) => e.stopPropagation()}
+                    />
+                  </div>
+
+                  {/* Visual Thumbnail Strip */}
+                  {Array.isArray(quickViewProduct.cover_image) &&
+                    quickViewProduct.cover_image.length > 1 && (
+                      <div className="flex gap-3 mt-6 overflow-x-auto hide-scrollbar pb-2">
+                        {quickViewProduct.cover_image.map((img, idx) => (
+                          <div
+                            key={idx}
+                            className="w-16 h-16 shrink-0 rounded-lg border border-slate-200 bg-white p-1 shadow-sm"
+                          >
+                            <img
+                              src={img}
+                              alt="thumbnail"
+                              className="w-full h-full object-contain mix-blend-multiply"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
                 </div>
 
-                {/* Visual Thumbnail Strip */}
-                {Array.isArray(quickViewProduct.cover_image) &&
-                  quickViewProduct.cover_image.length > 1 && (
-                    <div className="flex gap-3 mt-6 overflow-x-auto hide-scrollbar pb-2">
-                      {quickViewProduct.cover_image.map((img, idx) => (
-                        <div
-                          key={idx}
-                          className="w-16 h-16 shrink-0 rounded-lg border border-slate-200 bg-white p-1 shadow-sm"
+                {/* Right Side: Details & Tabs */}
+                <div className="md:w-1/2 p-8 md:p-10 flex flex-col justify-between bg-white relative">
+                  <div>
+                    {/* Tab Buttons */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {[
+                        "nutrition",
+                        "ingredients",
+                        "instructions to cook",
+                        "reviews",
+                      ].map((tab) => (
+                        <button
+                          key={tab}
+                          type="button"
+                          onClick={() => setActiveTab(tab)}
+                          className={`font-sans font-bold text-xs uppercase tracking-wider px-3.5 py-1.5 rounded-lg transition-all ${
+                            activeTab === tab
+                              ? "bg-eatpur-green-dark text-white shadow-sm"
+                              : "bg-slate-100 text-eatpur-text hover:bg-slate-200"
+                          }`}
                         >
-                          <img
-                            src={img}
-                            alt="thumbnail"
-                            className="w-full h-full object-contain mix-blend-multiply"
-                          />
-                        </div>
+                          {tab.replace("-", " ")}
+                        </button>
                       ))}
-                    </div>
-                  )}
-              </div>
-
-              {/* Right Side: Details & Tabs */}
-              <div className="md:w-1/2 p-8 md:p-10 flex flex-col justify-between bg-white relative">
-                <div>
-                  {/* Tab Buttons */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {[
-                      "nutrition",
-                      "instructions",
-                      "ingredients",
-                      "reviews",
-                    ].map((tab) => (
-                      <button
-                        key={tab}
-                        type="button"
-                        onClick={() => setActiveTab(tab)}
-                        className={`font-sans font-bold text-xs uppercase tracking-wider px-3.5 py-1.5 rounded-lg transition-all ${
-                          activeTab === tab
-                            ? "bg-eatpur-green-dark text-white shadow-sm"
-                            : "bg-slate-100 text-eatpur-text hover:bg-slate-200"
-                        }`}
-                      >
-                        {tab.replace("-", " ")}
-                      </button>
-                    ))}
-                    {quickViewProduct.is_trending && (
-                      <span className="text-eatpur-gold-dark font-sans font-bold text-[10px] tracking-widest uppercase px-3 py-1.5 bg-eatpur-gold-light/20 rounded-lg self-center ml-auto">
-                        Trending
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Title & PID */}
-                  <h2 className="text-3xl md:text-4xl font-serif text-eatpur-dark font-bold mb-2 leading-tight">
-                    {quickViewProduct.name}
-                  </h2>
-                  <p className="text-xs font-mono text-eatpur-text-light mb-6">
-                    PID: {quickViewProduct.pid}
-                  </p>
-
-                  {/* Price Section */}
-                  <div className="flex items-baseline gap-4 mb-6 border-b border-eatpur-gray-light pb-6">
-                    <span className="text-5xl font-bold text-eatpur-dark tracking-tight">
-                      ₹{quickViewProduct.discounted_price}
-                    </span>
-                    {Number(quickViewProduct.fixed_price) >
-                      Number(quickViewProduct.discounted_price) && (
-                      <div className="flex flex-col items-start">
-                        <span className="relative text-xl font-sans text-eatpur-text-light font-medium">
-                          ₹{quickViewProduct.fixed_price}
-                          <span className="absolute top-1/2 left-[-5%] w-[110%] h-[2px] bg-rose-500/80 -rotate-[12deg]"></span>
+                      {quickViewProduct.is_trending && (
+                        <span className="text-eatpur-gold-dark font-sans font-bold text-[10px] tracking-widest uppercase px-3 py-1.5 bg-eatpur-gold-light/20 rounded-lg self-center ml-auto">
+                          Trending
                         </span>
-                        <span className="text-rose-600 font-bold text-xs uppercase tracking-wider bg-rose-50 px-2 py-0.5 rounded mt-1">
-                          Save {quickViewProduct.discount_percentage}%
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* TAB CONTENT SWITCHER */}
-                  {activeTab === "nutrition" && (
-                    <div>
-                      <p className="text-eatpur-text font-sans leading-relaxed mb-6 text-sm md:text-base">
-                        {quickViewProduct.description ||
-                          "A pure, healthy product crafted for your wellbeing. Perfect for a balanced, modern lifestyle."}
-                      </p>
-                      {/* Macro Nutrients Grid */}
-                      <div className="flex md:grid grid-cols-4 gap-3 mb-6 overflow-x-auto md:overflow-visible pb-2 md:pb-0 hide-scrollbar snap-x snap-mandatory">
-                        <div className="bg-[#FAFCFA] p-3 text-center rounded-xl border border-eatpur-gray-light shadow-sm min-w-[110px] md:min-w-0 shrink-0 snap-start">
-                          <div className="text-[10px] font-bold text-eatpur-text-light uppercase tracking-wider mb-1 whitespace-nowrap">
-                            Protein
-                          </div>
-                          <div className="font-mono text-base font-bold text-eatpur-dark whitespace-nowrap">
-                            {quickViewProduct.protein || 0}g
-                          </div>
-                        </div>
-                        <div className="bg-[#FAFCFA] p-3 text-center rounded-xl border border-eatpur-gray-light shadow-sm min-w-[110px] md:min-w-0 shrink-0 snap-start">
-                          <div className="text-[10px] font-bold text-eatpur-text-light uppercase tracking-wider mb-1 whitespace-nowrap">
-                            Carbs
-                          </div>
-                          <div className="font-mono text-base font-bold text-eatpur-dark whitespace-nowrap">
-                            {quickViewProduct.carbohydrates || 0}g
-                          </div>
-                        </div>
-                        <div className="bg-[#FAFCFA] p-3 text-center rounded-xl border border-eatpur-gray-light shadow-sm min-w-[110px] md:min-w-0 shrink-0 snap-start">
-                          <div className="text-[10px] font-bold text-eatpur-text-light uppercase tracking-wider mb-1 whitespace-nowrap">
-                            Fibre
-                          </div>
-                          <div className="font-mono text-base font-bold text-eatpur-dark whitespace-nowrap">
-                            {quickViewProduct.fibre || 0}g
-                          </div>
-                        </div>
-                        <div className="bg-[#FAFCFA] p-3 text-center rounded-xl border border-eatpur-gray-light shadow-sm min-w-[110px] md:min-w-0 shrink-0 snap-start">
-                          <div className="text-[10px] font-bold text-eatpur-text-light uppercase tracking-wider mb-1 whitespace-nowrap">
-                            Calories
-                          </div>
-                          <div className="font-mono text-base font-bold text-eatpur-dark whitespace-nowrap">
-                            {quickViewProduct.calories || 0}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {activeTab === "instructions" && (
-                    <div className="mb-6 p-4 bg-[#FAFCFA] rounded-2xl border border-eatpur-gray-light text-sm font-sans text-eatpur-text leading-relaxed min-h-[140px]">
-                      {quickViewProduct.instructions ||
-                        quickViewProduct.how_to_use ||
-                        quickViewProduct.cooking_instructions || (
-                          <p className="italic text-eatpur-text-light">
-                            Store in a cool, dry place. Follow packet
-                            instructions for best results.
-                          </p>
-                        )}
-                    </div>
-                  )}
-
-                  {activeTab === "ingredients" && (
-                    <div className="mb-6 p-4 bg-[#FAFCFA] rounded-2xl border border-eatpur-gray-light text-sm font-sans text-eatpur-text leading-relaxed min-h-[140px]">
-                      {quickViewProduct.ingredients || (
-                        <p className="italic text-eatpur-text-light">
-                          100% natural ingredients without artificial additives
-                          or preservatives.
-                        </p>
                       )}
                     </div>
-                  )}
 
-                  {/* ========================================= */}
-                  {/* REVIEWS TAB                               */}
-                  {/* ========================================= */}
-                  {activeTab === "reviews" && (
-                    <div className="mb-6 h-[250px] flex flex-col">
-                      {/* Reviews List */}
-                      <div className="flex-1 overflow-y-auto pr-2 mb-4 space-y-4 hide-scrollbar">
-                        {loadingReviews ? (
-                          <p className="text-sm italic text-eatpur-text-light text-center mt-4">
-                            Loading reviews...
-                          </p>
-                        ) : reviews.length === 0 ? (
-                          <p className="text-sm italic text-eatpur-text-light text-center mt-4">
-                            No reviews yet. Be the first to review!
-                          </p>
-                        ) : (
-                          reviews.map((rev) => (
-                            <div
-                              key={rev.id}
-                              className="p-4 bg-slate-50 rounded-xl border border-slate-100 shadow-sm"
-                            >
-                              <div className="flex justify-between items-start mb-2">
-                                <div className="flex items-center gap-2">
-                                  {rev.avatar ? (
-                                    <img
-                                      src={rev.avatar}
-                                      className="w-6 h-6 rounded-full object-cover"
-                                      alt={rev.username}
-                                    />
-                                  ) : (
-                                    <div className="w-6 h-6 rounded-full bg-eatpur-green-dark text-white flex items-center justify-center text-xs font-bold">
-                                      {rev.username?.charAt(0)}
-                                    </div>
-                                  )}
-                                  <span className="font-bold text-sm text-eatpur-dark">
-                                    {rev.username}
-                                  </span>
-                                </div>
-                                <span className="text-xs font-bold text-eatpur-gold-dark flex items-center gap-1">
-                                  <FaStar /> {rev.rating}/5
-                                </span>
-                              </div>
-                              <p className="text-sm text-eatpur-text font-serif">
-                                {rev.content}
-                              </p>
-                              {/* Attached Images */}
-                              {rev.attached_images &&
-                                rev.attached_images.length > 0 && (
-                                  <div className="flex gap-2 mt-3 overflow-x-auto hide-scrollbar">
-                                    {rev.attached_images.map((img) => (
-                                      <img
-                                        key={img.id}
-                                        src={img.image}
-                                        className="w-14 h-14 object-cover rounded-md border border-slate-200"
-                                        alt="Review attachment"
-                                      />
-                                    ))}
-                                  </div>
-                                )}
-                            </div>
-                          ))
-                        )}
-                      </div>
+                    {/* Title & PID */}
+                    <h2 className="text-3xl md:text-4xl font-serif text-eatpur-dark font-bold mb-2 leading-tight">
+                      {quickViewProduct.name}
+                    </h2>
+                    <p className="text-xs font-mono text-eatpur-text-light mb-6">
+                      PID: {quickViewProduct.pid}
+                    </p>
 
-                      {/* Add Review Form */}
-                      <form
-                        onSubmit={handleReviewSubmit}
-                        className="bg-white p-3 rounded-xl border-2 border-eatpur-green-light/30 shadow-sm flex flex-col gap-2 shrink-0"
-                      >
-                        <div className="flex justify-between items-center px-1">
-                          <span className="text-xs font-bold uppercase tracking-wider text-eatpur-dark">
-                            Write a Review
+                    {/* Price Section */}
+                    <div className="flex items-baseline gap-4 mb-6 border-b border-eatpur-gray-light pb-6">
+                      <span className="text-5xl font-bold text-eatpur-dark tracking-tight">
+                        ₹{quickViewProduct.discounted_price}
+                      </span>
+                      {Number(quickViewProduct.fixed_price) >
+                        Number(quickViewProduct.discounted_price) && (
+                        <div className="flex flex-col items-start">
+                          <span className="relative text-xl font-sans text-eatpur-text-light font-medium">
+                            ₹{quickViewProduct.fixed_price}
+                            <span className="absolute top-1/2 left-[-5%] w-[110%] h-[2px] bg-rose-500/80 -rotate-[12deg]"></span>
                           </span>
-                          <div className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded border border-slate-200">
-                            <FaStar
-                              className="text-eatpur-gold-dark"
-                              size={10}
-                            />
-                            <select
-                              value={reviewForm.rating}
-                              onChange={(e) =>
-                                setReviewForm({
-                                  ...reviewForm,
-                                  rating: e.target.value,
-                                })
-                              }
-                              className="text-xs bg-transparent outline-none font-bold"
-                            >
-                              {[5, 4, 3, 2, 1].map((n) => (
-                                <option key={n} value={n}>
-                                  {n} Stars
-                                </option>
-                              ))}
-                            </select>
+                          <span className="text-rose-600 font-bold text-xs uppercase tracking-wider bg-rose-50 px-2 py-0.5 rounded mt-1">
+                            Save {quickViewProduct.discount_percentage}%
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* TAB CONTENT SWITCHER */}
+                    {activeTab === "nutrition" && (
+                      <div>
+                        <p className="text-eatpur-text font-sans leading-relaxed mb-6 text-sm md:text-base">
+                          {quickViewProduct.description ||
+                            "A pure, healthy product crafted for your wellbeing. Perfect for a balanced, modern lifestyle."}
+                        </p>
+                        {/* Macro Nutrients Grid */}
+                        <div className="flex md:grid grid-cols-4 gap-3 mb-6 overflow-x-auto md:overflow-visible pb-2 md:pb-0 hide-scrollbar snap-x snap-mandatory">
+                          <div className="bg-[#FAFCFA] p-3 text-center rounded-xl border border-eatpur-gray-light shadow-sm min-w-[110px] md:min-w-0 shrink-0 snap-start">
+                            <div className="text-[10px] font-bold text-eatpur-text-light uppercase tracking-wider mb-1 whitespace-nowrap">
+                              Protein
+                            </div>
+                            <div className="font-mono text-base font-bold text-eatpur-dark whitespace-nowrap">
+                              {quickViewProduct.protein || 0}g
+                            </div>
+                          </div>
+                          <div className="bg-[#FAFCFA] p-3 text-center rounded-xl border border-eatpur-gray-light shadow-sm min-w-[110px] md:min-w-0 shrink-0 snap-start">
+                            <div className="text-[10px] font-bold text-eatpur-text-light uppercase tracking-wider mb-1 whitespace-nowrap">
+                              Carbs
+                            </div>
+                            <div className="font-mono text-base font-bold text-eatpur-dark whitespace-nowrap">
+                              {quickViewProduct.carbohydrates || 0}g
+                            </div>
+                          </div>
+                          <div className="bg-[#FAFCFA] p-3 text-center rounded-xl border border-eatpur-gray-light shadow-sm min-w-[110px] md:min-w-0 shrink-0 snap-start">
+                            <div className="text-[10px] font-bold text-eatpur-text-light uppercase tracking-wider mb-1 whitespace-nowrap">
+                              Fibre
+                            </div>
+                            <div className="font-mono text-base font-bold text-eatpur-dark whitespace-nowrap">
+                              {quickViewProduct.fibre || 0}g
+                            </div>
+                          </div>
+                          <div className="bg-[#FAFCFA] p-3 text-center rounded-xl border border-eatpur-gray-light shadow-sm min-w-[110px] md:min-w-0 shrink-0 snap-start">
+                            <div className="text-[10px] font-bold text-eatpur-text-light uppercase tracking-wider mb-1 whitespace-nowrap">
+                              Calories
+                            </div>
+                            <div className="font-mono text-base font-bold text-eatpur-dark whitespace-nowrap">
+                              {quickViewProduct.calories || 0}
+                            </div>
                           </div>
                         </div>
-                        <textarea
-                          required
-                          rows={2}
-                          placeholder="Share your experience..."
-                          value={reviewForm.content}
-                          onChange={(e) =>
-                            setReviewForm({
-                              ...reviewForm,
-                              content: e.target.value,
-                            })
-                          }
-                          className="w-full text-sm p-2.5 rounded-lg border border-slate-200 bg-slate-50 outline-none focus:border-eatpur-green-dark resize-none font-serif"
-                        />
-                        <div className="flex justify-between items-center px-1">
-                          <input
-                            type="file"
-                            multiple
-                            accept="image/*"
-                            onChange={handleImageChange}
-                            className="w-48 text-xs text-slate-500 file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-eatpur-green-light/20 file:text-eatpur-green-dark hover:file:bg-eatpur-green-light/40 cursor-pointer"
-                          />
-                          <button
-                            type="submit"
-                            disabled={submittingReview}
-                            className="bg-eatpur-green-dark text-white font-bold tracking-wider uppercase text-[10px] py-1.5 px-4 rounded-full disabled:opacity-50 hover:bg-eatpur-dark transition-colors"
-                          >
-                            {submittingReview ? "Posting..." : "Post Review"}
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                  )}
-                </div>
+                      </div>
+                    )}
 
-                {/* Add To Cart CTA */}
-                <div className="mt-4 pt-4 border-t border-eatpur-gray-light">
-                  <CartButton
-                    onClick={() => {
-                      dispatch({ type: "ADD_ITEM", payload: quickViewProduct });
-                    }}
-                    onAnimationComplete={() => {
-                      setQuickViewProduct(null);
-                      dispatch({ type: "OPEN_CART" });
-                    }}
-                  />
+                    {activeTab === "instructions to cook" && (
+                      <div className="mb-6 p-4 bg-[#FAFCFA] rounded-2xl border border-eatpur-gray-light text-sm font-sans text-eatpur-text leading-relaxed min-h-[140px]">
+                        {quickViewProduct.instructions ||
+                          quickViewProduct.how_to_use ||
+                          quickViewProduct.cooking_instructions || (
+                            <p className="italic text-eatpur-text-light">
+                              Store in a cool, dry place. Follow packet
+                              instructions for best results.
+                            </p>
+                          )}
+                      </div>
+                    )}
+
+                    {activeTab === "ingredients" && (
+                      <div className="mb-6 p-4 bg-[#FAFCFA] rounded-2xl border border-eatpur-gray-light text-sm font-sans text-eatpur-text leading-relaxed min-h-[140px]">
+                        {quickViewProduct.ingredients || (
+                          <p className="italic text-eatpur-text-light">
+                            100% natural ingredients without artificial
+                            additives or preservatives.
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* ========================================= */}
+                    {/* REVIEWS TAB                                 */}
+                    {/* ========================================= */}
+                    {activeTab === "reviews" && (
+                      <div className="mb-6 h-[250px] flex flex-col">
+                        {/* Reviews List */}
+                        <div className="flex-1 overflow-y-auto pr-2 mb-4 space-y-4 hide-scrollbar">
+                          {loadingReviews ? (
+                            <p className="text-sm italic text-eatpur-text-light text-center mt-4">
+                              Loading reviews...
+                            </p>
+                          ) : reviews.length === 0 ? (
+                            <div className="text-center mt-4 space-y-3">
+                              <p className="text-sm italic text-eatpur-text-light">
+                                No reviews yet. Be the first to review!
+                              </p>
+                              {/* Blank to Clickable Star Rating Picker + Rating Text Display */}
+                              <div className="flex flex-col items-center gap-1.5 py-1">
+                                <div className="flex justify-center items-center gap-1.5">
+                                  {[1, 2, 3, 4, 5].map((star) => (
+                                    <button
+                                      key={star}
+                                      type="button"
+                                      onClick={() =>
+                                        setReviewForm({
+                                          ...reviewForm,
+                                          rating: star,
+                                        })
+                                      }
+                                      className="focus:outline-none transition-transform hover:scale-125"
+                                    >
+                                      <FaStar
+                                        size={20}
+                                        className={
+                                          star <= reviewForm.rating
+                                            ? "text-yellow-400 fill-yellow-400 drop-shadow-sm"
+                                            : "text-slate-300"
+                                        }
+                                      />
+                                    </button>
+                                  ))}
+                                </div>
+                                <span className="text-xs font-bold text-eatpur-dark">
+                                  {reviewForm.rating > 0
+                                    ? `${reviewForm.rating}/5 Rating`
+                                    : "Select Rating"}
+                                </span>
+                              </div>
+                            </div>
+                          ) : (
+                            reviews.map((rev) => (
+                              <div
+                                key={rev.id}
+                                className="p-4 bg-slate-50 rounded-xl border border-slate-100 shadow-sm"
+                              >
+                                <div className="flex justify-between items-start mb-2">
+                                  <div className="flex items-center gap-2">
+                                    {rev.avatar ? (
+                                      <img
+                                        src={rev.avatar}
+                                        className="w-6 h-6 rounded-full object-cover"
+                                        alt={rev.username}
+                                      />
+                                    ) : (
+                                      <div className="w-6 h-6 rounded-full bg-eatpur-green-dark text-white flex items-center justify-center text-xs font-bold">
+                                        {rev.username?.charAt(0)}
+                                      </div>
+                                    )}
+                                    <span className="font-bold text-sm text-eatpur-dark">
+                                      {rev.username}
+                                    </span>
+                                  </div>
+                                  <span className="text-xs font-bold text-eatpur-gold-dark flex items-center gap-1">
+                                    <FaStar /> {rev.rating}/5
+                                  </span>
+                                </div>
+                                <p className="text-sm text-eatpur-text font-serif">
+                                  {rev.content}
+                                </p>
+                                {/* Attached Images */}
+                                {rev.attached_images &&
+                                  rev.attached_images.length > 0 && (
+                                    <div className="flex gap-2 mt-3 overflow-x-auto hide-scrollbar">
+                                      {rev.attached_images.map((img) => (
+                                        <img
+                                          key={img.id}
+                                          src={img.image}
+                                          className="w-14 h-14 object-cover rounded-md border border-slate-200"
+                                          alt="Review attachment"
+                                        />
+                                      ))}
+                                    </div>
+                                  )}
+                              </div>
+                            ))
+                          )}
+                        </div>
+
+                        {/* Add Review Form */}
+                        <form
+                          onSubmit={handleReviewSubmit}
+                          className="bg-white p-3 rounded-xl border-2 border-eatpur-green-light/30 shadow-sm flex flex-col gap-2 shrink-0"
+                        >
+                          <div className="flex justify-between items-center px-1">
+                            <span className="text-xs font-bold uppercase tracking-wider text-eatpur-dark">
+                              Write a Review
+                            </span>
+                          </div>
+                          <textarea
+                            required
+                            rows={2}
+                            placeholder="Share your experience..."
+                            value={reviewForm.content}
+                            onChange={(e) =>
+                              setReviewForm({
+                                ...reviewForm,
+                                content: e.target.value,
+                              })
+                            }
+                            className="w-full text-sm p-2.5 rounded-lg border border-slate-200 bg-slate-50 outline-none focus:border-eatpur-green-dark resize-none font-serif"
+                          />
+                          <div className="flex justify-between items-center px-1">
+                            <input
+                              type="file"
+                              multiple
+                              accept="image/*"
+                              onChange={handleImageChange}
+                              className="w-48 text-xs text-slate-500 file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-eatpur-green-light/20 file:text-eatpur-green-dark hover:file:bg-eatpur-green-light/40 cursor-pointer"
+                            />
+                            <button
+                              type="submit"
+                              disabled={submittingReview}
+                              className="bg-eatpur-green-dark text-white font-bold tracking-wider uppercase text-[10px] py-1.5 px-4 rounded-full disabled:opacity-50 hover:bg-eatpur-dark transition-colors"
+                            >
+                              {submittingReview ? "Posting..." : "Post Review"}
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Add To Cart CTA */}
+                  <div className="mt-4 pt-4 border-t border-eatpur-gray-light">
+                    <CartButton
+                      onClick={() => {
+                        dispatch({
+                          type: "ADD_ITEM",
+                          payload: quickViewProduct,
+                        });
+                      }}
+                      onAnimationComplete={() => {
+                        setQuickViewProduct(null);
+                        dispatch({ type: "OPEN_CART" });
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body,
+      )}
     </div>
   );
 }
