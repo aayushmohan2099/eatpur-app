@@ -12,6 +12,7 @@ import StockMgmnt from "./StockMgmnt";
 import NewsWorkspace from "./News";
 import OrdersWorkspace from "./Orders";
 import LogisticsWorkspace from "./Logistics";
+import TransactionsWorkspace from "./Transactions";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -67,8 +68,13 @@ export default function AdminDashboard() {
       isExternalPage: false,
     },
     {
-      name: "News", // <-- 2. Added News to Registry
+      name: "News",
       path: "/admin/dashboard/news/",
+      isExternalPage: false,
+    },
+    {
+      name: "Transactions",
+      path: "/admin/dashboard/transactions/",
       isExternalPage: false,
     },
     {
@@ -95,6 +101,7 @@ export default function AdminDashboard() {
       "Push Blogs",
       "Authors",
     ],
+    Transactions: ["Overview", "Transaction List"],
     News: ["Published news"],
     "Staff Management": ["All Staff", "Roles & Permissions", "Activity Logs"],
   };
@@ -236,6 +243,14 @@ export default function AdminDashboard() {
           {/* Blogs Workspace Workspace Container */}
           {activeTab === "Blogs" && (
             <BlogsWorkspace activeSubTab={activeSubTab} />
+          )}
+          {/* News Workspace Workspace Container */}
+          {activeTab === "News" && (
+            <NewsWorkspace activeSubTab={activeSubTab} />
+          )}
+          {/* Transactions Workspace Container */}
+          {activeTab === "Transactions" && (
+            <TransactionsWorkspace activeSubTab={activeSubTab} />
           )}
           {/* Staff Management Workspace Container */}
           {activeTab === "Staff Management" && (

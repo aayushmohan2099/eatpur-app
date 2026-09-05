@@ -280,15 +280,6 @@ export default function CheckoutPage() {
       // 3. Verify on backend (Backend will bypass signature check for 'pay_TEST_' and trigger Auto-Dispatch)
       await verifyPayment({
         ...fakeRazorpayResponse,
-        // Re-send core fields needed for the auto-dispatch fallback logic in VerifyPaymentView
-        consignee_name: payload.consignee_name,
-        consignee_alternate_phone: payload.consignee_alternate_phone,
-        drop_location: payload.drop_location,
-        drop_city: payload.drop_city,
-        drop_state: payload.drop_state,
-        drop_pincode: payload.drop_pincode,
-        pickup_location_alias: payload.pickup_location_alias,
-        service_type: payload.service_type,
       });
 
       setIsSuccess(true);
@@ -360,16 +351,6 @@ export default function CheckoutPage() {
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_order_id: response.razorpay_order_id,
               razorpay_signature: response.razorpay_signature,
-
-              // Re-send core fields needed for the auto-dispatch fallback logic in VerifyPaymentView
-              consignee_name: payload.consignee_name,
-              consignee_alternate_phone: payload.consignee_alternate_phone,
-              drop_location: payload.drop_location,
-              drop_city: payload.drop_city,
-              drop_state: payload.drop_state,
-              drop_pincode: payload.drop_pincode,
-              pickup_location_alias: payload.pickup_location_alias,
-              service_type: payload.service_type,
             });
 
             setIsSuccess(true);

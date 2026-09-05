@@ -62,3 +62,41 @@ export const getAdminOrderStats = () => {
 export const getAdminOrderTimeline = (orderId) => {
   return apiFetch(`/shop/admin/orders/${orderId}/timeline/`, { method: "GET" });
 };
+
+// ===========================================================================
+// ADMIN TRANSACTION MANAGEMENT
+// ===========================================================================
+
+/**
+ * Fetch aggregated transaction analytics.
+ * @param {Object} params - Optional: { date_from: 'YYYY-MM-DD', date_to: 'YYYY-MM-DD' }
+ */
+export const getAdminTransactionOverview = (params = {}) => {
+  const cleanParams = Object.fromEntries(
+    Object.entries(params).filter(
+      ([_, v]) => v !== "" && v !== null && v !== undefined,
+    ),
+  );
+  const queryString = new URLSearchParams(cleanParams).toString();
+  const url = queryString
+    ? `/shop/admin/orders/transactions/overview/?${queryString}`
+    : "/shop/admin/orders/transactions/overview/";
+  return apiFetch(url, { method: "GET" });
+};
+
+/**
+ * Fetch list of all payment transactions for the admin dashboard.
+ * @param {Object} params - Filters: page, status, processor, processor_type, date_from, date_to, min_amount, max_amount, search
+ */
+export const getAdminTransactions = (params = {}) => {
+  const cleanParams = Object.fromEntries(
+    Object.entries(params).filter(
+      ([_, v]) => v !== "" && v !== null && v !== undefined,
+    ),
+  );
+  const queryString = new URLSearchParams(cleanParams).toString();
+  const url = queryString
+    ? `/shop/admin/orders/transactions/?${queryString}`
+    : "/shop/admin/orders/transactions/";
+  return apiFetch(url, { method: "GET" });
+};
