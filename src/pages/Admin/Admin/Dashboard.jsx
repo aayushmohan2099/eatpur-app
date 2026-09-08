@@ -13,6 +13,7 @@ import NewsWorkspace from "./News";
 import OrdersWorkspace from "./Orders";
 import LogisticsWorkspace from "./Logistics";
 import TransactionsWorkspace from "./Transactions";
+import HBList from "./DashComps/HBList";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -86,7 +87,7 @@ export default function AdminDashboard() {
 
   // Dynamic sub-navigation mapping
   const sidebarSubLinks = {
-    Dashboard: ["Overview", "Real-time Metrics", "Sales Reports"],
+    Dashboard: ["Overview", "Homepage Banners", "Sales Reports"],
     Products: ["All Products", "Add New Product", "Categories", "Discounts"],
     Inventory: ["Stock Levels", "Warehouses"],
     Orders: ["All Orders", "New Orders", "Processing", "Completed", "Returns"],
@@ -203,7 +204,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* DYNAMIC COMPONENT LOADER PLACEHOLDER */}
-          {activeTab === "Dashboard" && (
+          {activeTab === "Dashboard" && activeSubTab === "Overview" && (
             <>
               <div className="w-full">
                 <KpiCardsPlaceholder />
@@ -225,6 +226,10 @@ export default function AdminDashboard() {
                 </div>
               </div>
             </>
+          )}
+
+          {activeTab === "Dashboard" && activeSubTab === "Homepage Banners" && (
+            <HBList />
           )}
 
           {/* Products Workspace Workspace Container */}

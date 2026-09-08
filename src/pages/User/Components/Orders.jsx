@@ -5,9 +5,15 @@ import { getCustomerOrders } from "../../../api/customerApi";
 import Button3D from "./ui/Button3D";
 import StatusBadge3D from "./ui/StatusBadge3D";
 import ResponsiveTable from "./ui/ResponsiveTable";
+import Review from "./Review";
 
 export default function Orders({ activeSubMenu }) {
   const [orders, setOrders] = useState([]);
+
+  // Review Modal State
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [selectedOrderForReview, setSelectedOrderForReview] = useState(null);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -133,6 +139,19 @@ export default function Orders({ activeSubMenu }) {
       header: "Action",
       accessor: "action",
       render: (row) => {
+        if (row.fulfillment_status === "DELIVERED") {
+          return (
+            <button
+              onClick={() => {
+                setSelectedOrderForReview(row);
+                setIsReviewModalOpen(true);
+              }}
+              className="text-xs font-bold bg-eatpur-green-pale text-eatpur-green-dark border border-eatpur-green-light px-3 py-1.5 rounded-lg hover:bg-eatpur-green-light transition-colors inline-block shadow-sm"
+            >
+              Leave Review
+            </button>
+          );
+        }
         if (row.tracking_info && row.tracking_info.tracking_url) {
           return (
             <a
@@ -223,6 +242,13 @@ export default function Orders({ activeSubMenu }) {
           }
         />
       )}
+
+      {/* Leave Review Modal Overlay */}
+      <Review
+        isOpen={isReviewModalOpen}
+        onClose={() => setIsReviewModalOpen(false)}
+        order={selectedOrderForReview}
+      />
     </div>
   );
 }

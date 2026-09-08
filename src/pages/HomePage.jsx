@@ -34,20 +34,6 @@ import MSMECertificate from "../certificates/EATPUR _ Udyam Registration Certifi
 import StartupMOU from "../certificates/Startup certificate.pdf";
 import NutriDoc from "../certificates/EATPUR NATURALS LLP MoU with Nutrihub,ICAR-IIMR soft copy_signed.pdf";
 
-const heroImages = [
-  "/home/home-carousel/pic1.jpeg",
-  "/home/home-carousel/pic2.jpeg",
-  "/home/home-carousel/pic3.jpeg",
-  "/home/home-carousel/pic4.jpeg",
-  "/home/home-carousel/pic5.jpeg",
-  "/home/home-carousel/pic6.jpeg",
-  "/home/home-carousel/pic7.jpeg",
-  "/home/home-carousel/pic8.jpeg",
-  "/home/home-carousel/pic9.jpeg",
-  "/home/home-carousel/pic10.jpeg",
-  "/home/home-carousel/pic11.jpeg",
-];
-
 export default function HomePage() {
   const { dispatch } = useCart();
   const [quickViewProduct, setQuickViewProduct] = useState(null);
@@ -55,6 +41,7 @@ export default function HomePage() {
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
 
   // Live API Data States
+  const [heroImages, setHeroImages] = useState([]);
   const [trendingProducts, setTrendingProducts] = useState([]);
   const [topBlogs, setTopBlogs] = useState([]);
   const [userReviews, setUserReviews] = useState([]);
@@ -110,6 +97,21 @@ export default function HomePage() {
           );
           setTrendingProducts(flatProducts);
         }
+
+        // 4. Map Featured Banners for Hero Carousel
+        if (data.featured_banners && data.featured_banners.length > 0) {
+          const bannerUrls = data.featured_banners.map(
+            (banner) => banner.image,
+          );
+          setHeroImages(bannerUrls);
+        } else {
+          // Fallback if no banners are set in admin
+          setHeroImages([
+            "/home/home-carousel/pic1.jpeg",
+            "/home/home-carousel/pic2.jpeg",
+            "/home/home-carousel/pic3.jpeg",
+          ]);
+        }
       } catch (err) {
         console.error("Error fetching home analytics", err);
       } finally {
@@ -121,11 +123,12 @@ export default function HomePage() {
 
   // Hero Carousel Timer
   useEffect(() => {
+    if (heroImages.length === 0) return;
     const heroTimer = setInterval(() => {
       setCurrentHeroIndex((prev) => (prev + 1) % heroImages.length);
     }, 3500);
     return () => clearInterval(heroTimer);
-  }, []);
+  }, [heroImages.length]);
 
   return (
     <div className="w-full relative min-h-screen bg-[#FAFAFA]">
@@ -150,7 +153,9 @@ export default function HomePage() {
               >
                 {/* PURE IMAGE + SHADOW */}
                 <div className="w-full h-full drop-shadow-[0_25px_40px_rgba(0,0,0,0.25)]">
-                  <DistortedGallery images={heroImages} />
+                  {heroImages.length > 0 && (
+                    <DistortedGallery images={heroImages} />
+                  )}
                 </div>
               </motion.div>
             </div>

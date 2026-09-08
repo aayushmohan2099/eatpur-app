@@ -43,3 +43,31 @@ export const logoutUser = (refresh) => {
     body: JSON.stringify({ refresh }),
   });
 };
+
+// ===========================================================================
+// FRONT PAGE BANNERS (ADMIN)
+// ===========================================================================
+
+export const getBanners = () => {
+  return apiFetch("/auth/banners/");
+};
+
+export const createBanner = (formData) => {
+  return apiFetch("/auth/banners/", {
+    method: "POST",
+    body: formData,
+  });
+};
+
+export const updateBanner = (id, data, isFormData = false) => {
+  return apiFetch(`/auth/banners/${id}/`, {
+    method: "PATCH",
+    body: isFormData ? data : JSON.stringify(data),
+  });
+};
+
+export const deleteBanner = (id) => {
+  return apiFetch(`/auth/banners/${id}/`, {
+    method: "DELETE",
+  });
+};
