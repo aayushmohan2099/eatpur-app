@@ -127,6 +127,10 @@ export default function ProductsPage() {
   const { dispatch } = useCart();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, []);
+
   // State
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -148,6 +152,7 @@ export default function ProductsPage() {
 
   // Reviews State
   const [reviews, setReviews] = useState([]);
+  const [productRatings, setProductRatings] = useState({});
   const [loadingReviews, setLoadingReviews] = useState(false);
   const [reviewForm, setReviewForm] = useState({
     rating: 0, // Default 0 (blank/unselected)
@@ -199,6 +204,60 @@ export default function ProductsPage() {
     loadProducts();
   }, [debouncedFilters, sort]);
 
+  // Use approved customer reviews as the source of truth when the catalog
+  // response does not include a pre-calculated rating.
+  useEffect(() => {
+    if (products.length === 0) return;
+
+    let isCurrent = true;
+    const productsWithoutRating = products.filter(
+      (product) =>
+        product.average_rating == null &&
+        product.avg_rating == null &&
+        product.rating_average == null &&
+        product.rating == null,
+    );
+
+    const loadProductRatings = async () => {
+      const ratings = await Promise.all(
+        productsWithoutRating.map(async (product) => {
+          try {
+            const response = await getProductComments(product.pid);
+            const productReviews = Array.isArray(response) ? response : [];
+            const validRatings = productReviews
+              .map((review) => Number(review.rating))
+              .filter((rating) => Number.isFinite(rating) && rating >= 1 && rating <= 5);
+
+            if (validRatings.length === 0) return null;
+
+            const average =
+              validRatings.reduce((sum, rating) => sum + rating, 0) /
+              validRatings.length;
+            return [product.pid, {
+              average,
+              count: validRatings.length,
+            }];
+          } catch (error) {
+            console.error(`Failed to load rating for ${product.pid}`, error);
+            return null;
+          }
+        }),
+      );
+
+      if (isCurrent) {
+        setProductRatings((previous) => ({
+          ...previous,
+          ...Object.fromEntries(ratings.filter(Boolean)),
+        }));
+      }
+    };
+
+    loadProductRatings();
+    return () => {
+      isCurrent = false;
+    };
+  }, [products]);
+
   // Handle Product Like Toggle
   const handleToggleLike = async (e, product, index) => {
     e.stopPropagation();
@@ -217,6 +276,13 @@ export default function ProductsPage() {
   };
 
   const handleProductClick = (product) => {
+    if (
+      product.is_out_of_stock === true ||
+      product.status_name === "OUT_OF_STOCK"
+    ) {
+      return;
+    }
+
     const isAuthenticated = !!localStorage.getItem("access");
 
     if (!isAuthenticated) {
@@ -278,6 +344,22 @@ export default function ProductsPage() {
       await createProductComment(quickViewProduct.pid, formData);
       setReviewForm({ rating: 0, content: "", images: [] });
       fetchReviews(); // Refresh the list
+
+      const updatedReviews = await getProductComments(quickViewProduct.pid);
+      const validRatings = (Array.isArray(updatedReviews) ? updatedReviews : [])
+        .map((review) => Number(review.rating))
+        .filter((rating) => Number.isFinite(rating) && rating >= 1 && rating <= 5);
+      if (validRatings.length > 0) {
+        setProductRatings((previous) => ({
+          ...previous,
+          [quickViewProduct.pid]: {
+            average:
+              validRatings.reduce((sum, rating) => sum + rating, 0) /
+              validRatings.length,
+            count: validRatings.length,
+          },
+        }));
+      }
     } catch (err) {
       alert(err.message || "Failed to submit review. Are you logged in?");
     } finally {
@@ -295,6 +377,18 @@ export default function ProductsPage() {
       Number(product.fibre || 0) * 3 -
       Number(product.fats || 0);
     return Math.min(100, Math.max(50, Math.round(score)));
+  };
+
+  const getProductRating = (product) => {
+    const rating = Number(
+      productRatings[product?.pid]?.average ??
+        product?.average_rating ??
+        product?.avg_rating ??
+        product?.rating_average ??
+        product?.rating ??
+        0,
+    );
+    return Number.isFinite(rating) ? Math.min(5, Math.max(0, rating)) : 0;
   };
 
   return (
@@ -378,6 +472,17 @@ export default function ProductsPage() {
               <AnimatePresence>
                 {products.map((product, i) => {
                   const healthScore = calculateHealthScore(product);
+                  const productRating = getProductRating(product);
+                  const reviewCount = Number(
+                    productRatings[product.pid]?.count ??
+                      product.review_count ??
+                      product.total_reviews ??
+                      product.ratings_count ??
+                      0,
+                  );
+                  const isOutOfStock =
+                    product.is_out_of_stock === true ||
+                    product.status_name === "OUT_OF_STOCK";
                   const discountPct = Number(product.discount_percentage || 0);
 
                   return (
@@ -391,6 +496,14 @@ export default function ProductsPage() {
                       onClick={() => handleProductClick(product)}
                       className="vintage-card overflow-hidden flex flex-col group relative bg-white transition-all duration-300 hover:shadow-xl hover:-translate-y-1 rounded-2xl border border-eatpur-border cursor-pointer"
                     >
+                      {isOutOfStock && (
+                        <div className="absolute inset-0 z-40 flex items-center justify-center bg-white/35 pointer-events-none">
+                          <span className="rounded-full bg-rose-700 px-4 py-2 text-sm font-bold uppercase tracking-widest text-white shadow-lg">
+                            Out of Stock
+                          </span>
+                        </div>
+                      )}
+
                       {/* Top Badges & Like Button */}
                       <div className="absolute top-4 left-4 right-4 z-30 flex justify-between items-start pointer-events-none">
                         {/* Discount Tag */}
@@ -425,7 +538,9 @@ export default function ProductsPage() {
                       </div>
 
                       {/* Image Area with Slideshow */}
-                      <div className="h-64 relative bg-[#FAFCFA] p-6 flex justify-center items-center overflow-hidden border-b border-eatpur-gray-light/50">
+                      <div
+                        className={`h-64 relative bg-[#FAFCFA] p-6 flex justify-center items-center overflow-hidden border-b border-eatpur-gray-light/50 ${isOutOfStock ? "blur-[1px] grayscale-[30%]" : ""}`}
+                      >
                         <ImageCarousel
                           images={product.cover_image}
                           alt={product.name}
@@ -433,7 +548,9 @@ export default function ProductsPage() {
                       </div>
 
                       {/* Content Area */}
-                      <div className="p-5 flex flex-col flex-1 bg-white">
+                      <div
+                        className={`p-5 flex flex-col flex-1 bg-white ${isOutOfStock ? "blur-[1px] opacity-90" : ""}`}
+                      >
                         {/* Meta info */}
                         <div className="flex items-center justify-between mb-3">
                           <span className="text-[10px] text-eatpur-green-dark font-bold uppercase tracking-wider bg-eatpur-green-light/20 px-2.5 py-1 rounded">
@@ -462,6 +579,45 @@ export default function ProductsPage() {
                             Eatpur Health Score
                           </span>
                           <span className="font-bold">{healthScore}/100</span>
+                        </div>
+
+                        {/* Product rating */}
+                        <div className="flex flex-col items-center justify-center gap-1 mb-4 min-h-12 text-center">
+                          <span
+                            className={`text-[10px] font-bold uppercase tracking-wider ${
+                              productRating > 0
+                                ? "text-eatpur-green-dark"
+                                : "text-eatpur-text-light"
+                            }`}
+                          >
+                            {productRating > 0 ? "Rate Us" : "No Rating Yet"}
+                          </span>
+                          <div
+                            className="flex items-center justify-center gap-0.5"
+                            aria-label={`${productRating.toFixed(1)} out of 5 stars`}
+                          >
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <FaStar
+                                key={star}
+                                size={13}
+                                className={
+                                  star <= Math.round(productRating)
+                                    ? "text-amber-400"
+                                    : "text-slate-200"
+                                }
+                              />
+                            ))}
+                          </div>
+                          {productRating > 0 ? (
+                            <span className="text-xs font-bold text-eatpur-dark">
+                              {productRating.toFixed(1)}
+                              {reviewCount > 0 && (
+                                <span className="font-normal text-eatpur-text-light">
+                                  {` (${reviewCount})`}
+                                </span>
+                              )}
+                            </span>
+                          ) : null}
                         </div>
 
                         {/* Price Footer */}

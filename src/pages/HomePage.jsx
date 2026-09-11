@@ -14,7 +14,9 @@ import {
   FaSeedling,
   FaCommentDots,
   FaQuoteLeft,
+  FaStar,
 } from "react-icons/fa6";
+import { getProductComments } from "../api/inventory";
 import { useCart } from "../context/CartContext";
 import Chatbot from "../components/Chatbot";
 import FloatingImagesBackground from "./FloatingBG/floatingBG";
@@ -56,6 +58,7 @@ export default function HomePage() {
 
   // Live API Data States
   const [trendingProducts, setTrendingProducts] = useState([]);
+  const [productRatings, setProductRatings] = useState({});
   const [topBlogs, setTopBlogs] = useState([]);
   const [userReviews, setUserReviews] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -109,6 +112,39 @@ export default function HomePage() {
             })),
           );
           setTrendingProducts(flatProducts);
+
+          const ratingEntries = await Promise.all(
+            flatProducts.map(async (product) => {
+              const catalogRating =
+                product.average_rating ??
+                product.avg_rating ??
+                product.rating_average ??
+                product.rating;
+              if (catalogRating != null) return null;
+
+              try {
+                const response = await getProductComments(product.pid);
+                const ratings = (Array.isArray(response) ? response : [])
+                  .map((review) => Number(review.rating))
+                  .filter(
+                    (rating) =>
+                      Number.isFinite(rating) && rating >= 1 && rating <= 5,
+                  );
+                if (ratings.length === 0) return null;
+
+                return [product.pid, {
+                  average:
+                    ratings.reduce((sum, rating) => sum + rating, 0) /
+                    ratings.length,
+                  count: ratings.length,
+                }];
+              } catch (error) {
+                console.error(`Failed to load rating for ${product.pid}`, error);
+                return null;
+              }
+            }),
+          );
+          setProductRatings(Object.fromEntries(ratingEntries.filter(Boolean)));
         }
       } catch (err) {
         console.error("Error fetching home analytics", err);
@@ -464,19 +500,48 @@ export default function HomePage() {
                       product.cover_image ||
                       fallbackImage;
                     const healthScore = 90; // Defaulting health score as it's not in the API currently
+                    const catalogRating = Number(
+                      productRatings[product.pid]?.average ??
+                        product.average_rating ??
+                        product.avg_rating ??
+                        product.rating_average ??
+                        product.rating ??
+                        0,
+                    );
+                    const productRating = Number.isFinite(catalogRating)
+                      ? Math.min(5, Math.max(0, catalogRating))
+                      : 0;
+                    const reviewCount =
+                      productRatings[product.pid]?.count ??
+                      product.review_count ??
+                      product.total_reviews ??
+                      product.ratings_count ??
+                      0;
+                    const isOutOfStock =
+                      product.is_out_of_stock === true ||
+                      product.status_name === "OUT_OF_STOCK";
 
                     return (
                       <div
                         key={`${loopIndex}-${product.id}`}
-                        onClick={() =>
+                        onClick={() => {
+                          if (isOutOfStock) return;
                           setQuickViewProduct({
                             ...product,
                             image: displayImg,
                             healthScore,
-                          })
-                        }
+                          });
+                        }}
                         className="vintage-card w-[280px] md:w-[320px] shrink-0 overflow-hidden flex flex-col group/card relative transition-transform duration-300 hover:-translate-y-2 hover:shadow-xl bg-white cursor-pointer"
                       >
+                        {isOutOfStock && (
+                          <div className="absolute inset-0 z-40 flex items-center justify-center bg-white/35 pointer-events-none">
+                            <span className="rounded-full bg-rose-700 px-4 py-2 text-sm font-bold uppercase tracking-widest text-white shadow-lg">
+                              Out of Stock
+                            </span>
+                          </div>
+                        )}
+
                         {/* Top Right Discount Tag */}
                         {product.discounted_price && product.fixed_price && (
                           <div className="absolute top-4 right-4 z-20 bg-[#8B3A2A] text-white font-sans text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full shadow-md">
@@ -490,7 +555,9 @@ export default function HomePage() {
                           </div>
                         )}
 
-                        <div className="h-64 overflow-hidden p-6 pb-0 flex items-center justify-center bg-gray-50 relative">
+                        <div
+                          className={`h-64 overflow-hidden p-6 pb-0 flex items-center justify-center bg-gray-50 relative ${isOutOfStock ? "blur-[1px] grayscale-[30%]" : ""}`}
+                        >
                           <motion.img
                             whileHover={{ scale: 1.05 }}
                             transition={{ duration: 0.4 }}
@@ -501,7 +568,9 @@ export default function HomePage() {
                           />
                         </div>
 
-                        <div className="p-6 flex flex-col flex-1 border-t border-black/5">
+                        <div
+                          className={`p-6 flex flex-col flex-1 border-t border-black/5 ${isOutOfStock ? "blur-[1px] opacity-90" : ""}`}
+                        >
                           <span className="text-eatpur-green-dark text-[11px] uppercase tracking-widest font-semibold mb-1 truncate">
                             {product.categoryName}
                           </span>
@@ -521,6 +590,44 @@ export default function HomePage() {
                               Health Score
                             </span>
                             <span className="font-bold">{healthScore}/100</span>
+                          </div>
+
+                          <div className="flex flex-col items-center justify-center gap-1 mb-4 min-h-12 text-center">
+                            <span
+                              className={`text-[10px] font-bold uppercase tracking-wider ${
+                                productRating > 0
+                                  ? "text-eatpur-green-dark"
+                                  : "text-eatpur-text-light"
+                              }`}
+                            >
+                              {productRating > 0 ? "Rate Us" : "No Rating Yet"}
+                            </span>
+                            <div
+                              className="flex items-center justify-center gap-0.5"
+                              aria-label={`${productRating.toFixed(1)} out of 5 stars`}
+                            >
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <FaStar
+                                  key={star}
+                                  size={13}
+                                  className={
+                                    star <= Math.round(productRating)
+                                      ? "text-amber-400"
+                                      : "text-slate-200"
+                                  }
+                                />
+                              ))}
+                            </div>
+                            {productRating > 0 && (
+                              <span className="text-xs font-bold text-eatpur-dark">
+                                {productRating.toFixed(1)}
+                                {reviewCount > 0 && (
+                                  <span className="font-normal text-eatpur-text-light">
+                                    {` (${reviewCount})`}
+                                  </span>
+                                )}
+                              </span>
+                            )}
                           </div>
 
                           <div className="mt-auto flex items-end justify-between pt-4">
@@ -784,7 +891,7 @@ export default function HomePage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-eatpur-dark/40 backdrop-blur-sm"
+            className="fixed inset-0 z-[400] flex items-center justify-center p-4 bg-eatpur-dark/40 backdrop-blur-sm"
             onClick={() => setQuickViewProduct(null)}
           >
             <motion.div
