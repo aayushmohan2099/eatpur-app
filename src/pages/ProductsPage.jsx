@@ -126,6 +126,9 @@ const ImageCarousel = ({ images, alt, onClickView }) => {
 export default function ProductsPage() {
   const { dispatch } = useCart();
   const navigate = useNavigate();
+  const isDeployedServer =
+    import.meta.env.PROD &&
+    !["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -276,10 +279,7 @@ export default function ProductsPage() {
   };
 
   const handleProductClick = (product) => {
-    if (
-      product.is_out_of_stock === true ||
-      product.status_name === "OUT_OF_STOCK"
-    ) {
+    if (isDeployedServer && Number(product.quantity) === 0) {
       return;
     }
 
@@ -481,8 +481,7 @@ export default function ProductsPage() {
                       0,
                   );
                   const isOutOfStock =
-                    product.is_out_of_stock === true ||
-                    product.status_name === "OUT_OF_STOCK";
+                    isDeployedServer && Number(product.quantity) === 0;
                   const discountPct = Number(product.discount_percentage || 0);
 
                   return (
@@ -548,9 +547,7 @@ export default function ProductsPage() {
                       </div>
 
                       {/* Content Area */}
-                      <div
-                        className={`p-5 flex flex-col flex-1 bg-white ${isOutOfStock ? "blur-[1px] opacity-90" : ""}`}
-                      >
+                      <div className="p-5 flex flex-col flex-1 bg-white">
                         {/* Meta info */}
                         <div className="flex items-center justify-between mb-3">
                           <span className="text-[10px] text-eatpur-green-dark font-bold uppercase tracking-wider bg-eatpur-green-light/20 px-2.5 py-1 rounded">

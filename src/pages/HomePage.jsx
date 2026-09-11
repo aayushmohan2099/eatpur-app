@@ -52,6 +52,9 @@ const heroImages = [
 
 export default function HomePage() {
   const { dispatch } = useCart();
+  const isDeployedServer =
+    import.meta.env.PROD &&
+    !["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
@@ -518,8 +521,7 @@ export default function HomePage() {
                       product.ratings_count ??
                       0;
                     const isOutOfStock =
-                      product.is_out_of_stock === true ||
-                      product.status_name === "OUT_OF_STOCK";
+                      isDeployedServer && Number(product.quantity) === 0;
 
                     return (
                       <div
@@ -568,9 +570,7 @@ export default function HomePage() {
                           />
                         </div>
 
-                        <div
-                          className={`p-6 flex flex-col flex-1 border-t border-black/5 ${isOutOfStock ? "blur-[1px] opacity-90" : ""}`}
-                        >
+                        <div className="p-6 flex flex-col flex-1 border-t border-black/5">
                           <span className="text-eatpur-green-dark text-[11px] uppercase tracking-widest font-semibold mb-1 truncate">
                             {product.categoryName}
                           </span>
