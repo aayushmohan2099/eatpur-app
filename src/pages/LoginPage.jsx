@@ -7,6 +7,7 @@ import {
 } from "../api/authApi";
 import { useNavigate, useLocation } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
+import { useCart } from "../context/CartContext";
 
 export default function AuthPage() {
   const [captcha, setCaptcha] = useState(null);
@@ -31,6 +32,14 @@ export default function AuthPage() {
   });
 
   const navigate = useNavigate();
+  const { dispatch } = useCart();
+
+  const finishAuthentication = () => {
+    if (location.state?.openCart) {
+      dispatch({ type: "OPEN_CART" });
+    }
+    navigate(location.state?.returnTo || "/");
+  };
 
   const fetchCaptcha = async () => {
     const data = await getCaptcha();
@@ -56,7 +65,7 @@ export default function AuthPage() {
         setErrors({});
         setSuccessMessage("Google Login successful! Redirecting...");
         setTimeout(() => {
-          navigate(location.state?.returnTo || "/");
+          finishAuthentication();
         }, 1500);
       } else if (res && res.action === "requires_registration") {
         setIsLogin(false);
@@ -113,7 +122,7 @@ export default function AuthPage() {
         );
 
         setTimeout(() => {
-          navigate(location.state?.returnTo || "/");
+          finishAuthentication();
         }, 1500);
       }
     } catch (err) {

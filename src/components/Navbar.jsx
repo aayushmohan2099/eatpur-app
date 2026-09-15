@@ -77,6 +77,20 @@ export default function Navbar() {
     0,
   );
 
+  const handleCartClick = () => {
+    if (!localStorage.getItem("access")) {
+      navigate("/login", {
+        state: {
+          returnTo: `${location.pathname}${location.search}`,
+          openCart: true,
+        },
+      });
+      return;
+    }
+
+    dispatch({ type: "TOGGLE_CART" });
+  };
+
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 180) {
@@ -175,7 +189,7 @@ export default function Navbar() {
 
             {/* Cart */}
             <button
-              onClick={() => dispatch({ type: "TOGGLE_CART" })}
+              onClick={handleCartClick}
               className="relative hover:text-[#6B8E23] transition-all duration-300 hover:-translate-y-[2px]"
               aria-label="Cart"
             >

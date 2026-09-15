@@ -8,7 +8,10 @@ const loadInitialState = () => {
   try {
     const savedCart = localStorage.getItem("eatpur_cart");
     if (savedCart) {
-      return { items: JSON.parse(savedCart), isOpen: false };
+      const items = JSON.parse(savedCart);
+      if (Array.isArray(items)) {
+        return { items, isOpen: false };
+      }
     }
   } catch (error) {
     console.error("Failed to parse cart from local storage", error);
@@ -25,6 +28,7 @@ function cartReducer(state, action) {
 
       const cartItem = {
         ...payload,
+        id: payload.id ?? payload.pid,
         price: parseFloat(
           payload.discounted_price || payload.fixed_price || payload.price || 0,
         ),
