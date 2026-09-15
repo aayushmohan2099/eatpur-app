@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { HomeAnalytics } from "../api/homepage"; // Ensure this uses the updated client/axios interceptor
 import { motion, AnimatePresence } from "framer-motion";
@@ -118,6 +118,7 @@ const HomeProductImageCarousel = ({ images, alt }) => {
 export default function HomePage() {
   const { dispatch } = useCart();
   const navigate = useNavigate();
+  const redirectToLoginAfterCartAnimation = useRef(false);
   const isDeployedServer =
     import.meta.env.PROD &&
     !["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
@@ -142,6 +143,12 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
 
   const handleAddToCart = (product, image) => {
+    if (!localStorage.getItem("access")) {
+      dispatch({ type: "TOGGLE_CART", payload: false });
+      redirectToLoginAfterCartAnimation.current = true;
+      return;
+    }
+
     dispatch({
       type: "ADD_ITEM",
       payload: {
@@ -151,12 +158,6 @@ export default function HomePage() {
         price: product.discounted_price || product.fixed_price,
       },
     });
-
-    if (!localStorage.getItem("access")) {
-      navigate("/login", {
-        state: { returnTo: "/", openCart: true },
-      });
-    }
   };
 
   const BASE_URL = "https://eatpur.in";
@@ -1229,7 +1230,12 @@ export default function HomePage() {
                     onClick={() => handleAddToCart(quickViewProduct)}
                     onAnimationComplete={() => {
                       setQuickViewProduct(null);
-                      dispatch({ type: "OPEN_CART" });
+                      if (redirectToLoginAfterCartAnimation.current) {
+                        redirectToLoginAfterCartAnimation.current = false;
+                        navigate("/login", {
+                          state: { returnTo: "/" },
+                        });
+                      }
                     }}
                     className="!h-[58px]"
                   />
