@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+// src\pages\HomePage.jsx
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { HomeAnalytics } from "../api/homepage"; // Ensure this uses the updated client/axios interceptor
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -14,6 +15,9 @@ import {
   FaSeedling,
   FaCommentDots,
   FaQuoteLeft,
+  FaStar,
+  FaChevronLeft,
+  FaChevronRight,
 } from "react-icons/fa6";
 import { useCart } from "../context/CartContext";
 import Chatbot from "../components/Chatbot";
@@ -33,19 +37,62 @@ import FssaiLicense from "../certificates/EATPURFssaiLicense.pdf";
 import MSMECertificate from "../certificates/EATPUR _ Udyam Registration Certificate.pdf";
 import StartupMOU from "../certificates/Startup certificate.pdf";
 import NutriDoc from "../certificates/EATPUR NATURALS LLP MoU with Nutrihub,ICAR-IIMR soft copy_signed.pdf";
+import { createProductComment, getProductComments } from "../api/inventory";
+import CartButton from "../components/ui/CartButton";
 
 export default function HomePage() {
   const { dispatch } = useCart();
+
+  // Shailendra Merger: Navigation controls
+  const navigate = useNavigate();
+  const redirectToLoginAfterCartAnimation = useRef(false);
+  const isDeployedServer =
+    import.meta.env.PROD &&
+    !["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
+
   const [quickViewProduct, setQuickViewProduct] = useState(null);
+
+  // Shailendra Merger: Active tab states
+  const [activeTab, setActiveTab] = useState("nutrition");
+  const [quickViewReviews, setQuickViewReviews] = useState([]);
+  const [loadingQuickViewReviews, setLoadingQuickViewReviews] = useState(false);
+  const [reviewForm, setReviewForm] = useState({
+    rating: 0,
+    content: "",
+    images: [],
+  });
+  const [submittingReview, setSubmittingReview] = useState(false);
+
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
 
   // Live API Data States
   const [heroImages, setHeroImages] = useState([]);
   const [trendingProducts, setTrendingProducts] = useState([]);
+  const [productRatings, setProductRatings] = useState([]);
+
   const [topBlogs, setTopBlogs] = useState([]);
   const [userReviews, setUserReviews] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Shailendra Merger: Producty to cart addons
+  const handleAddToCart = (product, image) => {
+    if (!localStorage.getItem("access")) {
+      dispatch({ type: "TOGGLE_CART", payload: false });
+      redirectToLoginAfterCartAnimation.current = true;
+      return;
+    }
+
+    dispatch({
+      type: "ADD_ITEM",
+      payload: {
+        ...product,
+        id: product.id ?? product.pid,
+        ...(image ? { image } : {}),
+        price: product.discounted_price || product.fixed_price,
+      },
+    });
+  };
 
   const BASE_URL = "https://eatpur.in";
 
@@ -92,10 +139,54 @@ export default function HomePage() {
           const flatProducts = data.trending_by_category.flatMap((cat) =>
             cat.products.map((prod) => ({
               ...prod,
+              ...(prod.profile ||
+                prod.nutrition_profile ||
+                prod.product_profile ||
+                {}),
               categoryName: cat.category?.name || "Ready to Eat",
             })),
           );
           setTrendingProducts(flatProducts);
+
+          // Shailendra Merger: Entries for rating
+          const ratingEntries = await Promise.all(
+            flatProducts.map(async (product) => {
+              const catalogRating =
+                product.average_rating ??
+                product.avg_rating ??
+                product.rating_average ??
+                product.rating;
+              if (catalogRating != null) return null;
+
+              try {
+                const response = await getProductComments(product.pid);
+                const ratings = (Array.isArray(response) ? response : [])
+                  .map((review) => Number(review.rating))
+                  .filter(
+                    (rating) =>
+                      Number.isFinite(rating) && rating >= 1 && rating <= 5,
+                  );
+                if (ratings.length === 0) return null;
+
+                return [
+                  product.pid,
+                  {
+                    average:
+                      ratings.reduce((sum, rating) => sum + rating, 0) /
+                      ratings.length,
+                    count: ratings.length,
+                  },
+                ];
+              } catch (error) {
+                console.error(
+                  `Failed to load rating for ${product.pid}`,
+                  error,
+                );
+                return null;
+              }
+            }),
+          );
+          setProductRatings(Object.fromEntries(ratingEntries.filter(Boolean)));
         }
 
         // 4. Map Featured Banners for Hero Carousel
@@ -120,6 +211,76 @@ export default function HomePage() {
     };
     fetchHomeAnalytics();
   }, []);
+
+  // Shailendra Merger: loading reviews and creating comments per product
+  useEffect(() => {
+    if (!quickViewProduct || activeTab !== "reviews") return;
+
+    let isCurrent = true;
+    const loadReviews = async () => {
+      setLoadingQuickViewReviews(true);
+      try {
+        const response = await getProductComments(quickViewProduct.pid);
+        if (isCurrent)
+          setQuickViewReviews(Array.isArray(response) ? response : []);
+      } catch (error) {
+        console.error(
+          `Failed to load reviews for ${quickViewProduct.pid}`,
+          error,
+        );
+        if (isCurrent) setQuickViewReviews([]);
+      } finally {
+        if (isCurrent) setLoadingQuickViewReviews(false);
+      }
+    };
+
+    loadReviews();
+    return () => {
+      isCurrent = false;
+    };
+  }, [quickViewProduct, activeTab]);
+
+  const handleReviewSubmit = async (event) => {
+    event.preventDefault();
+    if (reviewForm.rating === 0) {
+      alert("Please select a star rating before submitting.");
+      return;
+    }
+    if (!reviewForm.content.trim()) return;
+
+    setSubmittingReview(true);
+    const formData = new FormData();
+    formData.append("rating", reviewForm.rating);
+    formData.append("content", reviewForm.content);
+    reviewForm.images.forEach((file) => formData.append("images", file));
+
+    try {
+      await createProductComment(quickViewProduct.pid, formData);
+      setReviewForm({ rating: 0, content: "", images: [] });
+      const updatedReviews = await getProductComments(quickViewProduct.pid);
+      const reviews = Array.isArray(updatedReviews) ? updatedReviews : [];
+      setQuickViewReviews(reviews);
+      const ratings = reviews
+        .map((review) => Number(review.rating))
+        .filter(
+          (rating) => Number.isFinite(rating) && rating >= 1 && rating <= 5,
+        );
+      if (ratings.length > 0) {
+        setProductRatings((previous) => ({
+          ...previous,
+          [quickViewProduct.pid]: {
+            average:
+              ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length,
+            count: ratings.length,
+          },
+        }));
+      }
+    } catch (error) {
+      alert(error.message || "Failed to submit review. Are you logged in?");
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
 
   // Hero Carousel Timer
   useEffect(() => {
@@ -464,110 +625,166 @@ export default function HomePage() {
                 >
                   {trendingProducts.map((product) => {
                     const fallbackImage = "/home/prod-carousel/MultiFlour.jpeg";
+                    const productImages =
+                      product.cover_image ||
+                      product.media
+                        ?.map((media) => media.image)
+                        .filter(Boolean) ||
+                      [];
                     const displayImg =
                       product.media?.[0]?.image ||
                       product.cover_image ||
                       fallbackImage;
                     const healthScore = 90; // Defaulting health score as it's not in the API currently
+                    const catalogRating = Number(
+                      productRatings[product.pid]?.average ??
+                        product.average_rating ??
+                        product.avg_rating ??
+                        product.rating_average ??
+                        product.rating ??
+                        0,
+                    );
+                    const productRating = Number.isFinite(catalogRating)
+                      ? Math.min(5, Math.max(0, catalogRating))
+                      : 0;
+                    const reviewCount =
+                      productRatings[product.pid]?.count ??
+                      product.review_count ??
+                      product.total_reviews ??
+                      product.ratings_count ??
+                      0;
+                    const isOutOfStock =
+                      isDeployedServer && Number(product.quantity) === 0;
 
                     return (
                       <div
                         key={`${loopIndex}-${product.id}`}
-                        onClick={() =>
+                        onClick={() => {
+                          if (isOutOfStock) return;
+                          setActiveTab("nutrition");
+                          setQuickViewReviews([]);
+                          setReviewForm({ rating: 0, content: "", images: [] });
                           setQuickViewProduct({
                             ...product,
                             image: displayImg,
                             healthScore,
-                          })
-                        }
+                          });
+                        }}
                         className="vintage-card w-[280px] md:w-[320px] shrink-0 overflow-hidden flex flex-col group/card relative transition-transform duration-300 hover:-translate-y-2 hover:shadow-xl bg-white cursor-pointer"
                       >
-                        {/* Top Right Discount Tag */}
-                        {product.discounted_price && product.fixed_price && (
-                          <div className="absolute top-4 right-4 z-20 bg-[#8B3A2A] text-white font-sans text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full shadow-md">
-                            {Math.round(
-                              ((product.fixed_price -
-                                product.discounted_price) /
-                                product.fixed_price) *
-                                100,
-                            )}
-                            % OFF
+                        {isOutOfStock && (
+                          <div className="absolute inset-0 z-40 flex items-center justify-center bg-white/35 pointer-events-none">
+                            <span className="rounded-full bg-rose-700 px-4 py-2 text-sm font-bold uppercase tracking-widest text-white shadow-lg">
+                              Out of Stock
+                            </span>
                           </div>
                         )}
 
-                        <div className="h-64 overflow-hidden p-6 pb-0 flex items-center justify-center bg-gray-50 relative">
-                          <motion.img
-                            whileHover={{ scale: 1.05 }}
-                            transition={{ duration: 0.4 }}
-                            src={displayImg}
+                        {Number(product.discount_percentage || 0) > 0 && (
+                          <span className="absolute top-4 left-4 z-30 bg-rose-600 text-white font-sans text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full shadow-md">
+                            {product.discount_percentage}% OFF
+                          </span>
+                        )}
+
+                        <div
+                          className={`h-64 relative bg-[#FAFCFA] p-6 flex justify-center items-center overflow-hidden border-b border-eatpur-gray-light/50 ${isOutOfStock ? "blur-[1px] grayscale-[30%]" : ""}`}
+                        >
+                          <HomeProductImageCarousel
+                            images={
+                              productImages.length ? productImages : displayImg
+                            }
                             alt={product.name}
-                            className="h-full object-contain drop-shadow-md rounded-t-xl mix-blend-multiply"
-                            loading="lazy"
                           />
                         </div>
 
-                        <div className="p-6 flex flex-col flex-1 border-t border-black/5">
-                          <span className="text-eatpur-green-dark text-[11px] uppercase tracking-widest font-semibold mb-1 truncate">
-                            {product.categoryName}
-                          </span>
-                          <h3 className="text-xl font-display font-medium text-eatpur-dark mb-1 truncate">
+                        <div className="p-5 flex flex-col flex-1 bg-white">
+                          <div className="flex items-center justify-between mb-3 gap-2">
+                            <span className="text-[10px] text-eatpur-green-dark font-bold uppercase tracking-wider bg-eatpur-green-light/20 px-2.5 py-1 rounded truncate">
+                              {product.categoryName || product.category_name}
+                            </span>
+                            <span className="text-[11px] text-eatpur-text-light font-mono font-medium bg-slate-50 border border-slate-100 px-2 py-0.5 rounded whitespace-nowrap">
+                              {product.size_name && `${product.size_name} `}
+                              {product.weight &&
+                                `(${product.weight}${product.unit || ""})`}
+                            </span>
+                          </div>
+                          <h3 className="text-xl font-serif font-bold text-eatpur-dark mb-2 leading-tight min-h-[3rem] group-hover:text-eatpur-green-dark transition-colors">
                             {product.name}
                           </h3>
 
                           {/* Eatpur Health Score Meter */}
-                          <div className="mt-3 mb-4 w-full bg-gray-100 rounded-full h-2 overflow-hidden shadow-inner flex items-center relative">
+                          <div className="mt-2 mb-1 w-full bg-eatpur-yellow-light/30 rounded-full h-1.5 overflow-hidden">
                             <div
-                              className="h-full bg-eatpur-green-dark"
+                              className="h-full bg-gradient-to-r from-eatpur-green-light to-eatpur-green-dark rounded-full"
                               style={{ width: `${healthScore}%` }}
-                            ></div>
+                            />
                           </div>
-                          <div className="text-xs text-eatpur-text flex justify-between mb-2">
-                            <span className="font-medium text-eatpur-green-dark">
-                              Health Score
+                          <div className="text-[11px] text-eatpur-text flex justify-between mb-6">
+                            <span className="font-semibold text-eatpur-green-dark">
+                              Eatpur Health Score
                             </span>
                             <span className="font-bold">{healthScore}/100</span>
                           </div>
 
+                          <div className="flex flex-col items-center justify-center gap-1 mb-4 min-h-12 text-center">
+                            <span
+                              className={`text-[10px] font-bold uppercase tracking-wider ${
+                                productRating > 0
+                                  ? "text-eatpur-green-dark"
+                                  : "text-eatpur-text-light"
+                              }`}
+                            >
+                              {productRating > 0 ? "Rate Us" : "No Rating Yet"}
+                            </span>
+                            <div
+                              className="flex items-center justify-center gap-0.5"
+                              aria-label={`${productRating.toFixed(1)} out of 5 stars`}
+                            >
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <FaStar
+                                  key={star}
+                                  size={13}
+                                  className={
+                                    star <= Math.round(productRating)
+                                      ? "text-amber-400"
+                                      : "text-slate-200"
+                                  }
+                                />
+                              ))}
+                            </div>
+                            {productRating > 0 && (
+                              <span className="text-xs font-bold text-eatpur-dark">
+                                {productRating.toFixed(1)}
+                                {reviewCount > 0 && (
+                                  <span className="font-normal text-eatpur-text-light">
+                                    {` (${reviewCount})`}
+                                  </span>
+                                )}
+                              </span>
+                            )}
+                          </div>
+
                           <div className="mt-auto flex items-end justify-between pt-4">
                             <div className="flex flex-col">
-                              {product.discounted_price ? (
+                              {Number(product.fixed_price) >
+                              Number(product.discounted_price) ? (
                                 <>
-                                  <div className="flex items-start gap-1.5 mb-0.5">
-                                    <span className="relative text-sm font-sans text-eatpur-text/60">
+                                  <div className="flex items-start mb-0.5">
+                                    <span className="relative text-sm font-sans text-eatpur-text-light font-medium">
                                       ₹{product.fixed_price}
-                                      <span className="absolute top-1/2 left-[-10%] w-[120%] h-[1.5px] bg-[#8B3A2A] -rotate-[15deg] origin-center"></span>
+                                      <span className="absolute top-1/2 left-[-10%] w-[120%] h-[1.5px] bg-rose-500/80 -rotate-[12deg]"></span>
                                     </span>
                                   </div>
-                                  <span className="text-xl font-bold text-[#3A5A1C]">
+                                  <span className="text-2xl font-bold text-eatpur-dark">
                                     ₹{product.discounted_price}
                                   </span>
                                 </>
                               ) : (
-                                <span className="text-xl font-bold text-[#3A5A1C]">
+                                <span className="text-2xl font-bold text-eatpur-dark">
                                   ₹{product.fixed_price}
                                 </span>
                               )}
                             </div>
-
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                dispatch({
-                                  type: "ADD_ITEM",
-                                  payload: {
-                                    ...product,
-                                    image: displayImg,
-                                    price:
-                                      product.discounted_price ||
-                                      product.fixed_price,
-                                  },
-                                });
-                              }}
-                              className="w-10 h-10 rounded-full border border-eatpur-dark/20 flex items-center justify-center text-eatpur-dark hover:bg-eatpur-green-dark hover:border-eatpur-green-dark hover:text-white transition-all transform hover:scale-105"
-                              aria-label="Add to cart"
-                            >
-                              <FaCartShopping size={14} />
-                            </button>
                           </div>
                         </div>
                       </div>
@@ -590,84 +807,6 @@ export default function HomePage() {
           </Link>
         </div>
       </section>
-
-      {/* Featured Blogs Section (Live API Data) */}
-      {/* <section className="py-24 px-6 bg-white relative border-t border-black/5">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-display text-eatpur-dark mb-4">
-              Our Blogs
-            </h2>
-            <p className="text-eatpur-text font-serif italic">
-              Discover modern nutrition through ancient wisdom.
-            </p>
-          </div>
-
-          {isLoading ? (
-            <div className="text-center italic font-serif text-eatpur-text animate-pulse">
-              Loading latest stories...
-            </div>
-          ) : topBlogs.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {topBlogs.map((blog, i) => (
-                <Link to={`/preview-blog/${blog.id}`} key={blog.id}>
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.1 }}
-                    className="vintage-card group cursor-pointer flex flex-col h-full border border-black/5 shadow-sm overflow-hidden bg-eatpur-white-warm"
-                  >
-                    <div className="h-64 overflow-hidden rounded-t-xl bg-gray-100 flex items-center justify-center">
-                      <img
-                        src={
-                          blog.cover_image ||
-                          "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=400"
-                        }
-                        alt={blog.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    </div>
-                    <div className="p-8 flex flex-col flex-1 border-t border-black/5">
-                      <div className="text-xs font-semibold text-eatpur-green-dark uppercase tracking-wider mb-3">
-                        By {blog.display_author || "Anonymous"}
-                      </div>
-                      <h3 className="text-2xl font-display text-eatpur-dark mb-3 group-hover:text-eatpur-green-dark transition-colors">
-                        {blog.title}
-                      </h3>
-                      <p className="text-eatpur-text line-clamp-3 mb-6 font-serif text-sm opacity-80">
-                        {blog.meta_description ||
-                          "Read more about this wonderful insight into healthy living..."}
-                      </p>
-                      <div className="mt-auto flex items-center justify-between text-sm text-eatpur-text-light font-medium">
-                        <span>
-                          {new Date(blog.created_at).toLocaleDateString()}
-                        </span>
-                        <span className="flex gap-3">
-                          <span className="flex items-center gap-1">
-                            <FaEye />{" "}
-                            {blog.views_count || blog.likes_count || 0}
-                          </span>
-                        </span>
-                      </div>
-                    </div>
-                  </motion.div>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center italic font-serif text-eatpur-text">
-              No stories available at the moment.
-            </div>
-          )}
-
-          <div className="mt-16 text-center">
-            <Link to="/blogs" className="btn-primary font-medium tracking-wide">
-              View All Blogs
-            </Link>
-          </div>
-        </div>
-      </section> */}
 
       {/* NEW SECTION: Verified User Reviews (Live API Data) */}
       <section className="py-5 bg-white relative overflow-hidden">
@@ -757,31 +896,6 @@ export default function HomePage() {
         )}
       </section>
 
-      {/* Special Offer Banner / Section */}
-
-      {/* <section className="py-20 px-6 relative bg-transparent text-center">
-        <div className="max-w-4xl mx-auto relative z-10 border border-[#D4C4A8]/40 p-8 md:p-14 rounded-[12px] bg-[#3A5A1C] shadow-[0_8px_30px_rgba(58,40,10,0.15)]">
-          <div className="text-[#C8922A] text-sm tracking-[0.3em] mb-4">
-            ✦ ─── ─── ✦
-          </div>
-          <h2 className="text-[#FFFDF8] font-serif text-4xl md:text-5xl mb-4 tracking-wide drop-shadow-sm">
-            Special Sale
-          </h2>
-          <p className="text-[#FFFDF8]/90 font-serif italic text-lg mb-8">
-            Up to 30% off on all organic millets.
-          </p>
-          <div className="text-[#C8922A] text-sm tracking-[0.3em] mb-8">
-            ✦ ─── ─── ✦
-          </div>
-          <Link
-            to="/products"
-            className="inline-block bg-[#FFFDF8] text-[#3A5A1C] font-sans font-semibold px-8 py-3 rounded-[6px] hover:bg-[#EADDCA] transition-colors shadow-sm"
-          >
-            View Deals
-          </Link>
-        </div>
-      </section> */}
-
       {/* Quick View Modal */}
       <AnimatePresence>
         {quickViewProduct && (
@@ -789,7 +903,7 @@ export default function HomePage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-eatpur-dark/40 backdrop-blur-sm"
+            className="fixed inset-0 z-[400] flex items-center justify-center p-4 bg-eatpur-dark/40 backdrop-blur-sm"
             onClick={() => setQuickViewProduct(null)}
           >
             <motion.div
@@ -797,7 +911,7 @@ export default function HomePage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="vintage-card w-full max-w-4xl max-h-[90vh] overflow-y-auto relative flex flex-col md:flex-row hide-scrollbar"
+              className="bg-white w-full max-w-5xl max-h-[90vh] overflow-y-auto relative flex flex-col md:flex-row rounded-3xl shadow-2xl border border-eatpur-gray-light"
             >
               <button
                 onClick={() => setQuickViewProduct(null)}
@@ -806,30 +920,227 @@ export default function HomePage() {
                 <FaXmark size={20} />
               </button>
 
-              <div className="md:w-1/2 p-8 bg-eatpur-white-warm flex items-center justify-center">
-                <img
-                  src={quickViewProduct.image}
-                  alt={quickViewProduct.name}
-                  className="w-full max-h-[400px] object-contain mix-blend-multiply"
-                />
+              <div className="md:w-1/2 p-2 bg-eatpur-green-dark flex items-center justify-center">
+                <div className="w-full h-full min-h-[300px] md:min-h-[400px] rounded-2xl overflow-hidden bg-white shadow-sm border border-slate-100 flex items-center justify-center">
+                  <img
+                    src={quickViewProduct.image}
+                    alt={quickViewProduct.name}
+                    className="w-full max-h-[400px] object-contain mix-blend-multiply"
+                  />
+                </div>
               </div>
-              <div className="md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-white">
-                <span className="text-eatpur-green-dark font-medium text-xs tracking-widest uppercase mb-3">
-                  {quickViewProduct.categoryName || quickViewProduct.category}
-                </span>
-                <h2 className="text-3xl md:text-4xl font-display text-eatpur-dark mb-4">
+              <div className="md:w-1/2 p-8 md:p-10 flex flex-col justify-between bg-white relative">
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {[
+                    "nutrition",
+                    "ingredients",
+                    "instructions to cook",
+                    "reviews",
+                  ].map((tab) => (
+                    <button
+                      key={tab}
+                      type="button"
+                      onClick={() => setActiveTab(tab)}
+                      className={`font-sans font-bold text-xs uppercase tracking-wider px-3.5 py-1.5 rounded-lg transition-all ${
+                        activeTab === tab
+                          ? "bg-eatpur-green-dark text-white shadow-sm"
+                          : "bg-slate-100 text-eatpur-text hover:bg-slate-200"
+                      }`}
+                    >
+                      {tab}
+                    </button>
+                  ))}
+                  {quickViewProduct.is_trending && (
+                    <span className="text-eatpur-gold-dark font-sans font-bold text-[10px] tracking-widest uppercase px-3 py-1.5 bg-eatpur-gold-light/20 rounded-lg self-center ml-auto">
+                      Trending
+                    </span>
+                  )}
+                </div>
+
+                <h2 className="text-3xl md:text-4xl font-display text-eatpur-dark mb-2">
                   {quickViewProduct.name}
                 </h2>
-                <span className="text-2xl font-medium text-eatpur-dark mb-6 border-b border-black/10 pb-4">
-                  ₹
-                  {quickViewProduct.discounted_price ||
-                    quickViewProduct.fixed_price}
-                </span>
-                <p className="text-eatpur-text leading-relaxed mb-6 gap-2">
-                  {quickViewProduct.description} This premium product ensures
-                  you get all the natural health benefits of pure millet without
-                  any artificial additives.
+                <p className="text-xs font-mono text-eatpur-text-light mb-5">
+                  PID: {quickViewProduct.pid}
                 </p>
+                <div className="flex items-baseline gap-4 mb-6 border-b border-eatpur-gray-light pb-6">
+                  <span className="text-5xl font-bold text-eatpur-dark tracking-tight">
+                    ₹
+                    {quickViewProduct.discounted_price ||
+                      quickViewProduct.fixed_price}
+                  </span>
+                  {Number(quickViewProduct.fixed_price) >
+                    Number(quickViewProduct.discounted_price) && (
+                    <div className="flex flex-col items-start">
+                      <span className="relative text-xl font-sans text-eatpur-text-light font-medium">
+                        ₹{quickViewProduct.fixed_price}
+                        <span className="absolute top-1/2 left-[-5%] w-[110%] h-[2px] bg-rose-500/80 -rotate-[12deg]"></span>
+                      </span>
+                      <span className="text-rose-600 font-bold text-xs uppercase tracking-wider bg-rose-50 px-2 py-0.5 rounded mt-1">
+                        Save {quickViewProduct.discount_percentage}%
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {activeTab === "nutrition" && (
+                  <div className="mb-6">
+                    <p className="text-eatpur-text font-sans leading-relaxed mb-6 text-sm md:text-base">
+                      {quickViewProduct.description ||
+                        "A pure, healthy product crafted for your wellbeing. Perfect for a balanced, modern lifestyle."}
+                    </p>
+                    <div className="flex md:grid grid-cols-4 gap-3 mb-6 overflow-x-auto md:overflow-visible pb-2 md:pb-0 hide-scrollbar snap-x snap-mandatory">
+                      {[
+                        ["Protein", "protein", "g"],
+                        ["Carbs", "carbohydrates", "g"],
+                        ["Fibre", "fibre", "g"],
+                        ["Calories", "calories", ""],
+                      ].map(([label, field, suffix]) => (
+                        <div
+                          key={field}
+                          className="bg-[#FAFCFA] p-3 text-center rounded-xl border border-eatpur-gray-light shadow-sm min-w-[110px] md:min-w-0 shrink-0 snap-start"
+                        >
+                          <div className="text-[10px] font-bold text-eatpur-text-light uppercase tracking-wider mb-1 whitespace-nowrap">
+                            {label}
+                          </div>
+                          <div className="font-mono text-base font-bold text-eatpur-dark whitespace-nowrap">
+                            {quickViewProduct[field] || 0}
+                            {suffix}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === "ingredients" && (
+                  <div className="mb-6 p-4 bg-[#FAFCFA] rounded-2xl border border-eatpur-gray-light text-sm text-eatpur-text leading-relaxed min-h-[140px]">
+                    {quickViewProduct.ingredients ||
+                      "100% natural ingredients without artificial additives or preservatives."}
+                  </div>
+                )}
+
+                {activeTab === "instructions to cook" && (
+                  <div className="mb-6 p-4 bg-[#FAFCFA] rounded-2xl border border-eatpur-gray-light text-sm text-eatpur-text leading-relaxed min-h-[140px]">
+                    {quickViewProduct.instructions ||
+                      quickViewProduct.how_to_use ||
+                      quickViewProduct.cooking_instructions ||
+                      "Store in a cool, dry place. Follow packet instructions for best results."}
+                  </div>
+                )}
+
+                {activeTab === "reviews" && (
+                  <div className="mb-6 h-[280px] flex flex-col">
+                    <div className="flex-1 overflow-y-auto pr-2 mb-4 space-y-3 hide-scrollbar">
+                      {loadingQuickViewReviews ? (
+                        <p className="text-sm italic text-eatpur-text-light text-center mt-4">
+                          Loading reviews...
+                        </p>
+                      ) : quickViewReviews.length === 0 ? (
+                        <p className="text-sm italic text-eatpur-text-light text-center mt-4">
+                          No reviews yet. Be the first to review!
+                        </p>
+                      ) : (
+                        quickViewReviews.map((review) => (
+                          <div
+                            key={
+                              review.id || `${review.user}-${review.created_at}`
+                            }
+                            className="p-3 bg-slate-50 rounded-xl border border-slate-100 shadow-sm"
+                          >
+                            <div className="flex justify-between items-start mb-2">
+                              <span className="font-bold text-sm text-eatpur-dark">
+                                {review.username ||
+                                  review.user_name ||
+                                  review.user ||
+                                  "Customer"}
+                              </span>
+                              <span className="text-xs font-bold text-eatpur-gold-dark flex items-center gap-1">
+                                <FaStar /> {review.rating}/5
+                              </span>
+                            </div>
+                            <p className="text-sm text-eatpur-text font-serif">
+                              {review.content || review.comment}
+                            </p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    <form
+                      onSubmit={handleReviewSubmit}
+                      className="bg-white p-3 rounded-xl border-2 border-eatpur-green-light/30 shadow-sm flex flex-col gap-2 shrink-0"
+                    >
+                      <div className="flex justify-between items-center px-1">
+                        <span className="text-xs font-bold uppercase tracking-wider text-eatpur-dark">
+                          Write a Review
+                        </span>
+                        <div className="flex items-center gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              type="button"
+                              onClick={() =>
+                                setReviewForm((previous) => ({
+                                  ...previous,
+                                  rating: star,
+                                }))
+                              }
+                              className="focus:outline-none transition-transform hover:scale-125"
+                              aria-label={`${star} star rating`}
+                            >
+                              <FaStar
+                                size={16}
+                                className={
+                                  star <= reviewForm.rating
+                                    ? "text-yellow-400 fill-yellow-400"
+                                    : "text-slate-300"
+                                }
+                              />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <textarea
+                        required
+                        rows={2}
+                        placeholder="Share your experience..."
+                        value={reviewForm.content}
+                        onChange={(event) =>
+                          setReviewForm((previous) => ({
+                            ...previous,
+                            content: event.target.value,
+                          }))
+                        }
+                        className="w-full text-sm p-2.5 rounded-lg border border-slate-200 bg-slate-50 outline-none focus:border-eatpur-green-dark resize-none font-serif"
+                      />
+                      <div className="flex justify-between items-center px-1">
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={(event) => {
+                            const files = Array.from(event.target.files || []);
+                            if (files.length <= 3)
+                              setReviewForm((previous) => ({
+                                ...previous,
+                                images: files,
+                              }));
+                            else alert("Maximum 3 images allowed per review.");
+                          }}
+                          className="w-48 text-xs text-slate-500 file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-eatpur-green-light/20 file:text-eatpur-green-dark"
+                        />
+                        <button
+                          type="submit"
+                          disabled={submittingReview}
+                          className="bg-eatpur-green-dark text-white font-bold tracking-wider uppercase text-[10px] py-1.5 px-4 rounded-full disabled:opacity-50 hover:bg-eatpur-dark transition-colors"
+                        >
+                          {submittingReview ? "Posting..." : "Post Review"}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
 
                 {/* Health Score in Modal */}
                 <div className="mb-8 p-4 border border-green-900/10 rounded-lg bg-green-50/50">
@@ -849,23 +1160,21 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                <button
-                  onClick={() => {
-                    dispatch({
-                      type: "ADD_ITEM",
-                      payload: {
-                        ...quickViewProduct,
-                        price:
-                          quickViewProduct.discounted_price ||
-                          quickViewProduct.fixed_price,
-                      },
-                    });
-                    setQuickViewProduct(null);
-                  }}
-                  className="btn-primary w-full flex justify-center items-center gap-3 py-4 text-base"
-                >
-                  <FaCartShopping /> Add to Cart
-                </button>
+                <div className="sticky bottom-0 z-20 mt-auto -mx-8 -mb-8 bg-white/95 px-8 pb-8 pt-4 backdrop-blur-sm md:-mx-10 md:-mb-10 md:px-10">
+                  <CartButton
+                    onClick={() => handleAddToCart(quickViewProduct)}
+                    onAnimationComplete={() => {
+                      setQuickViewProduct(null);
+                      if (redirectToLoginAfterCartAnimation.current) {
+                        redirectToLoginAfterCartAnimation.current = false;
+                        navigate("/login", {
+                          state: { returnTo: "/" },
+                        });
+                      }
+                    }}
+                    className="!h-[58px]"
+                  />
+                </div>
               </div>
             </motion.div>
           </motion.div>

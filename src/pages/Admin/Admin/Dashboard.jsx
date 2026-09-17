@@ -13,6 +13,7 @@ import NewsWorkspace from "./News";
 import OrdersWorkspace from "./Orders";
 import LogisticsWorkspace from "./Logistics";
 import TransactionsWorkspace from "./Transactions";
+import ReviewWorkspace from "./Review";
 import HBList from "./DashComps/HBList";
 
 export default function AdminDashboard() {
@@ -260,6 +261,10 @@ export default function AdminDashboard() {
           {/* Staff Management Workspace Container */}
           {activeTab === "Staff Management" && (
             <StaffMgmnt activeSubTab={activeSubTab} />
+          )}
+          {/* Review Workspace Container */}
+          {activeTab === "Reviews" && (
+            <ReviewWorkspace activeSubTab={activeSubTab} />
           )}
         </main>
       </div>

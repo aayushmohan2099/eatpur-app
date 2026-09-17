@@ -13,7 +13,7 @@ import Chatbot from "./Chatbot";
 import { getMe, logoutUser } from "../api/authApi";
 import Logo from "../assets/Logo3D.png";
 import ShopNowButton from "./SpcBtns/ShopNow/ShopNow";
-import { useUserRole } from "../utils/useUserRole";
+import { useUserRole, notifyAuthChange } from "../utils/useUserRole";
 
 export default function Navbar() {
   const { state, dispatch } = useCart();
@@ -77,6 +77,21 @@ export default function Navbar() {
     0,
   );
 
+  // Shailendra Merger: Updated handleCartClick to check for authentication before toggling the cart
+  const handleCartClick = () => {
+    if (!localStorage.getItem("access")) {
+      navigate("/login", {
+        state: {
+          returnTo: `${location.pathname}${location.search}`,
+          openCart: true,
+        },
+      });
+      return;
+    }
+
+    dispatch({ type: "TOGGLE_CART" });
+  };
+
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 180) {
@@ -107,7 +122,7 @@ export default function Navbar() {
         w-full
         sticky
         top-0
-        z-[100]
+        z-[300]
         border-b
         border-[#D4C4A8]/20
         bg-[#FAFDF8]/55
@@ -175,7 +190,8 @@ export default function Navbar() {
 
             {/* Cart */}
             <button
-              onClick={() => dispatch({ type: "TOGGLE_CART" })}
+              // Shailendra Merger: Updated onClick to handleCartClick which checks for authentication before toggling the cart
+              onClick={handleCartClick}
               className="relative hover:text-[#6B8E23] transition-all duration-300 hover:-translate-y-[2px]"
               aria-label="Cart"
             >
@@ -267,6 +283,9 @@ export default function Navbar() {
                             await logoutUser(refresh);
                             localStorage.removeItem("access");
                             localStorage.removeItem("refresh");
+                            // Shailendra Merger: Removing the role from localStorage and notifying the application about the authentication change to update user role and other related states
+                            localStorage.removeItem("role");
+                            notifyAuthChange();
                             setUser(null);
                             setLoadingUser(false);
                             setIsUserMenuOpen(false);
@@ -361,6 +380,9 @@ export default function Navbar() {
                       await logoutUser(refresh);
                       localStorage.removeItem("access");
                       localStorage.removeItem("refresh");
+                      // Shailendra Merger: Removing the role from localStorage and notifying the application about the authentication change to update user role and other related states
+                      localStorage.removeItem("role");
+                      notifyAuthChange();
                       setUser(null);
                       setIsMobileMenuOpen(false);
                       window.location.href = "/login";

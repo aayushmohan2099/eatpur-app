@@ -7,6 +7,9 @@ import {
 } from "../api/authApi";
 import { useNavigate, useLocation } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
+// Shailendra Merger: Importing useCart from CartContext to manage cart state after authentication
+import { useCart } from "../context/CartContext";
+import { notifyAuthChange } from "../utils/useUserRole";
 
 export default function AuthPage() {
   const [captcha, setCaptcha] = useState(null);
@@ -32,6 +35,16 @@ export default function AuthPage() {
 
   const navigate = useNavigate();
 
+  // Shailendra Merger: Using useCart to access the dispatch function for cart state management
+  const { dispatch } = useCart();
+
+  const finishAuthentication = () => {
+    if (location.state?.openCart) {
+      dispatch({ type: "OPEN_CART" });
+    }
+    navigate(location.state?.returnTo || "/");
+  };
+
   const fetchCaptcha = async () => {
     const data = await getCaptcha();
     setCaptcha(data);
@@ -52,11 +65,13 @@ export default function AuthPage() {
         localStorage.setItem("access", res.access);
         localStorage.setItem("refresh", res.refresh);
         localStorage.setItem("role", res.user?.role_name || "CUSTOMER");
-
+        // Shailendra Merger: Notify the application about the authentication change to update user role and other related states
+        notifyAuthChange();
         setErrors({});
         setSuccessMessage("Google Login successful! Redirecting...");
         setTimeout(() => {
-          navigate(location.state?.returnTo || "/");
+          // Shailendra Merger: Call finishAuthentication to handle post-authentication actions like opening the cart if needed
+          finishAuthentication();
         }, 1500);
       } else if (res && res.action === "requires_registration") {
         setIsLogin(false);
@@ -104,6 +119,8 @@ export default function AuthPage() {
         localStorage.setItem("refresh", res.refresh);
         const userRole = res.user?.role_name || "CUSTOMER";
         localStorage.setItem("role", userRole);
+        // Shailendra Merger: Notify the application about the authentication change to update user role and other related states
+        notifyAuthChange();
 
         setErrors({});
         setSuccessMessage(
@@ -113,7 +130,8 @@ export default function AuthPage() {
         );
 
         setTimeout(() => {
-          navigate(location.state?.returnTo || "/");
+          // Shailendra Merger: Call finishAuthentication to handle post-authentication actions like opening the cart if needed
+          finishAuthentication();
         }, 1500);
       }
     } catch (err) {

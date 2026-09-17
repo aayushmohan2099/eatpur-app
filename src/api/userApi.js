@@ -10,7 +10,7 @@ import { apiFetch } from "./client";
  * @param {number} page - The page number to fetch.
  */
 export const getUsers = (page = 1) => {
-    return apiFetch(`/admin/users/?page=${page}`);
+  return apiFetch(`/admin/users/?page=${page}`);
 };
 
 /**
@@ -18,38 +18,38 @@ export const getUsers = (page = 1) => {
  * @param {number|string} userId - The unique ID of the user.
  */
 export const getUserDetail = (userId) => {
-    return apiFetch(`/admin/users/detail/${userId}/`);
+  return apiFetch(`/admin/users/detail/${userId}/`);
 };
 
 /**
  * 2) Creates a new user record.
- * Note: If uploading an avatar file, pass a FormData object as data and 
+ * Note: If uploading an avatar file, pass a FormData object as data and
  * set headers: { "Content-Type": "multipart/form-data" } to override the default JSON header.
  * @param {Object|FormData} data - The payload containing user registration details.
  */
 export const createUser = (data) => {
-    const isFormData = data instanceof FormData;
-    return apiFetch("/admin/users/create/", {
-        method: "POST",
-        headers: isFormData ? { "Content-Type": "multipart/form-data" } : {},
-        body: isFormData ? data : JSON.stringify(data),
-    });
+  const isFormData = data instanceof FormData;
+  return apiFetch("/admin/users/create/", {
+    method: "POST",
+    headers: isFormData ? { "Content-Type": "multipart/form-data" } : {},
+    body: isFormData ? data : JSON.stringify(data),
+  });
 };
 
 /**
  * 3) Updates an existing user's record.
- * Note: If updating an avatar file, pass a FormData object as data and 
+ * Note: If updating an avatar file, pass a FormData object as data and
  * set headers: { "Content-Type": "multipart/form-data" }.
  * @param {number|string} userId - The unique ID of the user to update.
  * @param {Object|FormData} data - The configuration details to update.
  */
 export const updateUser = (userId, data) => {
-    const isFormData = data instanceof FormData;
-    return apiFetch(`/admin/users/update-delete/${userId}/`, {
-        method: "PUT", // Alternatively, change to "PATCH" if partial updates are preferred
-        headers: isFormData ? { "Content-Type": "multipart/form-data" } : {},
-        body: isFormData ? data : JSON.stringify(data),
-    });
+  const isFormData = data instanceof FormData;
+  return apiFetch(`/admin/users/update-delete/${userId}/`, {
+    method: "PUT", // Alternatively, change to "PATCH" if partial updates are preferred
+    headers: isFormData ? { "Content-Type": "multipart/form-data" } : {},
+    body: isFormData ? data : JSON.stringify(data),
+  });
 };
 
 /**
@@ -57,11 +57,10 @@ export const updateUser = (userId, data) => {
  * @param {number|string} userId - The unique ID of the user to delete.
  */
 export const deleteUser = (userId) => {
-    return apiFetch(`/admin/users/update-delete/${userId}/`, {
-        method: "DELETE",
-    });
+  return apiFetch(`/admin/users/update-delete/${userId}/`, {
+    method: "DELETE",
+  });
 };
-
 
 // ===========================================================================
 // 4 & 5) ROLE APIS
@@ -71,7 +70,7 @@ export const deleteUser = (userId) => {
  * 4) Fetches a listing of all non-deleted roles.
  */
 export const getRoles = () => {
-    return apiFetch("/admin/roles/");
+  return apiFetch("/admin/roles/");
 };
 
 /**
@@ -80,10 +79,10 @@ export const getRoles = () => {
  * @param {Object} data - Payload containing role configuration (e.g., role_name).
  */
 export const createRole = (data) => {
-    return apiFetch("/admin/roles/create/", {
-        method: "POST",
-        body: JSON.stringify(data),
-    });
+  return apiFetch("/admin/roles/create/", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
 };
 
 /**
@@ -93,9 +92,9 @@ export const createRole = (data) => {
  * @param {Object} data - Payload containing modified role specifications.
  */
 export const updateRole = (roleId, data) => {
-    return apiFetch(`/admin/roles/${roleId}/`, {
-        method: "PUT",
-    });
+  return apiFetch(`/admin/roles/${roleId}/`, {
+    method: "PUT",
+  });
 };
 
 /**
@@ -104,7 +103,14 @@ export const updateRole = (roleId, data) => {
  * @param {number|string} roleId - The lookup ID (primary key) of the target role.
  */
 export const deleteRole = (roleId) => {
-    return apiFetch(`/admin/roles/${roleId}/`, {
-        method: "DELETE",
-    });
+  return apiFetch(`/admin/roles/${roleId}/`, {
+    method: "DELETE",
+  });
+};
+
+/**
+ @param {number} page - The page number to fetch.
+ */
+export const getAllReviews = (page = 1) => {
+  return apiFetch(`/all-reviews/?page=${page}`);
 };

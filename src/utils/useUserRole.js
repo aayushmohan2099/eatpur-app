@@ -2,6 +2,12 @@
 
 import { useState, useEffect } from "react";
 
+export const AUTH_CHANGE_EVENT = "eatpur-auth-change";
+
+export function notifyAuthChange() {
+  window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
+}
+
 export function useUserRole() {
   const [role, setRole] = useState(null);
 
@@ -17,7 +23,12 @@ export function useUserRole() {
     };
 
     window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
+    window.addEventListener(AUTH_CHANGE_EVENT, handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener(AUTH_CHANGE_EVENT, handleStorageChange);
+    };
   }, []);
 
   // Return the raw role string alongside convenient boolean checks
