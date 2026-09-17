@@ -13,7 +13,7 @@ import NewsWorkspace from "./News";
 import OrdersWorkspace from "./Orders";
 import LogisticsWorkspace from "./Logistics";
 import TransactionsWorkspace from "./Transactions";
-import ReviewWorkspace from "./Review";
+import ReviewWorkspace from "./Reviews";
 import HBList from "./DashComps/HBList";
 
 export default function AdminDashboard() {

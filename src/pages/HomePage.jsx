@@ -686,14 +686,14 @@ export default function HomePage() {
                           </span>
                         )}
 
-                        <div
-                          className={`h-64 relative bg-[#FAFCFA] p-6 flex justify-center items-center overflow-hidden border-b border-eatpur-gray-light/50 ${isOutOfStock ? "blur-[1px] grayscale-[30%]" : ""}`}
-                        >
-                          <HomeProductImageCarousel
-                            images={
-                              productImages.length ? productImages : displayImg
-                            }
+                        <div className="h-64 overflow-hidden p-6 pb-0 flex items-center justify-center bg-gray-50 relative">
+                          <motion.img
+                            whileHover={{ scale: 1.05 }}
+                            transition={{ duration: 0.4 }}
+                            src={displayImg}
                             alt={product.name}
+                            className="h-full object-contain drop-shadow-md rounded-t-xl mix-blend-multiply"
+                            loading="lazy"
                           />
                         </div>
 
