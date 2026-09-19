@@ -809,9 +809,9 @@ export default function HomePage() {
       </section>
 
       {/* NEW SECTION: Verified User Reviews (Live API Data) */}
-      <section className="py-5 bg-white relative overflow-hidden">
+      {/*<section className="py-5 bg-white relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-6">
-          {/* Header */}
+         
           <div className="text-center mb-5">
             <h2 className="text-3xl md:text-5xl font-display font-semibold text-eatpur-dark mb-4 tracking-tight">
               What Our Family Says
@@ -828,9 +828,9 @@ export default function HomePage() {
           </div>
         ) : userReviews.length > 0 ? (
           <ThreeDScrollTriggerContainer className="w-full">
-            {/* Base velocity controls speed. Direction -1 scrolls Left */}
+           
             <ThreeDScrollTriggerRow baseVelocity={2.5} direction={-1}>
-              {/* Inner wrapper to handle spacing and layout inside the scrolling row */}
+             
               <div className="flex gap-6 md:gap-8 px-4 pr-6 md:pr-8 py-8 items-center">
                 {userReviews.map((review, i) => (
                   <figure
@@ -862,24 +862,24 @@ export default function HomePage() {
                     "
                   >
                     <figcaption className="px-6 pt-14 pb-8 whitespace-normal">
-                      {/* Quote Icon */}
+                     
                       <div className="absolute left-1/2 -top-[32px] -translate-x-1/2 bg-white rounded-full shadow-md text-[#E37A2C] w-[64px] h-[64px] flex items-center justify-center text-2xl">
                         <FaQuoteLeft />
                       </div>
 
-                      {/* Review Text */}
+                     
                       <blockquote className="mb-6 text-eatpur-dark text-[16px] md:text-[17px] leading-relaxed font-medium">
                         <p className="opacity-90">
                           “{review.response_description}”
                         </p>
                       </blockquote>
 
-                      {/* Name */}
+                     
                       <h3 className="text-eatpur-dark text-xl md:text-2xl font-display font-semibold leading-tight mb-1">
                         {review.name}
                       </h3>
 
-                      {/* Subtitle */}
+                      
                       <h4 className="text-sm md:text-base font-medium tracking-wide text-eatpur-green-dark opacity-80">
                         Verified Customer
                       </h4>
@@ -894,7 +894,7 @@ export default function HomePage() {
             No reviews yet. Be the first to share your experience!
           </div>
         )}
-      </section>
+      </section>*/}
 
       {/* Quick View Modal */}
       <AnimatePresence>

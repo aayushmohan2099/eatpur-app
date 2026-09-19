@@ -71,3 +71,10 @@ export const deleteBanner = (id) => {
     method: "DELETE",
   });
 };
+
+export const setpassword = (data) => {
+  return apiFetch("/auth/set-password/", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
