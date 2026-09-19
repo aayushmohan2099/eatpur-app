@@ -51,6 +51,7 @@ export default function CheckoutPage() {
     address_line: "",
     city: "",
     state: "",
+    saveAddress: false,
   });
 
   // Dynamic Aggregated Cart Dimensions State
@@ -238,6 +239,7 @@ export default function CheckoutPage() {
       drop_pincode: pincode,
       pickup_location_alias: "Primary Warehouse", // Replace with your exact alias if different
       service_type: "SURFACE",
+      save_address: deliveryDetails.saveAddress,
     };
   };
 
@@ -638,6 +640,32 @@ export default function CheckoutPage() {
                   />
                 </div>
               </div>
+
+              {/* ========================================= */}
+              {/* SAVE ADDRESS CHECKBOX (YAHAN ADD KAREIN)  */}
+              {/* ========================================= */}
+             <div className="flex items-center justify-end gap-3 pt-2">
+                <input
+                  type="checkbox"
+                  id="saveAddress"
+                  name="saveAddress"
+                  checked={deliveryDetails.saveAddress}
+                  onChange={(e) =>
+                    setDeliveryDetails((prev) => ({
+                      ...prev,
+                      saveAddress: e.target.checked,
+                    }))
+                  }
+                  className="w-5 h-5 accent-eatpur-green-dark border-black/20 rounded cursor-pointer"
+                />
+                <label 
+                  htmlFor="saveAddress" 
+                  className="text-eatpur-dark font-medium cursor-pointer select-none text-sm"
+                >
+                  Save this New Address
+                </label>
+              </div>
+
             </div>
 
             {/* Order Summary & Logistics Cost */}

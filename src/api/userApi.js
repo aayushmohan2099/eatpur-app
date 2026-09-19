@@ -94,6 +94,8 @@ export const createRole = (data) => {
 export const updateRole = (roleId, data) => {
   return apiFetch(`/admin/roles/${roleId}/`, {
     method: "PUT",
+    // Agar payload bhej rahe hain to body: JSON.stringify(data) add karna padega
+    body: data ? JSON.stringify(data) : undefined, 
   });
 };
 
@@ -113,4 +115,32 @@ export const deleteRole = (roleId) => {
  */
 export const getAllReviews = (page = 1) => {
   return apiFetch(`/all-reviews/?page=${page}`);
+};
+
+// ===========================================================================
+// SAVED ADDRESS APIS
+// ===========================================================================
+
+export const getAddresses = () => {
+  return apiFetch("/address/");
+};
+
+export const addAddress = (data) => {
+  return apiFetch("/address/", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+};
+
+export const updateAddress = (addressId, data) => {
+  return apiFetch(`/address/${addressId}/`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+};
+
+export const deleteAddress = (addressId) => {
+  return apiFetch(`/address/${addressId}/`, {
+    method: "DELETE",
+  });
 };

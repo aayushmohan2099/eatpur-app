@@ -6,7 +6,9 @@ import Sidebar, { SUB_MENUS } from "./Components/Sidebar";
 import MilletBg from "../../assets/user/millet_user_bg.png";
 import Orders from "./Components/Orders";
 import InvoiceList from "./Components/InvoiceList";
-
+import AddressList from "./Components/AddressList";
+import ChangePassword from "./Components/ChangePassword"; // Import the ChangePassword component
+import ReturnPolicy from "./Components/ReturnPolicy";
 // ===========================================================================
 // ICONS FOR FORMS
 // ===========================================================================
@@ -201,6 +203,12 @@ const HeroPlaceholder = ({ activeModule, activeSubMenu, user }) => {
       ) : activeModule === "Orders" && activeSubMenu === "invoices" ? (
         /* Render the Invoices component */
         <InvoiceList />
+      ) : activeModule === "Profile" && activeSubMenu === "addresses" ? (
+        <AddressList user={user} />
+      ) : activeModule === "Profile" && activeSubMenu === "security" ? (
+        <ChangePassword />
+      ) : activeModule === "Returns" && activeSubMenu === "policy" ? (
+        <ReturnPolicy />
       ) : (
         /* Generic Placeholder for all other unbuilt pages */
         <div className="h-64 flex flex-col items-center justify-center text-center border-2 border-dashed border-[#DCDFD9] rounded-[24px] bg-white/50 opacity-90">

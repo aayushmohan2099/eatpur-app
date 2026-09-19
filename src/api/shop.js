@@ -100,3 +100,8 @@ export const getAdminTransactions = (params = {}) => {
     : "/shop/admin/orders/transactions/";
   return apiFetch(url, { method: "GET" });
 };
+
+export const getCustomerAddressHistory = () => {
+  return apiFetch("/shop/admin/customer-address-history/", { method: "GET" });
+  
+};

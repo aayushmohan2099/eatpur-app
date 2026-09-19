@@ -14,6 +14,7 @@ import OrdersWorkspace from "./Orders";
 import LogisticsWorkspace from "./Logistics";
 import TransactionsWorkspace from "./Transactions";
 import ReviewWorkspace from "./Reviews";
+import CustomerWorkspace from "./Customers";
 import HBList from "./DashComps/HBList";
 
 export default function AdminDashboard() {
@@ -265,6 +266,10 @@ export default function AdminDashboard() {
           {/* Review Workspace Container */}
           {activeTab === "Reviews" && (
             <ReviewWorkspace activeSubTab={activeSubTab} />
+          )}
+          {/* Customer Workspace Container */}
+          {activeTab === "Customers" && (
+            <CustomerWorkspace activeSubTab={activeSubTab} />
           )}
         </main>
       </div>

@@ -15,6 +15,30 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
+const formatApiError = (value, fieldName = "") => {
+  if (value === null || value === undefined) return "";
+
+  if (typeof value === "string" || typeof value === "number") {
+    return fieldName ? `${fieldName}: ${value}` : String(value);
+  }
+
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => formatApiError(item, fieldName))
+      .filter(Boolean)
+      .join(", ");
+  }
+
+  if (typeof value === "object") {
+    return Object.entries(value)
+      .map(([key, nestedValue]) => formatApiError(nestedValue, key))
+      .filter(Boolean)
+      .join("; ");
+  }
+
+  return "";
+};
+
 export async function apiFetch(endpoint, options = {}) {
 const NO_AUTH_ENDPOINTS = [
     "/global/captcha/",
@@ -110,15 +134,15 @@ const NO_AUTH_ENDPOINTS = [
       }
     }
 
-    const raw = await res.json();
-    const decrypted = decryptResponse(raw);
-
-    if (!decrypted) throw new Error("Decryption failed");
+    const responseText = await res.text();
+    const raw = responseText ? JSON.parse(responseText) : null;
+    const decrypted = raw ? decryptResponse(raw) : null;
 
     // 🔥 SURGICAL FIX 3: Catch Backend Errors! 
     // If the HTTP response is 400/401/403/500, throw it so your Modals hit the catch() block instead of faking success.
     if (!res.ok) {
-      const errorMsg = decrypted.detail || decrypted.error || "API request failed";
+      const errorValue = decrypted?.detail || decrypted?.error || decrypted?.errors || decrypted;
+      const errorMsg = formatApiError(errorValue) || "API request failed";
       throw new Error(errorMsg);
     }
 
