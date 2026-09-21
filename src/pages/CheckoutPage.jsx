@@ -897,7 +897,7 @@ export default function CheckoutPage() {
 
             {/* Payment Submission */}
             <div className="pt-8 border-t border-black/10 flex flex-col items-center">
-              <button
+              {/* <button
                 type="button"
                 onClick={handleTestPayment}
                 disabled={
@@ -910,7 +910,7 @@ export default function CheckoutPage() {
                 className="w-full md:w-2/3 mb-4 py-3 text-sm font-bold tracking-wider rounded-2xl flex justify-center items-center gap-2 border-2 border-dashed border-eatpur-green-dark text-eatpur-green-dark bg-green-50 hover:bg-green-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 🧪 Simulate Razorpay Payment
-              </button>
+              </button> */}
 
               <button
                 type="submit"
