@@ -7,10 +7,13 @@ import {
   FaLocationDot,
   FaBoxOpen,
   FaTruckFast,
+  FaTag,
+  FaXmark,
 } from "react-icons/fa6";
 import { useCart } from "../context/CartContext";
-import { checkoutOrder, verifyPayment } from "../api/shop";
+import { checkoutOrder, verifyPayment, getCouponList } from "../api/shop";
 import { getProductById } from "../api/inventory";
+import { useUserRole } from "../utils/useUserRole";
 import {
   checkPincodeServiceability,
   getShippingEstimate,
@@ -30,6 +33,7 @@ const loadRazorpayScript = () => {
 export default function CheckoutPage() {
   const { state, dispatch } = useCart();
   const navigate = useNavigate();
+  const { isAdmin } = useUserRole();
 
   // Standard Checkout States
   const [isSuccess, setIsSuccess] = useState(false);
@@ -42,7 +46,14 @@ export default function CheckoutPage() {
   const [shippingEstimate, setShippingEstimate] = useState(null);
   const [isEstimating, setIsEstimating] = useState(false);
 
-  // Delivery Form State (Aligned exactly with backend expectations)
+  // --- COUPON STATES ---
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [autoCoupon, setAutoCoupon] = useState(null);
+  const [couponError, setCouponError] = useState("");
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+
+  // Delivery Form State
   const [deliveryDetails, setDeliveryDetails] = useState({
     firstName: "",
     lastName: "",
@@ -98,11 +109,7 @@ export default function CheckoutPage() {
           tHeight += Number(dim.height) || 10;
           tWidth += Number(dim.width) || 10;
         } catch (err) {
-          console.error(
-            `Failed to fetch dimensions for product ${item.id}`,
-            err,
-          );
-          // Fallback if API fails for a specific product
+          console.error(`Failed to fetch dimensions for product ${item.id}`, err);
           tWeight += 500 * item.quantity;
           tLength += 10;
           tHeight += 10;
@@ -131,7 +138,6 @@ export default function CheckoutPage() {
     } else {
       dispatch({ type: "UPDATE_QUANTITY", payload: { id, quantity: newQty } });
     }
-    // Estimates must be recalculated manually if quantity changes, requires clicking check pincode again
     setShippingEstimate(null);
     setServiceability(null);
   };
@@ -142,13 +148,12 @@ export default function CheckoutPage() {
     setDeliveryDetails((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Step 1: Check Pincode Serviceability
+  // Check Pincode Serviceability
   const handleCheckPincode = async () => {
     if (!pincode || pincode.length !== 6) {
       alert("Please enter a valid 6-digit Pincode.");
       return;
     }
-
     setIsCheckingPincode(true);
     setServiceability(null);
     setShippingEstimate(null);
@@ -157,8 +162,6 @@ export default function CheckoutPage() {
       const res = await checkPincodeServiceability(pincode);
       if (res.is_serviceable || res.status === true) {
         setServiceability(true);
-
-        // Auto-fill City/State if your check API returns it (Optional fallback)
         if (res.details) {
           setDeliveryDetails((prev) => ({
             ...prev,
@@ -166,9 +169,8 @@ export default function CheckoutPage() {
             state: res.details.state || prev.state,
           }));
         }
-
-        // Automatically fetch shipping estimate upon successful pincode check
         await fetchShippingEstimate(pincode);
+        await applyAutomaticCoupon();
       } else {
         setServiceability(false);
       }
@@ -180,19 +182,57 @@ export default function CheckoutPage() {
     }
   };
 
-  // Step 2: Fetch Accurate Shipping Cost Estimates from Ekart
+  const applyAutomaticCoupon = async () => {
+    if (!isAdmin || autoCoupon || state.items.length === 0) return;
+
+    try {
+      const response = await getCouponList();
+      const coupons = Array.isArray(response)
+        ? response
+        : response?.results || response?.data || [];
+      const now = new Date();
+      const coupon = coupons.find((item) => {
+        const startDate = item.start_date ? new Date(item.start_date) : null;
+        const endDate = item.end_date ? new Date(item.end_date) : null;
+
+        return (
+          item.is_auto_apply &&
+          item.discount_type === "FLAT" &&
+          item.status?.toUpperCase() === "ONGOING" &&
+          (!startDate || startDate <= now) &&
+          (!endDate || endDate >= now) &&
+          subtotal >= Number(item.min_order_value || 0)
+        );
+      });
+
+      if (coupon) {
+        const nextAutoCoupon = {
+          code: coupon.coupon_code,
+          type: "flat",
+          value: Number(coupon.discount_value),
+          source: "auto",
+        };
+        setAutoCoupon(nextAutoCoupon);
+        setAppliedCoupon(nextAutoCoupon);
+      }
+    } catch {
+      // Customer checkout does not have access to the admin coupon list.
+    }
+  };
+
+  // Fetch Accurate Shipping Cost Estimates
   const fetchShippingEstimate = async (validPincode) => {
     setIsEstimating(true);
     try {
       const payload = {
-        pickupPincode: 226022, // EatPur Default Warehouse Pincode (Lucknow)
+        pickupPincode: 226022,
         dropPincode: parseInt(validPincode),
-        invoiceAmount: subtotal,
-        weight: cartDimensions.weight || 500, // Pass calculated aggregated dimensions
+        invoiceAmount: subtotal, // Should calculate accurately
+        weight: cartDimensions.weight || 500,
         length: cartDimensions.length || 10,
         height: cartDimensions.height || 10,
         width: cartDimensions.width || 10,
-        serviceType: "SURFACE", // Default
+        serviceType: "SURFACE",
         codAmount: 0,
         shippingDirection: "FORWARD",
       };
@@ -202,28 +242,91 @@ export default function CheckoutPage() {
         setShippingEstimate(res.pricing);
       } else {
         setShippingEstimate(null);
-        alert(
-          "We couldn't calculate exact shipping charges for this location at this time.",
-        );
+        alert("We couldn't calculate exact shipping charges for this location.");
       }
     } catch (err) {
-      console.error("Failed to fetch shipping estimate:", err);
+      console.error("Failed to fetch estimate:", err);
       setShippingEstimate(null);
-      alert(
-        "Ekart API failed to return shipping estimates. Please verify details.",
-      );
+      alert("Ekart API failed to return shipping estimates.");
     } finally {
       setIsEstimating(false);
     }
   };
 
-  // Final Total Calculation (No Default Estimation Fallbacks allowed)
+  // --- COUPON HANDLERS ---
+  const handleApplyCoupon = async () => {
+    if (!couponInput.trim()) return;
+    setIsApplyingCoupon(true);
+    setCouponError("");
+
+    try {
+      const code = couponInput.trim().toUpperCase();
+      let couponDetails = null;
+
+      // Admin sessions can read coupon details, which lets us show the
+      // discount immediately. Checkout still validates it on the server.
+      if (isAdmin) {
+        try {
+          const response = await getCouponList();
+          const coupons = Array.isArray(response)
+            ? response
+            : response?.results || response?.data || [];
+          couponDetails = coupons.find(
+            (coupon) => coupon.coupon_code?.toUpperCase() === code,
+          );
+        } catch {
+          // Checkout still validates the coupon on the server.
+        }
+      }
+
+      setAppliedCoupon({
+        code,
+        type:
+          couponDetails?.discount_type === "FLAT"
+            ? "flat"
+            : couponDetails?.discount_type === "PERCENT"
+              ? "percentage"
+              : null,
+        value: Number(couponDetails?.discount_value || 0),
+              source: "manual",
+      });
+      setCouponInput("");
+    } catch (error) {
+      setCouponError(error.message || "Error applying coupon. Try again.");
+    } finally {
+      setIsApplyingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(
+      autoCoupon && appliedCoupon?.source === "manual" ? autoCoupon : null,
+    );
+    setCouponError("");
+  };
+
+  // --- FINAL TOTAL CALCULATIONS ---
+  // 1. Calculate Discount
+  let discountAmount = 0;
+  if (appliedCoupon) {
+    if (appliedCoupon.type === "percentage") {
+      discountAmount = (subtotal * appliedCoupon.value) / 100;
+    } else if (appliedCoupon.type === "flat") {
+      discountAmount = appliedCoupon.value;
+    }
+    // Discount can't be more than subtotal
+    discountAmount = Math.min(discountAmount, subtotal);
+  }
+
+  // 2. Shipping Charge
   const shippingCharge = shippingEstimate
     ? parseFloat(shippingEstimate.shipping_charge)
     : 0;
-  const finalTotal = subtotal + shippingCharge;
 
-  // Helper to compile the payload exactly as the backend VerifyPaymentSerializer expects
+  // 3. Final Total (Subtotal - Discount + Shipping)
+  const finalTotal = subtotal - discountAmount + shippingCharge;
+
+  // Build Checkout Payload
   const buildCheckoutPayload = () => {
     return {
       items: state.items.map((item) => ({
@@ -237,23 +340,20 @@ export default function CheckoutPage() {
       drop_city: deliveryDetails.city,
       drop_state: deliveryDetails.state,
       drop_pincode: pincode,
-      pickup_location_alias: "Primary Warehouse", // Replace with your exact alias if different
+      pickup_location_alias: "Primary Warehouse",
       service_type: "SURFACE",
       save_address: deliveryDetails.saveAddress,
+      coupon_code: appliedCoupon ? appliedCoupon.code : null, // Added Coupon to backend payload
     };
   };
 
-  // ============================================================
-  // TEST ONLY: Simulate a successful Razorpay payment response
-  // ============================================================
+  // Simulate Payment
   const handleTestPayment = async () => {
     if (state.items.length === 0) return;
     if (!serviceability || !shippingEstimate) {
       alert("Please check serviceability to calculate shipping costs first.");
       return;
     }
-
-    // Validate Required Backend Fields
     if (
       !deliveryDetails.firstName ||
       !deliveryDetails.address_line ||
@@ -266,35 +366,26 @@ export default function CheckoutPage() {
 
     setIsProcessing(true);
     try {
-      // 1. Create the order in Django and store all shipping preferences
       const payload = buildCheckoutPayload();
       const orderData = await checkoutOrder(payload);
 
-      // 2. Simulate Razorpay Success using the real backend order ID
       const fakeRazorpayResponse = {
         razorpay_payment_id: `pay_TEST_${Date.now()}`,
         razorpay_order_id: orderData.razorpay_order_id,
         razorpay_signature: `test_signature_${Date.now()}`,
       };
 
-      console.log("🧪 SIMULATED RAZORPAY RESPONSE:", fakeRazorpayResponse);
-
-      // 3. Verify on backend (Backend will bypass signature check for 'pay_TEST_' and trigger Auto-Dispatch)
-      await verifyPayment({
-        ...fakeRazorpayResponse,
-      });
-
+      await verifyPayment({ ...fakeRazorpayResponse });
       setIsSuccess(true);
       dispatch({ type: "CLEAR_CART" });
     } catch (err) {
-      console.error(err);
       alert(err.message || "Test payment failed.");
     } finally {
       setIsProcessing(false);
     }
   };
 
-  // Step 3: Handle Place Order (Real Razorpay Flow)
+  // Real Place Order
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
     if (state.items.length === 0) return;
@@ -303,7 +394,6 @@ export default function CheckoutPage() {
       return;
     }
 
-    // Validate Required Backend Fields
     if (
       !deliveryDetails.firstName ||
       !deliveryDetails.address_line ||
@@ -315,8 +405,6 @@ export default function CheckoutPage() {
     }
 
     setIsProcessing(true);
-
-    // 1. Load Razorpay Script
     const res = await loadRazorpayScript();
     if (!res) {
       alert("Razorpay SDK failed to load. Are you online?");
@@ -325,14 +413,12 @@ export default function CheckoutPage() {
     }
 
     try {
-      // 2. Call Backend Checkout API to create SaleOrder & save shipping preferences
       const payload = buildCheckoutPayload();
       const orderData = await checkoutOrder(payload);
 
-      // 3. Initialize Razorpay
       const options = {
         key: orderData.key_id,
-        amount: orderData.amount, // In paise
+        amount: orderData.amount, // backend should calculate amount including discount
         currency: orderData.currency,
         name: "EatPur Naturals",
         description: "Premium Millet Foods",
@@ -343,10 +429,7 @@ export default function CheckoutPage() {
           email: orderData.customer?.email || "",
           contact: payload.consignee_alternate_phone,
         },
-        theme: {
-          color: "#6B8E23", // EatPur Green Dark
-        },
-        // 4. Success Handler
+        theme: { color: "#6B8E23" },
         handler: async function (response) {
           try {
             await verifyPayment({
@@ -354,14 +437,10 @@ export default function CheckoutPage() {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_signature: response.razorpay_signature,
             });
-
             setIsSuccess(true);
             dispatch({ type: "CLEAR_CART" });
           } catch (verifyError) {
-            alert(
-              verifyError.message ||
-                "Payment verification failed. Please contact support.",
-            );
+            alert(verifyError.message || "Payment verification failed.");
           }
         },
       };
@@ -372,8 +451,7 @@ export default function CheckoutPage() {
       });
       rzp.open();
     } catch (err) {
-      console.error(err);
-      alert(err.message || "Failed to initialize checkout. Please try again.");
+      alert(err.message || "Failed to initialize checkout.");
     } finally {
       setIsProcessing(false);
     }
@@ -401,13 +479,9 @@ export default function CheckoutPage() {
             Order Successful!
           </h2>
           <p className="text-eatpur-text font-serif italic mb-8">
-            Thank you! Your premium millet foods are being prepared for
-            dispatch.
+            Thank you! Your premium millet foods are being prepared for dispatch.
           </p>
-          <Link
-            to="/products"
-            className="btn-primary font-medium tracking-wide"
-          >
+          <Link to="/products" className="btn-primary font-medium tracking-wide">
             Continue Shopping
           </Link>
         </motion.div>
@@ -423,9 +497,8 @@ export default function CheckoutPage() {
         </h1>
 
         <div className="vintage-card bg-white border border-black/5 p-8 md:p-12 rounded-2xl shadow-sm">
-          {/* ======================================================= */}
-          {/* STEP 1: SERVICEABILITY CHECK                            */}
-          {/* ======================================================= */}
+          
+          {/* STEP 1: SERVICEABILITY CHECK */}
           <div className="mb-10 pb-10 border-b border-black/10">
             <h3 className="text-2xl font-display text-eatpur-dark mb-6 flex items-center gap-3">
               <span className="w-8 h-8 rounded-full bg-eatpur-green-dark text-white flex items-center justify-center text-sm">
@@ -479,8 +552,7 @@ export default function CheckoutPage() {
                   animate={{ opacity: 1, height: "auto" }}
                   className="mt-4 flex items-center gap-2 text-eatpur-green-dark font-medium bg-green-50 px-4 py-2.5 rounded-lg border border-green-200"
                 >
-                  <FaCheck /> Great! We deliver to {pincode} via Ekart
-                  Logistics.
+                  <FaCheck /> Great! We deliver to {pincode} via Ekart Logistics.
                 </motion.div>
               )}
               {serviceability === false && (
@@ -495,14 +567,16 @@ export default function CheckoutPage() {
             </AnimatePresence>
           </div>
 
-          {/* ======================================================= */}
-          {/* STEP 2: DELIVERY DETAILS & PAYMENT (LOCKED INITIALLY)   */}
-          {/* ======================================================= */}
+          {/* STEP 2: DELIVERY DETAILS & PAYMENT */}
           <form
             onSubmit={handlePlaceOrder}
-            className={`space-y-12 font-sans transition-opacity duration-300 ${!serviceability || !shippingEstimate ? "opacity-40 pointer-events-none select-none grayscale-[50%]" : "opacity-100"}`}
+            className={`space-y-12 font-sans transition-opacity duration-300 ${
+              !serviceability || !shippingEstimate
+                ? "opacity-40 pointer-events-none select-none grayscale-[50%]"
+                : "opacity-100"
+            }`}
           >
-            {/* Delivery Details */}
+            {/* Delivery Details Fields */}
             <div className="space-y-6">
               <h3 className="text-2xl font-display text-eatpur-dark border-b border-black/10 pb-3 flex items-center gap-3">
                 <span className="w-8 h-8 rounded-full bg-eatpur-green-dark text-white flex items-center justify-center text-sm shadow-sm">
@@ -543,8 +617,7 @@ export default function CheckoutPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
                   <label className="block text-eatpur-dark text-sm mb-2 font-medium">
-                    Address Line (House, Street, Area){" "}
-                    <span className="text-red-500">*</span>
+                    Address Line (House, Street, Area) <span className="text-red-500">*</span>
                   </label>
                   <input
                     required
@@ -556,7 +629,6 @@ export default function CheckoutPage() {
                     className="w-full bg-eatpur-white-warm border border-black/10 rounded-xl px-4 py-3 text-eatpur-dark focus:outline-none focus:border-eatpur-green-dark transition-colors shadow-inner font-serif"
                   />
                 </div>
-
                 <div>
                   <label className="block text-eatpur-dark text-sm mb-2 font-medium">
                     City <span className="text-red-500">*</span>
@@ -570,7 +642,6 @@ export default function CheckoutPage() {
                     className="w-full bg-eatpur-white-warm border border-black/10 rounded-xl px-4 py-3 text-eatpur-dark focus:outline-none focus:border-eatpur-green-dark transition-colors shadow-inner font-serif"
                   />
                 </div>
-
                 <div>
                   <label className="block text-eatpur-dark text-sm mb-2 font-medium">
                     State <span className="text-red-500">*</span>
@@ -584,7 +655,6 @@ export default function CheckoutPage() {
                     className="w-full bg-eatpur-white-warm border border-black/10 rounded-xl px-4 py-3 text-eatpur-dark focus:outline-none focus:border-eatpur-green-dark transition-colors shadow-inner font-serif"
                   />
                 </div>
-
                 <div>
                   <label className="block text-eatpur-dark text-sm mb-2 font-medium">
                     Mobile Number <span className="text-red-500">*</span>
@@ -605,11 +675,9 @@ export default function CheckoutPage() {
                     className="w-full bg-eatpur-white-warm border border-black/10 rounded-xl px-4 py-3 text-eatpur-dark focus:outline-none focus:border-eatpur-green-dark transition-colors shadow-inner font-mono tracking-widest"
                   />
                 </div>
-
                 <div>
                   <label className="block text-eatpur-dark text-sm mb-2 font-medium">
-                    Alternate Mobile Number{" "}
-                    <span className="text-red-500">*</span>
+                    Alternate Mobile Number <span className="text-red-500">*</span>
                   </label>
                   <input
                     required
@@ -627,7 +695,6 @@ export default function CheckoutPage() {
                     className="w-full bg-eatpur-white-warm border border-black/10 rounded-xl px-4 py-3 text-eatpur-dark focus:outline-none focus:border-eatpur-green-dark transition-colors shadow-inner font-mono tracking-widest"
                   />
                 </div>
-
                 <div>
                   <label className="block text-eatpur-text-light text-sm mb-2 font-medium">
                     Pincode
@@ -641,10 +708,7 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              {/* ========================================= */}
-              {/* SAVE ADDRESS CHECKBOX (YAHAN ADD KAREIN)  */}
-              {/* ========================================= */}
-             <div className="flex items-center justify-end gap-3 pt-2">
+              <div className="flex items-center justify-end gap-3 pt-2">
                 <input
                   type="checkbox"
                   id="saveAddress"
@@ -658,14 +722,13 @@ export default function CheckoutPage() {
                   }
                   className="w-5 h-5 accent-eatpur-green-dark border-black/20 rounded cursor-pointer"
                 />
-                <label 
-                  htmlFor="saveAddress" 
+                <label
+                  htmlFor="saveAddress"
                   className="text-eatpur-dark font-medium cursor-pointer select-none text-sm"
                 >
                   Save this New Address
                 </label>
               </div>
-
             </div>
 
             {/* Order Summary & Logistics Cost */}
@@ -732,6 +795,54 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
+              {/* COUPON SECTION */}
+              <div className="bg-eatpur-white-warm border border-black/10 rounded-xl p-4 md:p-6 mt-4 shadow-sm">
+                <h4 className="text-eatpur-dark font-medium mb-3 flex items-center gap-2">
+                  <FaTag className="text-eatpur-green-dark" /> Have a Coupon Code?
+                </h4>
+                
+                {!appliedCoupon || appliedCoupon.source === "auto" ? (
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <input
+                      type="text"
+                      placeholder="Enter Promo Code (e.g. WELCOME10)"
+                      value={couponInput}
+                      onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                      className="flex-1 bg-white border border-black/10 rounded-lg px-4 py-2.5 text-eatpur-dark focus:outline-none focus:border-eatpur-green-dark uppercase"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleApplyCoupon}
+                      disabled={!couponInput.trim() || isApplyingCoupon}
+                      className="bg-eatpur-dark text-white px-6 py-2.5 rounded-lg hover:bg-black transition-colors font-medium disabled:opacity-50"
+                    >
+                      {isApplyingCoupon ? "Applying..." : "Apply"}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between bg-green-50 border border-green-200 p-3 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <FaCheck className="text-green-600" />
+                      <span className="text-green-700 font-bold tracking-wider">
+                        {appliedCoupon.code}
+                      </span>
+                      <span className="text-green-600 text-sm">applied</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRemoveCoupon}
+                      className="text-red-500 hover:text-red-700 p-1 transition-colors"
+                      title="Remove Coupon"
+                    >
+                        <FaXmark />
+                    </button>
+                  </div>
+                )}
+                {couponError && (
+                  <p className="text-red-500 text-sm mt-2">{couponError}</p>
+                )}
+              </div>
+
               {/* Pricing Breakdown */}
               <div className="bg-eatpur-white-warm rounded-xl p-6 border border-black/5 mt-6 shadow-inner">
                 <div className="flex justify-between items-center text-eatpur-text mb-3 font-medium">
@@ -760,6 +871,19 @@ export default function CheckoutPage() {
                   </span>
                 </div>
 
+                {appliedCoupon && (
+                  <div className="flex justify-between items-center text-green-700 mb-4 font-medium text-sm">
+                    <span className="flex items-center gap-2">
+                      <FaTag /> Coupon Applied 
+                    </span>
+                    <span>
+                      {discountAmount > 0
+                        ? `- ₹${discountAmount.toFixed(2)}`
+                        : "Calculated at checkout"}
+                    </span>
+                  </div>
+                )}
+
                 <div className="flex justify-between items-center text-xl pt-4 border-t border-black/10">
                   <span className="text-eatpur-dark font-display font-bold">
                     Total to Pay
@@ -773,9 +897,6 @@ export default function CheckoutPage() {
 
             {/* Payment Submission */}
             <div className="pt-8 border-t border-black/10 flex flex-col items-center">
-              {/* ===================================================== */}
-              {/* TEST ONLY: SIMULATE RAZORPAY PAYMENT                 */}
-              {/* ===================================================== */}
               <button
                 type="button"
                 onClick={handleTestPayment}

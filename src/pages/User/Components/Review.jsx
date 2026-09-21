@@ -68,8 +68,23 @@ export default function Review({ isOpen, onClose, order }) {
 
     setIsSubmitting(true);
 
-    // Get the base URL dynamically for the response_url API
-    const baseUrl = window.location.origin;
+    const productDetails = (order?.items || [])
+      .map((item) => {
+        const productId =
+          item.product_id ||
+          item.productId ||
+          item.pid ||
+          item.product?.id ||
+          item.id;
+        const productName =
+          item.product_name ||
+          item.productName ||
+          item.product?.name ||
+          "Unknown Product";
+
+        return `ID: ${productId}, Name: ${productName}`;
+      })
+      .join("\n");
 
     // Formatting data for the GoogleFormResponse Model webhook
     const payload = {
@@ -79,7 +94,7 @@ export default function Review({ isOpen, onClose, order }) {
       address: formData.address || "N/A",
       // Link to the specific order's detail API (assuming standard REST pattern)
       response_url: `/api/shop/customer/orders/${order?.id}/`,
-      response_description: `RATING: ${rating}/5 Stars.\nREVIEW: ${formData.comment || "No written comment provided."}`,
+      response_description: `PRODUCTS:\n${productDetails || "No product details available."}\n\nRATING: ${rating}/5 Stars.\nREVIEW: ${formData.comment || "No written comment provided."}`,
     };
 
     try {

@@ -105,3 +105,27 @@ export const getCustomerAddressHistory = () => {
   return apiFetch("/shop/admin/customer-address-history/", { method: "GET" });
   
 };
+
+export const getCouponList = () => {
+  return apiFetch("/shop/admin/coupons/", { method: "GET" });
+};
+
+export const createCoupon = (payload) => {
+  return apiFetch("/shop/admin/coupons/", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+};
+
+export const updateCoupon = (couponId, payload) => {
+  return apiFetch(`/shop/admin/coupons/${couponId}/`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+};
+
+export const deleteCoupon = (couponId) => {
+  return apiFetch(`/shop/admin/coupons/${couponId}/`, {
+    method: "DELETE",
+  });
+};

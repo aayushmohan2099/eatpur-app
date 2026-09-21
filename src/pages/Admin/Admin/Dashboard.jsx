@@ -15,6 +15,7 @@ import LogisticsWorkspace from "./Logistics";
 import TransactionsWorkspace from "./Transactions";
 import ReviewWorkspace from "./Reviews";
 import CustomerWorkspace from "./Customers";
+import CouponsWorkspace from "./CreateCoupon";
 import HBList from "./DashComps/HBList";
 
 export default function AdminDashboard() {
@@ -61,6 +62,11 @@ export default function AdminDashboard() {
       isExternalPage: false,
     },
     {
+      name: "Coupons",
+      path: "/admin/dashboard/coupons/",
+      isExternalPage: false,
+    },
+    {
       name: "Grievances",
       path: "/admin/dashboard/grievances/",
       isExternalPage: false,
@@ -96,6 +102,7 @@ export default function AdminDashboard() {
     Logistics: ["Overview", "Financials", "Saved Addresses", "Audit Logs"],
     Customers: ["Customer List", "Customer Segments", "Loyalty Program"],
     Reviews: ["All Reviews", "Pending Approval", "Reported"],
+    Coupons: ["All Coupons", "Create Coupon"],
     Grievances: ["Active Tickets", "Resolved", "Automated Responses"],
     Blogs: [
       "Blog Analytics",
@@ -266,6 +273,11 @@ export default function AdminDashboard() {
           {/* Review Workspace Container */}
           {activeTab === "Reviews" && (
             <ReviewWorkspace activeSubTab={activeSubTab} />
+          )}
+
+          {/* Coupons Workspace Container */}
+          {activeTab === "Coupons" && (
+            <CouponsWorkspace activeSubTab={activeSubTab} />
           )}
           {/* Customer Workspace Container */}
           {activeTab === "Customers" && (
