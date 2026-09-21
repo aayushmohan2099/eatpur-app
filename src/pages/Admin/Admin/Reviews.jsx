@@ -1,7 +1,8 @@
-// src\pages\Admin\Admin\Reviews.jsx
+// src/pages/Admin/Admin/Reviews.jsx
 import React, { useCallback, useEffect, useState } from "react";
 import { getAllReviews } from "../../../api/userApi";
 import EatpurTable from "./UniComps/Table";
+import { FaEye, FaTimes, FaBoxOpen, FaWhatsapp, FaCheck } from "react-icons/fa";
 
 const normalizeReviews = (response) => {
   const payload =
@@ -29,15 +30,50 @@ function ReviewsList({
   hasPrevious,
   onPageChange,
 }) {
+  // Yeh state track karegi ki kis-kis ko message bhej diya gaya hai
+  const [sentWhatsApp, setSentWhatsApp] = useState(new Set());
+
+  const handlePushToWhatsapp = (review, uniqueId) => {
+    let number = review.mobile_number || review.mobile;
+
+    if (!number || number === "-") {
+      alert("Customer Mobile Number Not Available.");
+      return;
+    }
+
+    number = number.toString().replace(/\D/g, "");
+    if (number.length === 10) {
+      number = `91${number}`;
+    }
+
+    const customerName = review.name && review.name !== "-" ? review.name : "Customer";
+    
+    // WhatsApp par bhejne wala message
+    const message = `Hello ${customerName},\n\nThank you for choosing Eatpur! Please share your feedback with us on WhatsApp:\nhttps://wa.link/2cuzrz\n\nRegards,\nEatpur Team`;
+
+    // Open the customer's WhatsApp chat with the feedback message pre-filled.
+    const whatsappUrl = `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
+    
+    // Naye tab me WhatsApp open karein
+    window.open(whatsappUrl, '_blank');
+
+    // Button ko "Sent" state me badalne ke liye ID save karein
+    setSentWhatsApp((prev) => new Set(prev).add(uniqueId));
+  };
+
   const columns = [
     { header: "Name", accessor: "name" },
     { header: "Mobile Number", accessor: "mobileNumber" },
     { header: "Email", accessor: "email" },
     { header: "Stars", accessor: "stars" },
     { header: "Response Description", accessor: "responseDescription" },
+    { header: "Actions", accessor: "actions" },
   ];
 
-  const rows = reviews.map((review) => {
+  const rows = reviews.map((review, index) => {
+    const uniqueId = review.id || index; // Use review ID, fallback to index
+    const isSent = sentWhatsApp.has(uniqueId);
+
     return {
       ...review,
       name: review.name || "-",
@@ -45,6 +81,27 @@ function ReviewsList({
       email: review.email || "-",
       stars: review.stars ?? review.rating ?? "-",
       responseDescription: review.response_description || "-",
+      actions: (
+        <button
+          onClick={() => handlePushToWhatsapp(review, uniqueId)}
+          disabled={isSent}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 shadow-sm ${
+            isSent
+              ? "bg-gray-100 text-gray-500 cursor-default"
+              : "bg-green-50 text-green-600 hover:bg-green-600 hover:text-white active:scale-95 cursor-pointer"
+          }`}
+        >
+          {isSent ? (
+            <>
+              <FaCheck className="text-gray-500" /> Send
+            </>
+          ) : (
+            <>
+              <FaWhatsapp className="text-lg" /> Push To Whatsapp
+            </>
+          )}
+        </button>
+      ),
     };
   });
 

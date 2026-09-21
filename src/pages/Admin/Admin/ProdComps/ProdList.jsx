@@ -182,17 +182,13 @@ export default function ProdList() {
         </span>
       </div>
     ),
-    status_badge: (
-      <Badge
-        text={prod.status_name}
-        type={
-          prod.status_name === "IN_STOCK"
-            ? "success"
-            : prod.status_name === "OUT_OF_STOCK"
-              ? "danger"
-              : "warning"
-        }
-      />
+   status_badge: (
+      <div className="whitespace-nowrap">
+        <Badge
+          text={Number(prod.quantity) <= 0 ? "Out of Stock" : "Active"}
+          type={Number(prod.quantity) <= 0 ? "danger" : "success"}
+        />
+      </div>
     ),
   }));
 
