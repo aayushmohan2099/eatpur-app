@@ -9,7 +9,7 @@ export default function ChangePassword() {
     new_password: "",
     confirm_password: "",
   });
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -28,18 +28,13 @@ export default function ChangePassword() {
     setError("");
     setSuccessMessage("");
 
-    // Validation 1: Check if passwords match
-    if (formData.new_password !== formData.confirm_password) {
-      setError("New Password and Confirm Password do not match.");
+    if (!formData.new_password.trim() || !formData.confirm_password.trim()) {
+      setError("Please enter and confirm your new password.");
       return;
     }
 
-    // Validation 2: Strong Password Policy
-    // Must contain at least 8 characters, one uppercase, one number and one special character
-    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
-    
-    if (!passwordRegex.test(formData.new_password)) {
-      setError("Password must be at least 8 characters long, include one uppercase letter, one number, and one special character.");
+    if (formData.new_password !== formData.confirm_password) {
+      setError("New Password and Confirm Password do not match.");
       return;
     }
 
