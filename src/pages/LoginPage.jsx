@@ -303,7 +303,7 @@ export default function AuthPage() {
                   : "text-eatpur-text-light hover:text-eatpur-dark"
               }`}
             >
-              Sign In
+              Already? Sign In
             </button>
             <button
               onClick={() => {
@@ -317,7 +317,7 @@ export default function AuthPage() {
                   : "text-eatpur-text-light hover:text-eatpur-dark"
               }`}
             >
-              Register
+              First Time? Sign Up
             </button>
           </div>
 

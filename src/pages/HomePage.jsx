@@ -294,7 +294,7 @@ export default function HomePage() {
   return (
     <div className="w-full relative min-h-screen bg-[#FAFAFA]">
       {/* Hero Section */}
-      <section className="relative w-full pt-20 pb-20 md:pt-28 md:pb-32 px-6 overflow-hidden bg-cover bg-center bg-no-repeat bg-[url('/home/Mobanner.png')]">
+      <section className="relative isolate w-full min-w-0 pt-20 pb-20 md:pt-28 md:pb-32 px-4 sm:px-6 overflow-hidden bg-cover bg-center bg-no-repeat bg-[url('/home/Mobanner.png')]">
         {/* Floating 3D Images Background */}
         <FloatingImagesBackground />
 
@@ -302,10 +302,10 @@ export default function HomePage() {
         <div className="absolute top-0 right-0 w-full md:w-1/2 h-full bg-gradient-to-l from-eatpur-green-light/90 to-transparent pointer-events-none z-[1]" />
 
         {/* Content Container */}
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-12 relative z-10">
+        <div className="w-full max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-12 relative z-10">
           {/* LEFT SIDE: Image Carousel */}
           <div className="flex-1 w-full flex justify-center md:justify-start lg:pr-12">
-            <div className="relative w-full max-w-[340px] md:max-w-[500px] aspect-[3/4]">
+            <div className="relative w-full max-w-[min(100%,340px)] md:max-w-[500px] aspect-[3/4]">
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -324,7 +324,7 @@ export default function HomePage() {
 
           {/* RIGHT SIDE: Texts and Buttons */}
           <motion.div
-            className="flex-1 flex flex-col items-center md:items-start text-center md:text-left lg:pl-8"
+            className="w-full flex-1 flex flex-col items-center md:items-start text-center md:text-left lg:pl-8"
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
@@ -334,14 +334,14 @@ export default function HomePage() {
               <span>Natural • No Maida • High Fiber</span>
             </div>
 
-            <h1 className="text-5xl md:text-7xl font-display text-eatpur-dark leading-tight mb-6 tracking-tight drop-shadow-sm">
+            <h1 className="w-full text-4xl sm:text-5xl md:text-7xl font-display text-eatpur-dark leading-tight mb-6 tracking-tight drop-shadow-sm">
               Millets... <br />
               Fuel Your Body
               <br />
               <span className="italic text-eatpur-green-dark">Naturally</span>
             </h1>
 
-            <p className="text-eatpur-text text-lg md:text-xl mb-10 max-w-md font-display leading-relaxed drop-shadow-sm">
+            <p className="w-full text-eatpur-text text-lg md:text-xl mb-10 max-w-md font-display leading-relaxed drop-shadow-sm">
               Smart nutrition for modern life – ready in minutes. Pure,
               wholesome, and tradition-rich grains.
             </p>
@@ -367,7 +367,7 @@ export default function HomePage() {
           </p>
         </div>
 
-        <ThreeDScrollTriggerContainer className="w-full pt-8 pb-8 overflow-visible">
+        <ThreeDScrollTriggerContainer className="w-full pt-8 pb-8 overflow-hidden">
           {/* Base velocity controls speed. Direction 1 scrolls Right */}
           <ThreeDScrollTriggerRow baseVelocity={2} direction={1}>
             {/* FSSAI */}
@@ -534,7 +534,7 @@ export default function HomePage() {
           </div>
         </div>
       </section> */}
-      <section className="py-16 md:py-24 px-6 relative bg-[#FAFAF7]">
+      <section className="py-16 md:py-24 px-6 relative overflow-hidden bg-[#FAFAF7]">
         {/* Subtle radial luxury glow in background */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-emerald-100/30 blur-[120px] rounded-full pointer-events-none" />
 
