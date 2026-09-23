@@ -575,7 +575,8 @@ export default function AllOrders({
     setError(null);
     try {
       const params = {
-        page,
+        page: 1,
+        page_size: PAGE_SIZE,
         search,
         payment_status: paymentFilter,
         fulfillment_status: fulfillmentFilter,
@@ -583,31 +584,43 @@ export default function AllOrders({
         date_from: dateFrom,
         date_to: dateTo,
       };
-      const res = await getAdminOrders(params);
-      const data = res.data || res.results || res;
+      const firstResponse = await getAdminOrders(params);
+      const getPageData = (response) => {
+        const data = response?.data ?? response;
+        return {
+          results: Array.isArray(data) ? data : data?.results || [],
+          count: data?.count ?? response?.count,
+        };
+      };
 
-      if (Array.isArray(data)) {
-        // Some API responses are already paginated arrays, while others
-        // return the complete collection. Avoid slicing an already paginated page.
-        const isAlreadyPaginated = data.length <= PAGE_SIZE;
-        const startIndex = (page - 1) * PAGE_SIZE;
-        setOrders(
-          isAlreadyPaginated
-            ? data
-            : data.slice(startIndex, startIndex + PAGE_SIZE),
-        );
-        setTotalPages(
-          isAlreadyPaginated
-            ? page + (data.length === PAGE_SIZE ? 1 : 0)
-            : Math.max(1, Math.ceil(data.length / PAGE_SIZE)),
-        );
-        setTotalRecords(data.length);
-      } else if (data.results) {
-        setOrders(data.results);
-        setTotalRecords(data.count);
-        setTotalPages(Math.max(1, Math.ceil(data.count / PAGE_SIZE)));
+      const firstPage = getPageData(firstResponse);
+      const allOrders = [...firstPage.results];
+      const totalCount = Number(firstPage.count) || allOrders.length;
+      const apiPageCount = firstPage.results.length
+        ? Math.ceil(totalCount / firstPage.results.length)
+        : 1;
+
+      // Some deployments ignore page_size or use a different server page size.
+      // Fetch the remaining pages so the client-side pagination cannot lose rows.
+      if (firstPage.count && firstPage.results.length < totalCount) {
+        for (let apiPage = 2; apiPage <= apiPageCount; apiPage += 1) {
+          const response = await getAdminOrders({ ...params, page: apiPage });
+          allOrders.push(...getPageData(response).results);
+        }
+      }
+
+      const uniqueOrders = Array.from(
+        new Map(allOrders.map((order) => [order.id, order])).values(),
+      );
+      const startIndex = (page - 1) * PAGE_SIZE;
+      setOrders(uniqueOrders.slice(startIndex, startIndex + PAGE_SIZE));
+      setTotalRecords(totalCount);
+      setTotalPages(Math.max(1, Math.ceil(totalCount / PAGE_SIZE)));
+      if (uniqueOrders.length !== totalCount) {
+        setTotalRecords(uniqueOrders.length);
+        setTotalPages(Math.max(1, Math.ceil(uniqueOrders.length / PAGE_SIZE)));
       } else {
-        setOrders([]);
+        setTotalRecords(totalCount);
       }
     } catch (err) {
       console.error(err);

@@ -49,7 +49,7 @@ function ReviewsList({
     const customerName = review.name && review.name !== "-" ? review.name : "Customer";
     
     // WhatsApp par bhejne wala message
-    const message = `Hello ${customerName},\n\nThank you for choosing Eatpur! Please share your feedback with us on WhatsApp:\nhttps://wa.link/2cuzrz\n\nRegards,\nEatpur Team`;
+    const message = `Hello ${customerName},\n\nThank you for choosing Eatpur! Please share your feedback with us on WhatsApp:\nhttps://eatpur.in/feedback\n\nRegards,\nEatpur Team`;
 
     // Open the customer's WhatsApp chat with the feedback message pre-filled.
     const whatsappUrl = `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
@@ -93,7 +93,7 @@ function ReviewsList({
         >
           {isSent ? (
             <>
-              <FaCheck className="text-gray-500" /> Send
+              <FaCheck className="text-gray-500" /> Sent
             </>
           ) : (
             <>
