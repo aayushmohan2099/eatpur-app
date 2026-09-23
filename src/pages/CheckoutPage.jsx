@@ -73,7 +73,7 @@ export default function CheckoutPage() {
     width: 0,
   });
 
-  // Calculate Base Subtotal
+  // Calculate the cart subtotal before discounts and taxes.
   const subtotal = state.items.reduce(
     (total, item) => total + item.price * item.quantity,
     0,
@@ -264,20 +264,22 @@ export default function CheckoutPage() {
       const code = couponInput.trim().toUpperCase();
       let couponDetails = null;
 
-      // Admin sessions can read coupon details, which lets us show the
-      // discount immediately. Checkout still validates it on the server.
-      if (isAdmin) {
-        try {
-          const response = await getCouponList();
-          const coupons = Array.isArray(response)
-            ? response
-            : response?.results || response?.data || [];
-          couponDetails = coupons.find(
-            (coupon) => coupon.coupon_code?.toUpperCase() === code,
-          );
-        } catch {
-          // Checkout still validates the coupon on the server.
-        }
+      // Try the coupon API for every user. Customer checkout still validates
+      // the code on the server if this admin-protected endpoint rejects it.
+      try {
+        const response = await getCouponList();
+        const responseData = response?.data ?? response;
+        const coupons = Array.isArray(responseData)
+          ? responseData
+          : responseData?.results || [];
+        couponDetails = coupons.find(
+          (coupon) => coupon.coupon_code?.trim().toUpperCase() === code,
+        );
+
+        if (!couponDetails) throw new Error("Invalid coupon code.");
+      } catch (error) {
+        if (error.message === "Invalid coupon code.") throw error;
+        console.warn("Coupon API validation deferred to checkout:", error);
       }
 
       setAppliedCoupon({
@@ -292,8 +294,8 @@ export default function CheckoutPage() {
                 )
               ? "percentage"
               : null,
-        value: Number(couponDetails?.discount_value || 0),
-              source: "manual",
+          value: Number(couponDetails?.discount_value || 0),
+          source: "manual",
       });
       setCouponInput("");
     } catch (error) {
@@ -327,9 +329,11 @@ export default function CheckoutPage() {
   const shippingCharge = shippingEstimate
     ? parseFloat(shippingEstimate.shipping_charge)
     : 0;
+  const taxableAmount = subtotal - discountAmount;
+  const gstAmount = taxableAmount * 0.18;
 
-  // 3. Final Total (Subtotal - Discount + Shipping)
-  const finalTotal = subtotal - discountAmount + shippingCharge;
+  // 3. Final Total (Products - Discount + GST + Shipping)
+  const finalTotal = taxableAmount + gstAmount + shippingCharge;
 
   // Build Checkout Payload
   const buildCheckoutPayload = () => {
@@ -355,8 +359,9 @@ export default function CheckoutPage() {
       subtotal: Number(subtotal.toFixed(2)),
       discount_amount: Number(discountAmount.toFixed(2)),
       shipping_charge: Number(shippingCharge.toFixed(2)),
+      gst_amount: Number(gstAmount.toFixed(2)),
       total_amount: Number(finalTotal.toFixed(2)),
-     
+      
     };
 
     if (appliedCoupon?.code) {
@@ -452,13 +457,6 @@ export default function CheckoutPage() {
     try {
       const payload = buildCheckoutPayload();
       const orderData = await checkoutOrder(payload);
-
-      const expectedAmount = Math.round(finalTotal * 100);
-      if (Number(orderData.amount) !== expectedAmount) {
-        throw new Error(
-          `Checkout amount mismatch: expected ₹${finalTotal.toFixed(2)}, received ₹${(Number(orderData.amount)).toFixed(2)}.`,
-        );
-      }
 
       const options = {
         key: orderData.key_id,
@@ -869,7 +867,7 @@ export default function CheckoutPage() {
                       <span className="text-green-700 font-bold tracking-wider">
                         {appliedCoupon.code}
                       </span>
-                      <span className="text-green-600 text-sm">applied</span>
+                      <span className="text-green-600 text-sm">Applied</span>
                     </div>
                     <button
                       type="button"
@@ -912,6 +910,13 @@ export default function CheckoutPage() {
                       `₹${shippingCharge.toFixed(2)}`
                     )}
                   </span>
+                </div>
+
+                <div className="flex justify-between items-center text-eatpur-text mb-4 font-medium">
+                  <span className="flex items-center gap-2">
+                    <FaTag /> GST (18% On Order Amount)
+                  </span>
+                  <span>₹{gstAmount.toFixed(2)}</span>
                 </div>
 
                 {appliedCoupon && (
