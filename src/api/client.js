@@ -49,6 +49,7 @@ const NO_AUTH_ENDPOINTS = [
   ];
 
   try {
+    const responseType = options.responseType;
     let token = localStorage.getItem("access");
     const isPublic = NO_AUTH_ENDPOINTS.includes(endpoint);
 
@@ -132,6 +133,27 @@ const NO_AUTH_ENDPOINTS = [
           isRefreshing = false;
         }
       }
+    }
+
+    if (responseType === "blob") {
+      const responseBlob = await res.blob();
+
+      if (!res.ok) {
+        const errorText = await responseBlob.text();
+        let errorData = null;
+
+        try {
+          errorData = errorText ? JSON.parse(errorText) : null;
+        } catch {
+          errorData = errorText;
+        }
+
+        const errorValue =
+          errorData?.detail || errorData?.error || errorData?.errors || errorData;
+        throw new Error(formatApiError(errorValue) || "API request failed");
+      }
+
+      return responseBlob;
     }
 
     const responseText = await res.text();

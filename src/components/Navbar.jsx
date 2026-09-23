@@ -22,6 +22,18 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    }
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isMobileMenuOpen]);
+
   const { isAdmin, isStaff, isInventoryManager } = useUserRole();
   const getDashboardConfig = () => {
     if (isAdmin) return { path: "/admin/dashboard", label: "Admin Panel" };
@@ -322,7 +334,7 @@ export default function Navbar() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: "-100%" }}
             transition={{ type: "tween", duration: 0.4, ease: "easeInOut" }}
-            className="fixed inset-0 z-[150] bg-[#F4EEE0]/95 backdrop-blur-md p-6 flex flex-col shadow-2xl lg:hidden"
+            className="fixed inset-0 z-[150] bg-[#F4EEE0]/95 backdrop-blur-md p-6 flex flex-col shadow-2xl overflow-y-auto overscroll-contain touch-pan-y lg:hidden"
           >
             <div className="flex justify-end mb-8">
               <button

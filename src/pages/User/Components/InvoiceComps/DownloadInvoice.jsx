@@ -4,19 +4,30 @@ import { getInvoiceDetails } from "../../../../api/customerApi";
 import Button3D from "../ui/Button3D";
 import { FaDownload } from "react-icons/fa6";
 
-export default function DownloadInvoice({ orderId, invoiceNumber }) {
+export default function DownloadInvoice({
+  orderId,
+  invoiceNumber,
+  buttonLabel = "Download",
+  className = "text-xs",
+  onClick,
+}) {
   const [downloading, setDownloading] = useState(false);
 
   const handleDownload = async () => {
     setDownloading(true);
     try {
-      const res = await getInvoiceDetails(orderId);
-      const data = res.data || res;
-
-      generatePrintableInvoice(data);
+      const invoiceBlob = await getInvoiceDetails(orderId);
+      const downloadUrl = URL.createObjectURL(invoiceBlob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = `${invoiceNumber || `invoice-${orderId}`}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(downloadUrl);
     } catch (err) {
       console.error(err);
-      alert("Failed to generate invoice document.");
+      alert(err.message || "Failed to download invoice document.");
     } finally {
       setDownloading(false);
     }
@@ -176,11 +187,14 @@ export default function DownloadInvoice({ orderId, invoiceNumber }) {
       variant="outline"
       size="sm"
       disabled={downloading}
-      onClick={handleDownload}
-      className="text-xs"
+      onClick={(event) => {
+        onClick?.(event);
+        handleDownload();
+      }}
+      className={className}
     >
       <FaDownload className="text-slate-400" />
-      {downloading ? "Loading..." : "Download"}
+      {downloading ? "Loading..." : buttonLabel}
     </Button3D>
   );
 }

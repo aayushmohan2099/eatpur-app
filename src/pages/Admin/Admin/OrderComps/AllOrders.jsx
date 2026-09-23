@@ -8,6 +8,7 @@ import MagicButton from "../UniComps/MagicButton";
 import AlertToast from "../UniComps/AlertToast";
 import DispatchOrder from "./DispatchOrder";
 import OrderTimeline from "./OrderTimeline";
+import DownloadInvoice from "../../../User/Components/InvoiceComps/DownloadInvoice";
 
 // Label Helper
 const createPrintLabel = (label) => {
@@ -539,6 +540,7 @@ export default function AllOrders({
   title = "All Orders",
   subtitle = "Complete list of customer orders across all statuses.",
 }) {
+  const PAGE_SIZE = 10;
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -570,6 +572,7 @@ export default function AllOrders({
 
   const fetchOrders = async (page = 1) => {
     setLoading(true);
+    setError(null);
     try {
       const params = {
         page,
@@ -584,18 +587,34 @@ export default function AllOrders({
       const data = res.data || res.results || res;
 
       if (Array.isArray(data)) {
-        setOrders(data);
-        setTotalPages(1);
+        // Some API responses are already paginated arrays, while others
+        // return the complete collection. Avoid slicing an already paginated page.
+        const isAlreadyPaginated = data.length <= PAGE_SIZE;
+        const startIndex = (page - 1) * PAGE_SIZE;
+        setOrders(
+          isAlreadyPaginated
+            ? data
+            : data.slice(startIndex, startIndex + PAGE_SIZE),
+        );
+        setTotalPages(
+          isAlreadyPaginated
+            ? page + (data.length === PAGE_SIZE ? 1 : 0)
+            : Math.max(1, Math.ceil(data.length / PAGE_SIZE)),
+        );
         setTotalRecords(data.length);
       } else if (data.results) {
         setOrders(data.results);
         setTotalRecords(data.count);
-        setTotalPages(Math.ceil(data.count / 12));
+        setTotalPages(Math.max(1, Math.ceil(data.count / PAGE_SIZE)));
       } else {
         setOrders([]);
       }
     } catch (err) {
       console.error(err);
+      if (page > 1) {
+        setCurrentPage(1);
+        return;
+      }
       setError("Failed to load orders.");
     } finally {
       setLoading(false);
@@ -704,11 +723,12 @@ export default function AllOrders({
     { header: "Logistics Action", accessor: "actions" },
   ];
 
-  const formattedData = orders.map((order) => {
+  const formattedData = orders.map((order, index) => {
     const hasTracking = order.tracking_ids && order.tracking_ids.length > 0;
 
     return {
       ...order,
+      rowNumber: (currentPage - 1) * PAGE_SIZE + index + 1,
       orderDetails: (
         <div className="flex flex-col">
           <span className="font-bold text-[--color-eatpur-dark]">
@@ -771,18 +791,29 @@ export default function AllOrders({
                 Dispatch Order
               </button>
             )}
-          {hasTracking && order.fulfillment_status !== "DELIVERED" && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handlePrintLabel(order.tracking_ids);
-              }}
-              disabled={actionLoading}
-              className="text-xs font-bold uppercase tracking-wider bg-slate-800 text-white px-3 py-1.5 rounded hover:bg-black transition-colors disabled:opacity-50"
-            >
-              Print Label
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {hasTracking && order.fulfillment_status !== "DELIVERED" && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePrintLabel(order.tracking_ids);
+                }}
+                disabled={actionLoading}
+                className="text-xs font-bold uppercase tracking-wider bg-slate-800 text-white px-3 py-1.5 rounded hover:bg-black transition-colors disabled:opacity-50"
+              >
+                Print Label
+              </button>
+            )}
+            {order.payment_status === "PAID" && (
+              <DownloadInvoice
+                orderId={order.id}
+                invoiceNumber={order.invoice_number}
+                buttonLabel="Download Invoice"
+                onClick={(e) => e.stopPropagation()}
+                className="text-xs font-bold uppercase tracking-wider bg-slate-200 text-slate-800 px-3 py-1.5 rounded hover:bg-slate-300 transition-colors disabled:opacity-50"
+              />
+            )}
+          </div>
         </div>
       ),
     };
@@ -860,7 +891,10 @@ export default function AllOrders({
           type="text"
           placeholder="Search Order ID, Email, Phone..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setCurrentPage(1);
+          }}
           className="bg-white border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-800 focus:outline-none focus:border-[--color-eatpur-green-dark] w-full md:w-64"
         />
 
@@ -868,7 +902,10 @@ export default function AllOrders({
           {!defaultPaymentStatus && (
             <select
               value={paymentFilter}
-              onChange={(e) => setPaymentFilter(e.target.value)}
+              onChange={(e) => {
+                setPaymentFilter(e.target.value);
+                setCurrentPage(1);
+              }}
               className="bg-white border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none"
             >
               <option value="">All Payments</option>
@@ -880,7 +917,10 @@ export default function AllOrders({
           {!defaultFulfillmentStatus && (
             <select
               value={fulfillmentFilter}
-              onChange={(e) => setFulfillmentFilter(e.target.value)}
+              onChange={(e) => {
+                setFulfillmentFilter(e.target.value);
+                setCurrentPage(1);
+              }}
               className="bg-white border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none"
             >
               <option value="">All Fulfillment</option>
@@ -917,7 +957,7 @@ export default function AllOrders({
               <span className="text-sm text-slate-500">
                 Page{" "}
                 <span className="font-bold text-slate-800">{currentPage}</span>{" "}
-                of {totalPages}
+                of {totalPages} ({totalRecords} orders)
               </span>
               <div className="flex gap-3">
                 <MagicButton

@@ -194,10 +194,11 @@ export default function CheckoutPage() {
       const coupon = coupons.find((item) => {
         const startDate = item.start_date ? new Date(item.start_date) : null;
         const endDate = item.end_date ? new Date(item.end_date) : null;
+        const discountType = item.discount_type?.toUpperCase();
 
         return (
           item.is_auto_apply &&
-          item.discount_type === "FLAT" &&
+          ["FLAT", "FIXED"].includes(discountType) &&
           item.status?.toUpperCase() === "ONGOING" &&
           (!startDate || startDate <= now) &&
           (!endDate || endDate >= now) &&
@@ -282,9 +283,13 @@ export default function CheckoutPage() {
       setAppliedCoupon({
         code,
         type:
-          couponDetails?.discount_type === "FLAT"
+          ["FLAT", "FIXED"].includes(
+            couponDetails?.discount_type?.toUpperCase(),
+          )
             ? "flat"
-            : couponDetails?.discount_type === "PERCENT"
+            : ["PERCENT", "PERCENTAGE"].includes(
+                  couponDetails?.discount_type?.toUpperCase(),
+                )
               ? "percentage"
               : null,
         value: Number(couponDetails?.discount_value || 0),
@@ -328,14 +333,18 @@ export default function CheckoutPage() {
 
   // Build Checkout Payload
   const buildCheckoutPayload = () => {
-    return {
+    const payload = {
       items: state.items.map((item) => ({
         product_id: item.id,
         quantity: item.quantity,
       })),
-      consignee_name: `${deliveryDetails.firstName.trim()} ${deliveryDetails.lastName.trim()}`,
+      consignee_name: [
+        deliveryDetails.firstName.trim(),
+        deliveryDetails.lastName.trim(),
+      ]
+        .filter(Boolean)
+        .join(" "),
       consignee_phone: deliveryDetails.phone,
-      consignee_alternate_phone: deliveryDetails.alt_phone,
       drop_location: deliveryDetails.address_line,
       drop_city: deliveryDetails.city,
       drop_state: deliveryDetails.state,
@@ -343,13 +352,40 @@ export default function CheckoutPage() {
       pickup_location_alias: "Primary Warehouse",
       service_type: "SURFACE",
       save_address: deliveryDetails.saveAddress,
-      coupon_code: appliedCoupon ? appliedCoupon.code : null, // Added Coupon to backend payload
+      subtotal: Number(subtotal.toFixed(2)),
+      discount_amount: Number(discountAmount.toFixed(2)),
+      shipping_charge: Number(shippingCharge.toFixed(2)),
+      total_amount: Number(finalTotal.toFixed(2)),
+     
     };
+
+    if (appliedCoupon?.code) {
+      payload.coupon_code = appliedCoupon.code;
+    }
+
+    if (deliveryDetails.alt_phone.trim()) {
+      payload.consignee_alternate_phone = deliveryDetails.alt_phone.trim();
+    }
+
+    return payload;
+  };
+
+  const validatePhoneNumbers = () => {
+    if (
+      deliveryDetails.phone.trim() &&
+      deliveryDetails.phone.trim() === deliveryDetails.alt_phone.trim()
+    ) {
+      alert("Phone Number and Alternate Phone Number cannot be the same!");
+      return false;
+    }
+
+    return true;
   };
 
   // Simulate Payment
   const handleTestPayment = async () => {
     if (state.items.length === 0) return;
+    if (!validatePhoneNumbers()) return;
     if (!serviceability || !shippingEstimate) {
       alert("Please check serviceability to calculate shipping costs first.");
       return;
@@ -389,6 +425,7 @@ export default function CheckoutPage() {
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
     if (state.items.length === 0) return;
+    if (!validatePhoneNumbers()) return;
     if (!serviceability || !shippingEstimate) {
       alert("Please check serviceability to calculate shipping costs first.");
       return;
@@ -416,9 +453,16 @@ export default function CheckoutPage() {
       const payload = buildCheckoutPayload();
       const orderData = await checkoutOrder(payload);
 
+      const expectedAmount = Math.round(finalTotal * 100);
+      if (Number(orderData.amount) !== expectedAmount) {
+        throw new Error(
+          `Checkout amount mismatch: expected ₹${finalTotal.toFixed(2)}, received ₹${(Number(orderData.amount)).toFixed(2)}.`,
+        );
+      }
+
       const options = {
         key: orderData.key_id,
-        amount: orderData.amount, // backend should calculate amount including discount
+        amount: orderData.amount, // in paise
         currency: orderData.currency,
         name: "EatPur Naturals",
         description: "Premium Millet Foods",
@@ -601,10 +645,9 @@ export default function CheckoutPage() {
                 </div>
                 <div>
                   <label className="block text-eatpur-dark text-sm mb-2 font-medium">
-                    Last Name <span className="text-red-500">*</span>
+                    Last Name <span className="text-slate-400">(optional)</span>
                   </label>
                   <input
-                    required
                     type="text"
                     name="lastName"
                     value={deliveryDetails.lastName}

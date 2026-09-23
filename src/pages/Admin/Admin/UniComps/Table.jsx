@@ -145,7 +145,7 @@ export default function EatpurTable({
                   className="hover:bg-[--color-eatpur-white-warm]/40 transition-colors duration-150 border-b border-[--color-eatpur-yellow-light] last:border-none"
                 >
                   <td className="px-6 py-3.5 text-sm font-semibold text-[--color-eatpur-dark]">
-                    {rowIdx + 1}
+                    {row.rowNumber ?? rowIdx + 1}
                   </td>
                   {columns.map((col, colIdx) => (
                     <td

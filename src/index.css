@@ -26,6 +26,13 @@
 }
 
 @layer base {
+  html,
+  #root {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
   body {
     background-color: var(--color-eatpur-white-warm);
     color: var(--color-eatpur-dark);
@@ -33,6 +40,8 @@
     overflow-x: hidden;
     margin: 0;
     padding: 0;
+    width: 100%;
+    min-width: 0;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     /* Soft global vignette and base46 SVG noise */

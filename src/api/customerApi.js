@@ -46,5 +46,6 @@ export const getCustomerInvoices = (params = {}) => {
 export const getInvoiceDetails = (orderId) => {
   return apiFetch(`/shop/customer/invoices/${orderId}/download/`, {
     method: "GET",
+    responseType: "blob",
   });
 };

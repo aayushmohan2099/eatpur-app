@@ -55,7 +55,7 @@ export function ThreeDScrollTriggerContainer({
 
   return (
     <ThreeDScrollTriggerContext.Provider value={velocityFactor}>
-      <div className={cn("relative w-full overflow-visible", className)} {...props}>
+      <div className={cn("relative w-full overflow-hidden", className)} {...props}>
         {children}
       </div>
     </ThreeDScrollTriggerContext.Provider>

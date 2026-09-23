@@ -378,7 +378,7 @@ export default function ProductAddScreen() {
                   onChange={(e) =>
                     setBaseDetails({
                       ...baseDetails,
-                      description: e.target.value,
+                      ingredients: e.target.value,
                     })
                   }
                   className="w-full px-4 py-2.5 rounded-[--radius-button] border border-slate-300 focus:border-eatpur-green focus:ring-1 focus:ring-eatpur-green-soft outline-none transition-all bg-eatpur-bg-light resize-y"
@@ -395,7 +395,7 @@ export default function ProductAddScreen() {
                   onChange={(e) =>
                     setBaseDetails({
                       ...baseDetails,
-                      description: e.target.value,
+                      cooking_instructions: e.target.value,
                     })
                   }
                   className="w-full px-4 py-2.5 rounded-[--radius-button] border border-slate-300 focus:border-eatpur-green focus:ring-1 focus:ring-eatpur-green-soft outline-none transition-all bg-eatpur-bg-light resize-y"
@@ -412,7 +412,7 @@ export default function ProductAddScreen() {
                   onChange={(e) =>
                     setBaseDetails({
                       ...baseDetails,
-                      description: e.target.value,
+                      highlights: e.target.value,
                     })
                   }
                   className="w-full px-4 py-2.5 rounded-[--radius-button] border border-slate-300 focus:border-eatpur-green focus:ring-1 focus:ring-eatpur-green-soft outline-none transition-all bg-eatpur-bg-light resize-y"
