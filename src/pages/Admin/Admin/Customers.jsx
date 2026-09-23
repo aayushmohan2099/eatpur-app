@@ -117,7 +117,7 @@ function CustomerList({
   const columns = [
     { header: "Name", accessor: "consigneeName" },
     { header: "Phone", accessor: "consigneePhone" },
-    { header: "Alternative Phone", accessor: "alternativePhone" },
+    { header: "Alternative Phone", accessor: "consigneeAlternatePhone" },
     { header: "Location", accessor: "dropLocation" },
     { header: "City", accessor: "dropCity" },
     { header: "State", accessor: "dropState" },
@@ -131,7 +131,7 @@ function CustomerList({
       ...customer,
       consigneeName: customer.consignee_name || "-",
       consigneePhone: customer.consignee_phone || "-",
-      alternativePhone: customer.consignee_alternative_phone || customer.alternative_phone || "-",
+      consigneeAlternatePhone: customer.consignee_alternate_phone || customer.alternate_phone || "-",
       dropLocation: customer.drop_location || customer.street_address || customer.address_line || "-",
       dropCity: customer.drop_city || customer.city || "-",
       dropState: customer.drop_state || customer.state || "-",

@@ -204,17 +204,7 @@ export default function AuthPage() {
         newErrors.password_confirm = "Please confirm password";
       }
 
-      if (form.password) {
-        if (form.password.length < 8) {
-          newErrors.password = "Minimum 8 characters required";
-        } else if (!/[A-Z]/.test(form.password)) {
-          newErrors.password = "Must include uppercase letter";
-        } else if (!/[0-9]/.test(form.password)) {
-          newErrors.password = "Must include a digit";
-        } else if (!/[!@#$%^&*]/.test(form.password)) {
-          newErrors.password = "Must include special character";
-        }
-      }
+      
 
       if (
         form.password &&
@@ -268,10 +258,8 @@ export default function AuthPage() {
                   <div>
                     Password must include:
                     <ul className="ml-4 mt-1 space-y-1 text-white/70 italic text-sm">
-                      <li>- 8+ characters</li>
-                      <li>- 1 uppercase letter</li>
-                      <li>- 1 number</li>
-                      <li>- 1 special character</li>
+                      <li>- 4+ characters</li>
+                     
                     </ul>
                   </div>
                 </li>
