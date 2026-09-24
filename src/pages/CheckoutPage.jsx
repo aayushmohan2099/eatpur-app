@@ -265,7 +265,7 @@ export default function CheckoutPage() {
       let couponDetails = null;
 
       // Try the coupon API for every user. Customer checkout still validates
-      // the code on the server if this admin-protected endpoint rejects it.
+      
       try {
         const response = await getCouponList();
         const responseData = response?.data ?? response;
