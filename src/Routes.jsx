@@ -14,7 +14,6 @@ import EatpurSurveyPage from "./pages/MilletSurvey/EatpurSurveyPage";
 // News Page Import
 import NewsPage from "../src/pages/News/NewsPage";
 
-
 // Login now
 import LoginPage from "./pages/LoginPage";
 
@@ -23,6 +22,9 @@ import Dashboard from "./pages/User/Dashboard"; // Customer Dashboard
 
 // Admin Dashboard - Routes
 import AdminDashboard from "./pages/Admin/Admin/Dashboard";
+
+// NEW FEEDBACK FORM
+import FeedbackForm from "./pages/MilletFeedback/FeedbackForm";
 
 import StaffDashboard from "./pages/Admin/Staff/Dashboard";
 import InventoryManagerDashboard from "./pages/Admin/InventoryManager/Dashboard";
@@ -90,9 +92,8 @@ export default function AppRoutes() {
         />
       </Route>
       {/* Google form */}
-      <Route path="/feedback" element={<FeedbackRedirect />} />
+      <Route path="/feedback" element={<FeedbackForm />} />
       <Route path="/survey" element={<EatpurSurveyPage />} />
     </Routes>
-
   );
 }

@@ -474,6 +474,24 @@ export default function AboutPage() {
                         {review.name}
                       </h3>
 
+                      {/* Stars */}
+                      {review?.stars && (
+                        <div className="flex items-center justify-center gap-1 w-full mb-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <span
+                              key={star}
+                              className={`text-2xl leading-none ${
+                                star <= Number(review.stars)
+                                  ? "text-yellow-400"
+                                  : "text-gray-300"
+                              }`}
+                            >
+                              ★
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
                       {/* Subtitle */}
                       <h4 className="text-sm md:text-base font-medium tracking-wide text-eatpur-green-dark opacity-80">
                         Verified Customer
