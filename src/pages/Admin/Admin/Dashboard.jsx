@@ -98,7 +98,7 @@ export default function AdminDashboard() {
     Dashboard: ["Overview", "Homepage Banners", "Sales Reports"],
     Products: ["All Products", "Add New Product", "Categories", "Discounts"],
     Inventory: ["Stock Levels", "Warehouses"],
-    Orders: ["All Orders", "New Orders", "Processing", "Completed", "Returns"],
+    Orders: ["All Orders"],
     Logistics: ["Overview", "Financials", "Saved Addresses", "Audit Logs"],
     Customers: ["Customer List", "Customer Segments", "Loyalty Program"],
     Reviews: ["All Reviews", "Pending Approval", "Reported"],

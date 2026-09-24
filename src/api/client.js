@@ -40,7 +40,7 @@ const formatApiError = (value, fieldName = "") => {
 };
 
 export async function apiFetch(endpoint, options = {}) {
-const NO_AUTH_ENDPOINTS = [
+  const NO_AUTH_ENDPOINTS = [
     "/global/captcha/",
     "/auth/login/",
     "/auth/register/",
@@ -62,7 +62,10 @@ const NO_AUTH_ENDPOINTS = [
     // 🔥 SURGICAL FIX 1: Strip Content-Type for FormData
     // If FormData is passed, we MUST physically delete the Content-Type key.
     // This allows the browser to automatically set 'multipart/form-data; boundary=...'
-    if (options.body instanceof FormData || headers["Content-Type"] === undefined) {
+    if (
+      options.body instanceof FormData ||
+      headers["Content-Type"] === undefined
+    ) {
       delete headers["Content-Type"];
     }
 
@@ -149,7 +152,10 @@ const NO_AUTH_ENDPOINTS = [
         }
 
         const errorValue =
-          errorData?.detail || errorData?.error || errorData?.errors || errorData;
+          errorData?.detail ||
+          errorData?.error ||
+          errorData?.errors ||
+          errorData;
         throw new Error(formatApiError(errorValue) || "API request failed");
       }
 
@@ -157,13 +163,28 @@ const NO_AUTH_ENDPOINTS = [
     }
 
     const responseText = await res.text();
-    const raw = responseText ? JSON.parse(responseText) : null;
+    let raw = null;
+
+    try {
+      raw = responseText ? JSON.parse(responseText) : null;
+    } catch (parseError) {
+      // 🚨 CAUGHT HTML ERROR PAGE (e.g. Django 500/404)
+      console.error(
+        "CRITICAL: Received HTML instead of JSON. Backend crashed.",
+        responseText,
+      );
+      throw new Error(
+        `Server Error (${res.status}): The backend crashed and returned HTML. Check your Django terminal logs!`,
+      );
+    }
+
     const decrypted = raw ? decryptResponse(raw) : null;
 
-    // 🔥 SURGICAL FIX 3: Catch Backend Errors! 
+    // 🔥 SURGICAL FIX 3: Catch Backend Errors!
     // If the HTTP response is 400/401/403/500, throw it so your Modals hit the catch() block instead of faking success.
     if (!res.ok) {
-      const errorValue = decrypted?.detail || decrypted?.error || decrypted?.errors || decrypted;
+      const errorValue =
+        decrypted?.detail || decrypted?.error || decrypted?.errors || decrypted;
       const errorMsg = formatApiError(errorValue) || "API request failed";
       throw new Error(errorMsg);
     }
