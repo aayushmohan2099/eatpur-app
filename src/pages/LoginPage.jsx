@@ -372,7 +372,7 @@ export default function AuthPage() {
             <div>
               <input
                 type="text"
-                placeholder="Username"
+                placeholder="Name"
                 className="w-full p-3.5 rounded-xl bg-eatpur-white-warm border border-black/10 focus:border-eatpur-green-dark outline-none text-eatpur-dark placeholder:text-eatpur-text-light shadow-inner font-serif transition-colors"
                 onChange={(e) => setForm({ ...form, username: e.target.value })}
               />

@@ -101,9 +101,11 @@ export const getAdminTransactions = (params = {}) => {
   return apiFetch(url, { method: "GET" });
 };
 
-export const getCustomerAddressHistory = () => {
-  return apiFetch("/shop/admin/customer-address-history/", { method: "GET" });
-  
+export const getCustomerAddressHistory = (page = 1, pageSize = 15) => {
+  const queryString = `?page=${page}&page_size=${pageSize}`;
+  return apiFetch(`/shop/admin/customer-address-history/${queryString}`, {
+    method: "GET",
+  });
 };
 
 export const getCouponList = () => {
@@ -129,3 +131,27 @@ export const deleteCoupon = (couponId) => {
     method: "DELETE",
   });
 };
+
+export const createAnnouncement = (payload) => {
+  return apiFetch("/shop/admin/announcements/", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export const updateAnnouncement = (announcementId, payload) => {
+  return apiFetch(`/shop/admin/announcements/${announcementId}/`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+export const deleteAnnouncement = (announcementId) => {
+  return apiFetch(`/shop/admin/announcements/${announcementId}/`, {
+    method: "DELETE",
+  });
+}
+
+export const getAnnouncementList = () => {
+  return apiFetch("/announcements/", { method: "GET" });
+}

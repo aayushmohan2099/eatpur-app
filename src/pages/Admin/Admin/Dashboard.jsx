@@ -17,6 +17,7 @@ import ReviewWorkspace from "./Reviews";
 import CustomerWorkspace from "./Customers";
 import CouponsWorkspace from "./CreateCoupon";
 import HBList from "./DashComps/HBList";
+import Announcements from "./Announcements";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -112,7 +113,7 @@ export default function AdminDashboard() {
       "Authors",
     ],
     Transactions: ["Overview", "Transaction List"],
-    News: ["Published news"],
+    News: ["Published news", "Announcements"],
     "Staff Management": ["All Staff", "Roles & Permissions", "Activity Logs"],
   };
 
@@ -259,9 +260,13 @@ export default function AdminDashboard() {
             <BlogsWorkspace activeSubTab={activeSubTab} />
           )}
           {/* News Workspace Workspace Container */}
-          {activeTab === "News" && (
+          {activeTab === "News" && activeSubTab === "Published news" && (
             <NewsWorkspace activeSubTab={activeSubTab} />
           )}
+          {activeTab === "News" && activeSubTab === "Announcements" && (
+            <Announcements activeSubTab={activeSubTab} />
+          )}
+         
           {/* Transactions Workspace Container */}
           {activeTab === "Transactions" && (
             <TransactionsWorkspace activeSubTab={activeSubTab} />

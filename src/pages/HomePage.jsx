@@ -39,6 +39,7 @@ import StartupMOU from "../certificates/Startup certificate.pdf";
 import NutriDoc from "../certificates/EATPUR NATURALS LLP MoU with Nutrihub,ICAR-IIMR soft copy_signed.pdf";
 import { createProductComment, getProductComments } from "../api/inventory";
 import CartButton from "../components/ui/CartButton";
+import AnnouncementTicker from "../components/AnnouncementTicker";
 
 export default function HomePage() {
   const { dispatch } = useCart();
@@ -74,6 +75,76 @@ export default function HomePage() {
   const [topBlogs, setTopBlogs] = useState([]);
   const [userReviews, setUserReviews] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const bestSellersTrackRef = useRef(null);
+  const bestSellersPausedRef = useRef(false);
+  const bestSellersDragRef = useRef({
+    active: false,
+    startX: 0,
+    startScrollLeft: 0,
+    moved: false,
+  });
+
+  useEffect(() => {
+    const track = bestSellersTrackRef.current;
+    if (!track || trendingProducts.length === 0) return;
+
+    const loopWidth = track.scrollWidth / 2;
+    track.scrollLeft = loopWidth;
+
+    let animationFrame;
+    const scroll = () => {
+      if (!bestSellersPausedRef.current && loopWidth > 0) {
+        track.scrollLeft -= 0.6;
+        if (track.scrollLeft <= 0) track.scrollLeft += loopWidth;
+      }
+      animationFrame = requestAnimationFrame(scroll);
+    };
+
+    animationFrame = requestAnimationFrame(scroll);
+    return () => cancelAnimationFrame(animationFrame);
+  }, [trendingProducts.length]);
+
+  const handleBestSellersPointerDown = (event) => {
+    if (event.pointerType !== "mouse") return;
+
+    const track = bestSellersTrackRef.current;
+    if (!track) return;
+
+    const drag = bestSellersDragRef.current;
+    drag.active = true;
+    drag.startX = event.clientX;
+    drag.startScrollLeft = track.scrollLeft;
+    drag.moved = false;
+    bestSellersPausedRef.current = true;
+    track.setPointerCapture(event.pointerId);
+  };
+
+  const handleBestSellersPointerMove = (event) => {
+    const drag = bestSellersDragRef.current;
+    const track = bestSellersTrackRef.current;
+    if (!drag.active || !track) return;
+
+    const deltaX = event.clientX - drag.startX;
+    if (Math.abs(deltaX) > 5) drag.moved = true;
+
+    const loopWidth = track.scrollWidth / 2;
+    if (loopWidth > 0) {
+      track.scrollLeft =
+        ((drag.startScrollLeft - deltaX) % loopWidth + loopWidth) % loopWidth;
+    }
+  };
+
+  const handleBestSellersPointerUp = (event) => {
+    const drag = bestSellersDragRef.current;
+    const track = bestSellersTrackRef.current;
+    if (!drag.active) return;
+
+    drag.active = false;
+    if (track?.hasPointerCapture(event.pointerId)) {
+      track.releasePointerCapture(event.pointerId);
+    }
+    bestSellersPausedRef.current = Boolean(track?.matches(":hover"));
+  };
 
   // Shailendra Merger: Producty to cart addons
   const handleAddToCart = (product, image) => {
@@ -295,12 +366,15 @@ export default function HomePage() {
     <div className="w-full relative min-h-screen bg-[#FAFAFA]">
       {/* Hero Section */}
       <section className="relative isolate w-full min-w-0 pt-20 pb-20 md:pt-28 md:pb-32 px-4 sm:px-6 overflow-hidden bg-cover bg-center bg-no-repeat bg-[url('/home/Mobanner.png')]">
+        <div className="absolute inset-x-0 top-0 z-20">
+          <AnnouncementTicker />
+        </div>
         {/* Floating 3D Images Background */}
         <FloatingImagesBackground />
-
+        
         {/* Soft Gradient Overlay */}
         <div className="absolute top-0 right-0 w-full md:w-1/2 h-full bg-gradient-to-l from-eatpur-green-light/90 to-transparent pointer-events-none z-[1]" />
-
+        
         {/* Content Container */}
         <div className="w-full max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-12 relative z-10">
           {/* LEFT SIDE: Image Carousel */}
@@ -606,7 +680,29 @@ export default function HomePage() {
         </div>
 
         {/* --- PREMIUM SCROLLING CAROUSEL START --- */}
-        <div className="relative w-full max-w-[100vw] overflow-hidden group">
+        <div
+          ref={bestSellersTrackRef}
+          className="relative w-full max-w-[100vw] overflow-x-auto overflow-y-hidden group cursor-grab active:cursor-grabbing select-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          onMouseEnter={() => {
+            bestSellersPausedRef.current = true;
+          }}
+          onMouseLeave={() => {
+            if (!bestSellersDragRef.current.active) {
+              bestSellersPausedRef.current = false;
+            }
+          }}
+          onPointerDown={handleBestSellersPointerDown}
+          onPointerMove={handleBestSellersPointerMove}
+          onPointerUp={handleBestSellersPointerUp}
+          onPointerCancel={handleBestSellersPointerUp}
+          onClickCapture={(event) => {
+            if (bestSellersDragRef.current.moved) {
+              event.preventDefault();
+              event.stopPropagation();
+              bestSellersDragRef.current.moved = false;
+            }
+          }}
+        >
           <div className="absolute top-0 left-0 w-16 md:w-32 h-full z-10 pointer-events-none"></div>
           <div className="absolute top-0 right-0 w-16 md:w-32 h-full z-10 pointer-events-none"></div>
 
@@ -615,7 +711,7 @@ export default function HomePage() {
               Loading best sellers...
             </div>
           ) : trendingProducts.length > 0 ? (
-            <div className="flex w-max animate-marquee hover:[animation-play-state:paused]">
+            <div className="flex w-max">
               {/* Render the lists twice to create the infinite loop */}
               {[0, 1].map((loopIndex) => (
                 <div

@@ -139,24 +139,125 @@ export async function apiFetch(endpoint, options = {}) {
     }
 
     if (responseType === "blob") {
-      const responseBlob = await res.blob();
+      const contentType = (res.headers.get("content-type") || "").toLowerCase();
+      const rawText = await res.text();
 
       if (!res.ok) {
-        const errorText = await responseBlob.text();
         let errorData = null;
 
         try {
-          errorData = errorText ? JSON.parse(errorText) : null;
+          errorData = rawText ? JSON.parse(rawText) : null;
         } catch {
-          errorData = errorText;
+          errorData = rawText;
         }
 
+        const decodedErrorData =
+          errorData && typeof errorData === "object" && "data" in errorData
+            ? decryptResponse(errorData)
+            : errorData;
+
         const errorValue =
-          errorData?.detail ||
-          errorData?.error ||
-          errorData?.errors ||
-          errorData;
+          decodedErrorData?.detail ||
+          decodedErrorData?.error ||
+          decodedErrorData?.errors ||
+          decodedErrorData?.message ||
+          decodedErrorData;
         throw new Error(formatApiError(errorValue) || "API request failed");
+      }
+
+      if (
+        contentType.includes("application/json") ||
+        contentType.includes("text/plain") ||
+        contentType.includes("text/json") ||
+        (!contentType && rawText)
+      ) {
+        try {
+          const parsed = rawText ? JSON.parse(rawText) : null;
+          const decrypted = parsed ? decryptResponse(parsed) : null;
+
+          if (decrypted && typeof decrypted === "object") {
+            return decrypted;
+          }
+
+          if (parsed && typeof parsed === "object") {
+            return parsed;
+          }
+
+          if (typeof decrypted === "string" || typeof parsed === "string") {
+            const candidate = decrypted ?? parsed;
+            if (candidate?.includes("base64,")) {
+              const payload = candidate.split("base64,")[1];
+              const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+              const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
+              const binary = atob(padded);
+              const bytes = new Uint8Array(binary.length);
+
+              for (let i = 0; i < binary.length; i += 1) {
+                bytes[i] = binary.charCodeAt(i);
+              }
+
+              return new Blob([bytes], { type: "application/pdf" });
+            }
+
+            return candidate;
+          }
+        } catch (error) {
+          console.warn("Invoice response was text, not a PDF file:", error);
+          return rawText || null;
+        }
+      }
+
+      const responseBlob = new Blob([rawText], {
+        type: contentType || "application/octet-stream",
+      });
+
+      const blobType = (responseBlob.type || "").toLowerCase();
+      if (blobType.includes("application/json") || blobType.includes("text/json")) {
+        const text = await responseBlob.text();
+
+        try {
+          const parsed = JSON.parse(text);
+          const decrypted = parsed ? decryptResponse(parsed) : null;
+          const encodedValue =
+            typeof decrypted === "string"
+              ? decrypted
+              : decrypted?.data || parsed?.data;
+
+          if (typeof encodedValue === "string") {
+            const payload = encodedValue.includes("base64,")
+              ? encodedValue.split("base64,")[1]
+              : encodedValue;
+
+            const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+            const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
+            const binary = atob(padded);
+            const bytes = new Uint8Array(binary.length);
+
+            for (let i = 0; i < binary.length; i += 1) {
+              bytes[i] = binary.charCodeAt(i);
+            }
+
+            return new Blob([bytes], { type: "application/pdf" });
+          }
+        } catch (error) {
+          console.warn("Encrypted blob decode failed:", error);
+        }
+
+        throw new Error(
+          "The invoice endpoint returned JSON instead of a PDF file. Please retry the download.",
+        );
+      }
+
+      if (blobType.includes("application/pdf")) {
+        return responseBlob;
+      }
+
+      if (rawText) {
+        try {
+          return JSON.parse(rawText);
+        } catch {
+          return rawText;
+        }
       }
 
       return responseBlob;

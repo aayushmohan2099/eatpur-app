@@ -29,6 +29,7 @@ export default function ProductEditorModal({
     cooking_instructions: "",
     highlights: "",
     category_id: "",
+    need_category_id: "",
   });
 
   useEffect(() => {
@@ -40,6 +41,7 @@ export default function ProductEditorModal({
         cooking_instructions: product.cooking_instructions || "",
         highlights: product.highlights || "",
         category_id: "", // Pre-filled dynamically when variants fetch
+        need_category_id: product.need_category_id || "",
       });
       fetchVariants(product.id);
       fetchCategoriesList();
@@ -74,6 +76,11 @@ export default function ProductEditorModal({
           cooking_instructions: rawData[0].cooking_instructions || "",
           highlights: rawData[0].highlights || "",
           category_id: rawData[0].category?.id || "",
+          need_category_id:
+            rawData[0].need_category_id ||
+            rawData[0].need_category?.name ||
+            rawData[0].need_category ||
+            "",
         });
       }
 
@@ -245,6 +252,7 @@ export default function ProductEditorModal({
       formData.append("highlights", baseDetails.highlights);
       formData.append("fixed_price", variant.fixed_price || 0);
       formData.append("category_id", baseDetails.category_id);
+      formData.append("need_category_id", baseDetails.need_category_id);
       formData.append("discounted_price", variant.discounted_price || 0);
       formData.append("quantity", variant.quantity || 0);
 
@@ -450,11 +458,11 @@ export default function ProductEditorModal({
                     <option value="" disabled>
                       Select Category
                     </option>
-                    <option value="">Kids Nutrition</option>
-                    <option value="">Fitness & Weight Loss</option>
-                    <option value="">Daily Family Staples</option>
-                    <option value="">Quick Meals</option>
-                    <option value="">Organic Living</option>
+                    <option value="Kids Nutrition">Kids Nutrition</option>
+                    <option value="Fitness & Weight Loss">Fitness & Weight Loss</option>
+                    <option value="Daily Family Staples">Daily Family Staples</option>
+                    <option value="Quick Meals">Quick Meals</option>
+                    <option value="Organic Living">Organic Living</option>
                   </select>
                 </div>
                 <div className="md:col-span-3">

@@ -330,10 +330,9 @@ export default function CheckoutPage() {
     ? parseFloat(shippingEstimate.shipping_charge)
     : 0;
   const taxableAmount = subtotal - discountAmount;
-  const gstAmount = taxableAmount * 0.18;
 
-  // 3. Final Total (Products - Discount + GST + Shipping)
-  const finalTotal = taxableAmount + gstAmount + shippingCharge;
+  // 3. Final Total (Products - Discount + Shipping)
+  const finalTotal = taxableAmount + shippingCharge;
 
   // Build Checkout Payload
   const buildCheckoutPayload = () => {
@@ -359,9 +358,7 @@ export default function CheckoutPage() {
       subtotal: Number(subtotal.toFixed(2)),
       discount_amount: Number(discountAmount.toFixed(2)),
       shipping_charge: Number(shippingCharge.toFixed(2)),
-      gst_amount: Number(gstAmount.toFixed(2)),
       total_amount: Number(finalTotal.toFixed(2)),
-      
     };
 
     if (appliedCoupon?.code) {
@@ -912,12 +909,7 @@ export default function CheckoutPage() {
                   </span>
                 </div>
 
-                <div className="flex justify-between items-center text-eatpur-text mb-4 font-medium">
-                  <span className="flex items-center gap-2">
-                    <FaTag /> GST (18% On Order Amount)
-                  </span>
-                  <span>₹{gstAmount.toFixed(2)}</span>
-                </div>
+                
 
                 {appliedCoupon && (
                   <div className="flex justify-between items-center text-green-700 mb-4 font-medium text-sm">
