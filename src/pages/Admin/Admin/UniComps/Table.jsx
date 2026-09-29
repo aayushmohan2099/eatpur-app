@@ -7,6 +7,8 @@ export default function EatpurTable({
   maxRows,
   showActions = true,
   onViewClick,
+  currentPage = 1,     
+  itemsPerPage = 10,    
 }) {
   // Slice data array cleanly if a maximum number of rows is passed
   const displayedData = maxRows ? data.slice(0, maxRows) : data;
@@ -144,9 +146,11 @@ export default function EatpurTable({
                   key={rowIdx}
                   className="hover:bg-[--color-eatpur-white-warm]/40 transition-colors duration-150 border-b border-[--color-eatpur-yellow-light] last:border-none"
                 >
+                  {/* YAHAN S.NO CALCULATION CHANGE KI HAI */}
                   <td className="px-6 py-3.5 text-sm font-semibold text-[--color-eatpur-dark]">
-                    {row.rowNumber ?? rowIdx + 1}
+                    {row.rowNumber ?? ((currentPage - 1) * itemsPerPage + rowIdx + 1)}
                   </td>
+                  
                   {columns.map((col, colIdx) => (
                     <td
                       key={colIdx}

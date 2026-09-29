@@ -40,12 +40,17 @@ export const getCustomerInvoices = (params = {}) => {
 };
 
 /**
- * Download the detailed JSON payload to render an invoice for a specific order.
  * @param {number|string} orderId
  */
-export const getInvoiceDetails = (orderId) => {
-  return apiFetch(`/shop/customer/invoices/${orderId}/download/`, {
+export const getInvoiceDetails = (orderId) =>
+  apiFetch(`/shop/customer/invoices/${orderId}/download/`, {
     method: "GET",
-    responseType: "blob",
   });
-};
+
+/**
+ * @param {number|string} orderId
+ */
+export const generateLocalInvoice = (orderId) =>
+  apiFetch(`/shop/customer/invoices/${orderId}/generate-local/`, {
+    method: "GET",
+  });

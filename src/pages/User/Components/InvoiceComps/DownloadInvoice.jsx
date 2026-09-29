@@ -1,8 +1,11 @@
-// src/pages/User/Components/InvoiceComps/DownloadInvoice.jsx
 import React, { useState } from "react";
-import { getInvoiceDetails } from "../../../../api/customerApi";
+import {
+  generateLocalInvoice,
+  getInvoiceDetails,
+} from "../../../../api/customerApi";
 import Button3D from "../ui/Button3D";
 import { FaDownload } from "react-icons/fa6";
+import logoImg from "../../../../assets/Logo3D.png";
 
 export default function DownloadInvoice({
   orderId,
@@ -16,15 +19,59 @@ export default function DownloadInvoice({
   const handleDownload = async () => {
     setDownloading(true);
     try {
-      const invoiceBlob = await getInvoiceDetails(orderId);
-      const downloadUrl = URL.createObjectURL(invoiceBlob);
+      let invoiceData;
+      try {
+        invoiceData = await getInvoiceDetails(orderId);
+      } catch (error) {
+        console.warn("Invoice download failed.", error);
+        const shouldGenerate = window.confirm(
+          "The invoice is not ready to download. Would you like to create and download a copy now?",
+        );
+
+        if (!shouldGenerate) return;
+        invoiceData = await generateLocalInvoice(orderId);
+      }
+
+      if (typeof invoiceData === "string") {
+        try {
+          invoiceData = JSON.parse(invoiceData);
+        } catch {
+          throw new Error("Invoice response was not valid JSON text.");
+        }
+      }
+
+      if (invoiceData && typeof invoiceData === "object" && !(invoiceData instanceof Blob)) {
+        generatePrintableInvoice(invoiceData);
+        return;
+      }
+
+      if (!(invoiceData instanceof Blob)) {
+        throw new Error("Invoice response was not a valid file.");
+      }
+
+      const blobType = (invoiceData.type || "").toLowerCase();
+      if (blobType && !blobType.includes("pdf")) {
+        const textPreview = await invoiceData.text().catch(() => "");
+        console.error("Received non-PDF invoice blob.", {
+          blobType,
+          preview: textPreview.slice(0, 200),
+        });
+        throw new Error(
+          "The downloaded file is not a valid PDF. Please try again or generate a fresh invoice.",
+        );
+      }
+
+      const downloadUrl = URL.createObjectURL(invoiceData);
       const link = document.createElement("a");
       link.href = downloadUrl;
       link.download = `${invoiceNumber || `invoice-${orderId}`}.pdf`;
       document.body.appendChild(link);
       link.click();
-      link.remove();
-      URL.revokeObjectURL(downloadUrl);
+
+      setTimeout(() => {
+        link.remove();
+        URL.revokeObjectURL(downloadUrl);
+      }, 1500);
     } catch (err) {
       console.error(err);
       alert(err.message || "Failed to download invoice document.");
@@ -35,137 +82,193 @@ export default function DownloadInvoice({
 
   const generatePrintableInvoice = (data) => {
     const printWindow = window.open("", "_blank");
-    const baseUrl = window.location.origin;
+    if (!printWindow) return;
+
+    const invoice = data?.invoice_details || {};
+    const company = data?.company_info || {};
+    const customer = data?.customer_info || {};
+    const shipping = data?.shipping_info || customer;
+    const items = Array.isArray(data?.items) ? data.items : [];
+    const totals = data?.totals || {};
+    const escapeHtml = (value) =>
+      String(value ?? "").replace(/[&<>"']/g, (character) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      })[character]);
+    const formatAmount = (value) => {
+      if (value == null || value === "") return "";
+      const amount = Number(value);
+      return Number.isFinite(amount) ? amount.toFixed(2) : escapeHtml(value);
+    };
+    const formatDate = (value) =>
+      value ? escapeHtml(new Date(value).toLocaleDateString("en-GB")) : "";
+    const itemRows = items.map((item, index) => `
+      <tr>
+        <td>${index + 1}</td>
+        <td class="product-name">${escapeHtml([item.name || item.product_name, item.sku].filter(Boolean).join(" - "))}</td>
+        <td>${formatAmount(item.unit_price)}</td>
+        <td>${escapeHtml(item.quantity)}</td>
+        <td>${formatAmount(item.taxable_amount)}</td>
+        <td>${escapeHtml(item.tax_rate)}</td>
+        <td>${escapeHtml(item.tax_type)}</td>
+        <td>${formatAmount(item.tax_amount)}</td>
+        <td>${formatAmount(item.subtotal)}</td>
+      </tr>
+    `).join("");
+    const totalQuantity = items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+    const orderDate = invoice.order_date || data?.order_details?.date;
 
     const htmlContent = `
       <html>
         <head>
-          <title>Invoice ${data.invoice_details.invoice_number}</title>
+          <title>Invoice ${escapeHtml(invoice.invoice_number)}</title>
           <style>
-            body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; margin: 0; padding: 40px; }
-            .invoice-box { 
-              max-width: 800px; 
-              margin: auto; 
-              padding: 30px; 
-              border: 1px solid #eee; 
-              box-shadow: 0 0 10px rgba(0, 0, 0, .15); 
-              font-size: 16px; 
-              line-height: 24px; 
-              color: #555; 
-              /* Background image applied here */
-              background-image: url('${baseUrl}/invoice/invoice_bg.png');
-              background-size: cover;
-              background-position: center;
-              background-repeat: no-repeat;
-            }
-            table { width: 100%; line-height: inherit; text-align: left; border-collapse: collapse; }
-            table td { padding: 10px; vertical-align: top; }
-            table tr.top table td { padding-bottom: 20px; }
-            table tr.top table td.title { font-size: 45px; line-height: 45px; color: #3A5A1C; font-weight: bold;}
-            table tr.information table td { padding-bottom: 40px; }
-            table tr.heading td { background: #eee; border-bottom: 1px solid #ddd; font-weight: bold; }
-            table tr.item td { border-bottom: 1px solid #eee; }
-            table tr.item.last td { border-bottom: none; }
-            table tr.total td:nth-child(2) { border-top: 2px solid #eee; font-weight: bold; }
+            @page { size: A4; margin: 6mm; }
+            * { box-sizing: border-box; }
+            body { margin: 0; padding: 0; color: #000; font-family: Arial, sans-serif; font-size: 11px; }
+            .invoice-box { width: 100%; margin: 0 auto; border: 1px solid #777; }
+            table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+            td, th { border: 1px solid #111; padding: 6px 7px; vertical-align: middle; }
+            .header-section { height: 135px; position: relative; text-align: center; border-bottom: 1px solid #111; padding: 8px 5px; }
+            .header-left { position: absolute; top: 7px; left: 5px; text-align: left; }
+            .header-right { position: absolute; top: 7px; right: 5px; font-size: 14px; font-weight: bold; }
+            .invoice-title { margin-bottom: 5px; font-size: 24px; font-weight: bold; }
+            .company-block { padding-top: 28px; line-height: 1.35; }
+            .company-logo { display: block; width: auto; max-width: 100px; max-height: 40px; margin: 0 auto 4px; }
+            .spacer { height: 25px; }
+            .text-center { text-align: center; }
             .text-right { text-align: right; }
-            .green-text { color: #3A5A1C; }
-            
-            /* Forces the browser to print background images */
+            .text-left { text-align: left; }
+            .font-bold { font-weight: bold; }
+            .section-heading { background: #e9e9e9; font-weight: bold; text-align: center; }
+            .address-location { display: grid; grid-template-columns: 1fr 1fr; }
+            .address-location > span { padding: 0 5px; }
+            .address-location > span:last-child { padding-right: 10px; }
+            .address-location-cell { position: relative; }
+            .address-location-cell::after { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; border-right: 1px solid #111; pointer-events: none; }
+            .items-table th { height: 52px; padding: 5px 3px; background: #e9e9e9; text-align: center; font-weight: bold; line-height: 1.15; }
+            .items-table td { text-align: center; padding: 6px 4px; }
+            .items-table .product-name { text-align: left; line-height: 1.2; overflow-wrap: anywhere; }
+            .totals-table td { padding: 6px 7px; }
+            .footer-note { padding: 5px 7px; }
+            .footer-signature { padding: 16px 7px 5px; }
             @media print {
-              body, .invoice-box {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-              }
+              body, .invoice-box, th, .section-heading, .items-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             }
           </style>
         </head>
         <body>
           <div class="invoice-box">
-            <table cellpadding="0" cellspacing="0">
-              <tr class="top">
-                <td colspan="2">
-                  <table>
-                    <tr>
-                      <td class="title">Eatpur Naturals LLP</td>
-                      <td class="text-right">
-                        Invoice #: <strong>${data.invoice_details.invoice_number}</strong><br>
-                        Order #: ${data.invoice_details.order_id}<br>
-                        Created: ${new Date(data.invoice_details.date).toLocaleDateString()}<br>
-                        Status: <span class="green-text">${data.invoice_details.payment_status}</span>
-                      </td>
-                    </tr>
-                  </table>
-                </td>
+            <div class="header-section">
+              <div class="header-left">
+                <div class="invoice-title">Tax Invoice</div>
+                <div><strong>GSTIN:</strong> ${escapeHtml(company.gstin)}</div>
+              </div>
+              <div class="header-right">ORIGINAL</div>
+              <div class="company-block">
+                <img class="company-logo" src="${logoImg}" alt="EatPur Logo" />
+                <div class="font-bold">${escapeHtml(company.name)}</div>
+                <div>${escapeHtml(company.address)}</div>
+              </div>
+            </div>
+
+            <table>
+              <tr>
+                <td style="width: 50%;">Invoice No: <strong>${escapeHtml(invoice.invoice_number)}</strong></td>
+                <td style="width: 50%;">Order No: <strong>${escapeHtml(invoice.order_id || orderId)}</strong></td>
               </tr>
-              <tr class="information">
-                <td colspan="2">
-                  <table>
-                    <tr>
-                      <td>
-                        <strong>From:</strong><br>
-                        ${data.company_info.name}<br>
-                        ${data.company_info.address}<br>
-                        GSTIN: ${data.company_info.gstin}
-                      </td>
-                      <td class="text-right">
-                        <strong>Billed To:</strong><br>
-                        ${data.customer_info.name}<br>
-                        ${data.customer_info.address}<br>
-                        Ph: ${data.customer_info.phone}
-                      </td>
-                    </tr>
-                  </table>
-                </td>
+              <tr>
+                <td>Invoice Date: <strong>${formatDate(invoice.date )}</strong></td>
+                <td>Order Date: <strong>${formatDate(invoice.order_date )}</strong></td>
+              </tr>
+              <tr>
+                <td>State: <strong>${escapeHtml(customer.state)}</strong></td>
+                <td>Country: <strong>${escapeHtml(customer.country)}</strong></td>
               </tr>
             </table>
 
+            <div class="spacer"></div>
+
             <table>
-              <tr class="heading">
-                <td>Item</td>
-                <td>Qty</td>
-                <td>Unit Price</td>
-                <td class="text-right">Subtotal</td>
+              <tr>
+                <td class="section-heading" style="width: 50%;">BILL TO PARTY</td>
+                <td class="section-heading" style="width: 50%;">SHIP TO PARTY / DELIVERY ADDRESS</td>
               </tr>
-              ${data.items
-                .map(
-                  (item) => `
-                <tr class="item">
-                  <td>${item.name}</td>
-                  <td>${item.quantity}</td>
-                  <td>₹${item.unit_price}</td>
-                  <td class="text-right">₹${item.subtotal}</td>
-                </tr>
-              `,
-                )
-                .join("")}
+              <tr>
+                <td class="font-bold">${escapeHtml(customer.name)}</td>
+                <td class="font-bold">${escapeHtml(shipping.name || customer.name)}</td>
+              </tr>
+              <tr>
+                <td>${escapeHtml(customer.address)}</td>
+                <td>${escapeHtml(shipping.address || customer.shipping_address)}</td>
+              </tr>
+              <tr>
+                <td>Pincode: <strong>${escapeHtml(customer.pincode)}</strong></td>
+                <td>Pincode: <strong>${escapeHtml(shipping.pincode || customer.pincode)}</strong></td>
+              </tr>
+              <tr>
+                <td>Phone No: <strong>${escapeHtml(customer.phone)}</strong></td>
+                <td>Phone No: <strong>${escapeHtml(shipping.phone || customer.phone)}</strong></td>
+              </tr>
+             <tr>
+                <td class="address-location-cell"><div class="address-location"><span>State: <strong>${escapeHtml(customer.state)}</strong></span><span>Country: <strong>${escapeHtml(customer.country)}</strong></span></div></td>
+                <td class="address-location-cell"><div class="address-location"><span>State: <strong>${escapeHtml(shipping.state || customer.state)}</strong></span><span>Country: <strong>${escapeHtml(shipping.country || customer.country)}</strong></span></div></td>
+              </tr>
             </table>
-            
-            <table style="margin-top: 20px;">
+
+            <div class="spacer"></div>
+
+            <table class="items-table">
+              <colgroup>
+                <col style="width: 4%;"><col style="width: 34%;"><col style="width: 9%;"><col style="width: 6%;"><col style="width: 12%;"><col style="width: 8%;"><col style="width: 8%;"><col style="width: 10%;"><col style="width: 9%;">
+              </colgroup>
+              <thead>
                 <tr>
-                    <td style="width: 60%"></td>
-                    <td style="width: 40%">
-                        <table style="border-top: 2px solid #3A5A1C; padding-top:10px;">
-                            <tr>
-                                <td>Taxable Amount:</td>
-                                <td class="text-right">₹${data.totals.taxable_amount}</td>
-                            </tr>
-                            <tr>
-                                <td>Tax (GST included):</td>
-                                <td class="text-right">₹${data.totals.tax_amount}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Grand Total:</strong></td>
-                                <td class="text-right"><strong class="green-text" style="font-size: 20px;">₹${data.totals.grand_total}</strong></td>
-                            </tr>
-                        </table>
-                    </td>
+                  <th>#</th>
+                  <th class="text-left">PRODUCT NAME - SKU</th>
+                  <th>UNIT<br>PRICE<br>(Rs.)</th>
+                  <th>QTY</th>
+                  <th>TAXABLE<br>AMOUNT<br>(Rs.)</th>
+                  <th>TAX<br>RATE<br>(%)</th>
+                  <th>TAX<br>TYPE</th>
+                  <th>TAX<br>AMOUNT<br>(Rs.)</th>
+                  <th>TOTAL<br>(Rs.)</th>
                 </tr>
+              </thead>
+              <tbody>${itemRows}</tbody>
+              <tfoot>
+                <tr class="section-heading">
+                  <td colspan="3" class="text-left">TOTAL</td>
+                  <td>${totalQuantity || ""}</td>
+                  <td colspan="4"></td>
+                  <td>${formatAmount(data?.totals?.grand_total)}</td>
+                </tr>
+              </tfoot>
             </table>
-            
-            <p style="text-align: center; margin-top: 50px; font-size: 12px; color: #888;">
-                This is a computer generated invoice. No signature is required.<br>
-                Thank you for shopping with Eatpur Naturals!
-            </p>
+
+            <div class="spacer"></div>
+
+            <table class="totals-table">
+              <colgroup><col style="width: 50%;"><col style="width: 32%;"><col style="width: 18%;"></colgroup>
+              <tr>
+                <td rowspan="3"><strong>Payment Mode:</strong> ${escapeHtml(invoice.payment_mode)}</td>
+                <td>Subtotal (Rs.)</td>
+                <td class="text-right">${formatAmount(data?.totals?.taxable_amount)}</td>
+              </tr>
+              <tr><td>Total Tax (Rs.)</td><td class="text-right">${formatAmount(data?.totals?.tax_amount)}</td></tr>
+              <tr><td>Discount (Rs.)</td><td class="text-right">(-) ${formatAmount(data?.totals?.discount)}</td></tr>
+              <tr>
+                <td>Total Invoice Amount in Words:<br><strong>${escapeHtml(data?.totals?.amount_in_words)}</strong></td>
+                <td class="section-heading text-left">TOTAL (Rs.)</td>
+                <td class="section-heading text-right">${formatAmount(data?.totals?.grand_total)}</td>
+              </tr>
+            </table>
+            <div class="footer-note">E. &amp; O.E.</div>
+            <div class="footer-signature text-right">For, ${escapeHtml(company.name)}</div>
+            <div class="footer-note text-right">This is a computer generated invoice and does not require a signature</div>
           </div>
         </body>
       </html>
@@ -175,7 +278,6 @@ export default function DownloadInvoice({
     printWindow.document.write(htmlContent);
     printWindow.document.close();
 
-    // Ensures the background image has time to load before triggering the print dialog
     setTimeout(() => {
       printWindow.focus();
       printWindow.print();
