@@ -142,7 +142,7 @@ export default function ProdList() {
     ),
     productDetails: (
       <div
-        className={`flex items-center gap-3 p-2 rounded ${prod.is_trending ? "bg-amber-50/50" : ""}`}
+        className={`flex min-w-0 w-full items-center gap-3 p-2 rounded ${prod.is_trending ? "bg-amber-50/50" : ""}`}
       >
         {prod.cover_image ? (
           <img
@@ -155,14 +155,14 @@ export default function ProdList() {
             No Img
           </div>
         )}
-        <div className="flex flex-col">
-          <span className="font-semibold text-[--color-eatpur-dark] flex items-center gap-2">
+        <div className="flex min-w-0 flex-1 flex-col">
+          <span className="flex min-w-0 flex-wrap items-center gap-2 break-words font-semibold text-[--color-eatpur-dark]">
             {prod.name}
             {prod.is_trending && (
               <Badge type="warning" text="Featured" icon="🔥" />
             )}
           </span>
-          <span className="text-xs text-slate-500 uppercase tracking-wider">
+          <span className="break-words text-xs uppercase tracking-wider text-slate-500">
             {prod.pid} • {prod.category_name}
           </span>
         </div>

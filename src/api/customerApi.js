@@ -44,7 +44,8 @@ export const getCustomerInvoices = (params = {}) => {
  */
 export const getInvoiceDetails = (orderId) =>
   apiFetch(`/shop/customer/invoices/${orderId}/download/`, {
-    method: "GET",
+    
+    responseType: "blob",
   });
 
 /**
@@ -53,4 +54,5 @@ export const getInvoiceDetails = (orderId) =>
 export const generateLocalInvoice = (orderId) =>
   apiFetch(`/shop/customer/invoices/${orderId}/generate-local/`, {
     method: "GET",
+    
   });
