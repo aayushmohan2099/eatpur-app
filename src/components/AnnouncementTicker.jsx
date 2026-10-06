@@ -43,9 +43,9 @@ export default function AnnouncementTicker() {
     <div className="w-full overflow-hidden py-2.5" aria-label="Announcements">
       <marquee
         behavior="scroll"
-        direction="right"
+        direction="left"
         scrollamount="6"
-        className="text-black font-serif italic text-[17px] md:text-[20px] font-bold"
+        className="text-gray-800 font-serif italic text-[17px] md:text-[20px] font-bold"
       >
         {announcements.map((announcement, index) => (
           <span key={announcement.id || index} className="mx-8 inline-block">

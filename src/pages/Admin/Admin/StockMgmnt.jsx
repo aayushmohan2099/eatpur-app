@@ -246,7 +246,7 @@ export default function StockMgmnt({ activeSubTab }) {
 
             {/* Stock Table Grid */}
             <div className="bg-white border border-slate-100 rounded-xl shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
+                <div className="hidden overflow-x-auto md:block">
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-slate-50/70 border-b border-slate-100 text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -315,6 +315,38 @@ export default function StockMgmnt({ activeSubTab }) {
                             )}
                         </tbody>
                     </table>
+                </div>
+
+                <div className="space-y-3 p-3 md:hidden">
+                    {paginatedStock.length > 0 ? paginatedStock.map((item) => {
+                        const status = getStockStatus(item.currentStock, item.minThreshold);
+                        const statusStyles = status === "low"
+                            ? "bg-rose-100 text-rose-700"
+                            : status === "medium"
+                                ? "bg-amber-100 text-amber-700"
+                                : "bg-emerald-100 text-emerald-700";
+                        const statusLabel = status === "low" ? "Low Stock" : status === "medium" ? "Medium Stock" : "High / Optimal";
+
+                        return (
+                            <article key={item.id} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                                <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
+                                    <div className="min-w-0">
+                                        <h3 className="break-words font-semibold text-slate-800">{item.productName}</h3>
+                                        <p className="mt-1 break-all font-mono text-xs text-slate-500">{item.sku} · {item.size}</p>
+                                    </div>
+                                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${statusStyles}`}>{statusLabel}</span>
+                                </div>
+                                <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                                    <div><dt className="text-xs text-slate-500">Category</dt><dd className="mt-1 text-slate-700">{item.category}</dd></div>
+                                    <div><dt className="text-xs text-slate-500">Warehouse</dt><dd className="mt-1 break-words text-slate-700">{item.warehouse}</dd></div>
+                                    <div><dt className="text-xs text-slate-500">Current stock</dt><dd className="mt-1 font-semibold text-slate-800">{item.currentStock} {item.unit}</dd></div>
+                                    <div><dt className="text-xs text-slate-500">Min threshold</dt><dd className="mt-1 text-slate-700">{item.minThreshold} {item.unit}</dd></div>
+                                </dl>
+                            </article>
+                        );
+                    }) : (
+                        <p className="p-8 text-center text-sm text-slate-400">No inventory metrics found matching your search filters.</p>
+                    )}
                 </div>
 
                 {/* Pagination Integration */}

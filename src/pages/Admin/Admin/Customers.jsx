@@ -78,6 +78,18 @@ const normalizeOrderDetails = (orders) => {
   return Array.from(groupedOrders.values());
 };
 
+const getOrderResponseData = (response) => {
+  let payload = response?.data ?? response;
+  if (payload?.data && !Array.isArray(payload.data)) payload = payload.data;
+
+  return {
+    orders: Array.isArray(payload) ? payload : payload?.results || payload?.orders || [],
+    count: Number(payload?.count) || 0,
+  };
+};
+
+const normalizePhone = (value) => String(value || "").replace(/\D/g, "");
+
 function CustomerList({
   customers,
   loading,
@@ -95,6 +107,9 @@ function CustomerList({
   const [orderDetails, setOrderDetails] = useState([]);
   const [modalError, setModalError] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  
+  // NEW: State for Tabs inside Modal
+  const [activeModalTab, setActiveModalTab] = useState("paid"); 
 
   const handleViewClick = async (customer) => {
     setSelectedCustomer(customer);
@@ -102,24 +117,56 @@ function CustomerList({
     setModalLoading(true);
     setModalError("");
     setOrderDetails([]);
+    setActiveModalTab("paid"); // Reset tab to 'paid' when opening modal
 
     try {
-      const orderIds = Array.isArray(customer?.order_ids)
-        ? customer.order_ids.filter(Boolean)
-        : [customer?.order_id || customer?.id].filter(Boolean);
-
-      if (orderIds.length === 0) throw new Error("Order ID missing for this customer.");
-
-      const response = await getAdminOrders({
-        order_ids: orderIds.join(","),
-        page_size: orderIds.length,
-      });
-      const payload = response?.data || response;
-      const orders = Array.isArray(payload) ? payload : payload?.results || payload?.orders || [];
+      const orderIds = [
+        ...(Array.isArray(customer?.order_ids) ? customer.order_ids : []),
+        customer?.order_id,
+      ]
+        .map((order) => (typeof order === "object" ? order?.id ?? order?.order_id : order))
+        .filter(Boolean);
       const requestedOrderIds = new Set(orderIds.map(String));
-      const matchingOrders = orders.filter((order) =>
-        requestedOrderIds.has(String(order?.id ?? order?.order_id)),
-      );
+      let matchingOrders = [];
+
+      if (orderIds.length > 0) {
+        const response = await getAdminOrders({
+          order_ids: orderIds.join(","),
+          page_size: orderIds.length,
+        });
+        const { orders } = getOrderResponseData(response);
+        matchingOrders = orders.filter((order) =>
+          requestedOrderIds.has(String(order?.id ?? order?.order_id)),
+        );
+      }
+
+      if (matchingOrders.length === 0) {
+        const phone = normalizePhone(customer?.consignee_phone);
+        const email = String(customer?.consignee_email || "").trim().toLowerCase();
+        const searchTerms = [customer?.consignee_phone, customer?.consignee_email].filter(Boolean);
+
+        for (const search of searchTerms) {
+          const firstResponse = await getAdminOrders({ search, page: 1, page_size: 100 });
+          const firstPage = getOrderResponseData(firstResponse);
+          const searchedOrders = [...firstPage.orders];
+          const pageCount = firstPage.count ? Math.ceil(firstPage.count / 100) : 1;
+
+          for (let page = 2; page <= pageCount; page += 1) {
+            const response = await getAdminOrders({ search, page, page_size: 100 });
+            searchedOrders.push(...getOrderResponseData(response).orders);
+          }
+
+          matchingOrders = searchedOrders.filter((order) => {
+            const orderPhone = normalizePhone(order?.customer_phone || order?.consignee_phone);
+            const orderEmail = String(order?.customer_email || order?.consignee_email || "")
+              .trim()
+              .toLowerCase();
+            return (phone && orderPhone === phone) || (email && orderEmail === email);
+          });
+
+          if (matchingOrders.length > 0) break;
+        }
+      }
 
       if (matchingOrders.length === 0) throw new Error("No order details found.");
       setOrderDetails(normalizeOrderDetails(matchingOrders));
@@ -136,7 +183,6 @@ function CustomerList({
     setOrderDetails([]);
   };
 
-  // Aapki purani columns hi rakhi hain bina naye S.No ke
   const columns = [
     { header: "Name", accessor: "consigneeName" },
     { header: "Phone", accessor: "consigneePhone" },
@@ -146,6 +192,7 @@ function CustomerList({
     { header: "State", accessor: "dropState" },
     { header: "Pincode", accessor: "dropPincode" },
     { header: "Order Count", accessor: "orderCount" },
+    { header: "Unpaid Orders", accessor: "unpaidOrder" },
     { header: "Action", accessor: "actionBtn" },
   ];
 
@@ -160,6 +207,7 @@ function CustomerList({
       dropState: customer.drop_state || customer.state || "-",
       dropPincode: customer.drop_pincode || customer.pincode || "-",
       orderCount: customer.order_count ?? "0",
+      unpaidOrders: customer.unpaid_order_count ?? "0",
       actionBtn: (
         <button
           onClick={() => handleViewClick(customer)}
@@ -170,6 +218,15 @@ function CustomerList({
       ),
     };
   });
+
+  // Filter Logic for Tabs
+  const paidStatuses = ["paid", "success", "completed"];
+  const isPaidOrder = (status) => status && paidStatuses.includes(status.toLowerCase());
+  
+  const paidOrdersList = orderDetails.filter((order) => isPaidOrder(order.payment_status));
+  const unpaidOrdersList = orderDetails.filter((order) => !isPaidOrder(order.payment_status));
+  
+  const currentOrdersToDisplay = activeModalTab === "paid" ? paidOrdersList : unpaidOrdersList;
 
   return (
     <div className="space-y-4">
@@ -188,7 +245,6 @@ function CustomerList({
         </div>
       ) : (
         <>
-          {/* YAHAN HUMNE currentPage AUR itemsPerPage ADD KIYA HAI */}
           <EatpurTable 
             columns={columns} 
             data={rows} 
@@ -243,8 +299,6 @@ function CustomerList({
               </div>
               <button 
                 onClick={closeModal}
-                aria-label="Close order details"
-                title="Close"
                 className="shrink-0 rounded-xl border border-slate-200 bg-white p-2.5 text-slate-400 shadow-sm transition-all hover:border-rose-200 hover:bg-rose-50 hover:text-rose-500"
               >
                 <FaTimes size={16} />
@@ -262,7 +316,8 @@ function CustomerList({
                   <p className="font-medium text-rose-600">{modalError}</p>
                 </div>
               ) : orderDetails.length > 0 ? (
-                <div className="space-y-4 ">
+                <div className="space-y-6">
+                  {/* Customer Summary Info */}
                   <div className="grid grid-cols-1 gap-4 rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm sm:grid-cols-2 sm:p-5 lg:grid-cols-4">
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Customer User Name</p>
@@ -273,139 +328,171 @@ function CustomerList({
                       <p className="mt-1 font-semibold text-slate-900">{orderDetails[0]?.customer_phone || selectedCustomer?.consignee_phone || "-"}</p>
                     </div>
                     <div>
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Customer Email</p>
-                            <p className="mt-1 break-all text-slate-700">{orderDetails[0]?.customer_email || selectedCustomer?.consignee_email || "-"}</p>
-                          </div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Customer Email</p>
+                      <p className="mt-1 break-all text-slate-700">{orderDetails[0]?.customer_email || selectedCustomer?.consignee_email || "-"}</p>
+                    </div>
                     <div>
-                      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Orders</p>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Total Orders</p>
                       <p className="mt-1 font-semibold text-slate-900">{selectedCustomer?.order_count ?? orderDetails.length}</p>
                     </div>
-                   
                   </div>
 
-                  {orderDetails.map((order, orderIndex) => {
-                    const items = getOrderItems(order);
-                    const orderDate = order.order_date
-                      ? new Date(order.order_date).toLocaleString()
-                      : "-";
-                    const trackingIds = Array.isArray(order.tracking_ids)
-                      ? order.tracking_ids
-                      : [];
-                    const ekartStatuses = Array.isArray(order.ekart_statuses)
-                      ? order.ekart_statuses
-                      : [];
+                  {/* Tabs Section */}
+                  <div className="flex gap-6 border-b border-slate-200">
+                    <button
+                      className={`pb-3 text-sm font-bold transition-all ${
+                        activeModalTab === "paid"
+                          ? "border-b-2 border-emerald-600 text-emerald-700"
+                          : "border-b-2 border-transparent text-slate-400 hover:text-slate-600"
+                      }`}
+                      onClick={() => setActiveModalTab("paid")}
+                    >
+                      Paid Orders ({paidOrdersList.length})
+                    </button>
+                    <button
+                      className={`pb-3 text-sm font-bold transition-all ${
+                        activeModalTab === "unpaid"
+                          ? "border-b-2 border-rose-500 text-rose-600"
+                          : "border-b-2 border-transparent text-slate-400 hover:text-slate-600"
+                      }`}
+                      onClick={() => setActiveModalTab("unpaid")}
+                    >
+                      Unpaid Orders ({unpaidOrdersList.length})
+                    </button>
+                  </div>
 
-                    return (
-                      <div key={order.id || order.order_id || orderIndex} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-                        <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-4">
-                          <div>
-                            <p className="text-xs font-bold uppercase tracking-[0.14em] text-emerald-700">
-                              Order #{order.id || order.order_id || "-"}
-                            </p>
-                            <p className="mt-1 text-xs text-slate-500">{orderDate}</p>
-                          </div>
-                          <div className="rounded-xl bg-emerald-50 px-3 py-2 text-right">
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Total amount</p>
-                            <p className="font-bold text-emerald-900">₹{order.total_amount || "0"}</p>
-                          </div>
-                        </div>
+                  {/* Display Orders based on Active Tab */}
+                  <div className="space-y-4">
+                    {currentOrdersToDisplay.length > 0 ? (
+                      currentOrdersToDisplay.map((order, orderIndex) => {
+                        const items = getOrderItems(order);
+                        const orderDate = order.order_date ? new Date(order.order_date).toLocaleString() : "-";
+                        const trackingIds = Array.isArray(order.tracking_ids) ? order.tracking_ids : [];
+                        const ekartStatuses = Array.isArray(order.ekart_statuses) ? order.ekart_statuses : [];
 
-                        <div className="grid grid-cols-1 gap-3 rounded-xl bg-slate-50 p-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
-                          <div>
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Consignee Name</p>
-                            <p className="mt-1 font-semibold text-slate-800">{selectedCustomer?.consignee_name || order.customer_name || "-"}</p>
-                          </div>
-                          <div>
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Consignee Phone</p>
-                            <p className="mt-1 text-slate-700">{selectedCustomer?.consignee_phone || order.customer_phone || "-"}</p>
-                          </div>
-                          
-                          <div>
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Alternate Phone</p>
-                            <p className="mt-1 leading-relaxed text-slate-700">{selectedCustomer?.consignee_alternate_phone || selectedCustomer?.alternate_phone || order.customer_alternate_phone || "-"}</p>
-                          </div>
-                          <div className="sm:col-span-2 lg:col-span-3">
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Delivery Address</p>
-                            <p className="mt-1 leading-relaxed text-slate-700">
-                              {[
-                                selectedCustomer?.drop_location || selectedCustomer?.street_address || selectedCustomer?.address_line,
-                                selectedCustomer?.drop_city || selectedCustomer?.city,
-                                selectedCustomer?.drop_state || selectedCustomer?.state,
-                                selectedCustomer?.drop_pincode || selectedCustomer?.pincode,
-                              ].filter(Boolean).join(", ") || "-"}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Payment</p>
-                            <span className="mt-1 inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-800">{order.payment_status || "-"}</span>
-                          </div>
-                          <div>
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Fulfillment</p>
-                            <span className="mt-1 inline-flex rounded-full bg-sky-100 px-2.5 py-1 text-xs font-bold text-sky-800">{order.fulfillment_status || "-"}</span>
-                          </div>
-                          <div>
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tracking IDs</p>
-                            <p className="mt-1 break-all text-slate-700">{trackingIds.join(", ") || "-"}</p>
-                          </div>
-                          <div>
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Ekart Status</p>
-                            <p className="mt-1 text-slate-700">{ekartStatuses.join(", ") || "-"}</p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between gap-3">
-                          <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Products</p>
-                          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{items.length} item{items.length === 1 ? "" : "s"}</span>
-                        </div>
-
-                        {items.length > 0 ? items.map((item, index) => {
-                          const product = item.product || item.product_details || item.product_info || item;
-                          const productName = product.name || product.title || item.product_name || item.product_title || "Unknown Product";
-                          const image = getItemImage(item, product);
-                          const price = item.price_at_purchase || item.price || item.unit_price || product.price || product.mrp || product.selling_price || "0";
-                          const subtotal = item.subtotal || "-";
-                          const quantity = item.quantity || item.qty;
-
-                          return (
-                            <div key={item.id || item.product_id || index} className="flex gap-3 rounded-xl border border-slate-100 bg-[#fcfcfa] p-3 transition-colors hover:border-emerald-200 sm:p-4">
-                              <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm">
-                                {image ? (
-                                  <>
-                                    <img
-                                      src={image}
-                                      alt={productName}
-                                      className="h-full w-full object-contain"
-                                      onError={(event) => {
-                                        event.currentTarget.classList.add("hidden");
-                                        event.currentTarget.nextElementSibling?.classList.remove("hidden");
-                                      }}
-                                    />
-                                    <FaBoxOpen size={24} className="hidden text-gray-300" />
-                                  </>
-                                ) : (
-                                  <FaBoxOpen size={24} className="text-gray-300" />
-                                )}
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <h4 className="font-bold leading-tight text-slate-900">{productName}</h4>
-                                <p className="mt-1 text-xs font-medium text-emerald-700">PID: {item.pid || item.product_id || "-"}</p>
-                                <p className="mt-1 text-sm text-slate-700">
-                                  ₹{price}{quantity ? ` × ${quantity}` : ""} | Subtotal: ₹{subtotal}
+                        return (
+                          <div key={order.id || order.order_id || orderIndex} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+                            <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-4">
+                              <div>
+                                <p className="text-xs font-bold uppercase tracking-[0.14em] text-emerald-700">
+                                  Order #{order.id || order.order_id || "-"}
                                 </p>
-                                {(product.description || item.description) && (
-                                  <p className="mt-1 line-clamp-2 text-xs text-slate-500">
-                                    {product.description || item.description}
-                                  </p>
-                                )}
+                                <p className="mt-1 text-xs text-slate-500">{orderDate}</p>
+                              </div>
+                              <div className="rounded-xl bg-emerald-50 px-3 py-2 text-right">
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Total amount</p>
+                                <p className="font-bold text-emerald-900">₹{order.total_amount || "0"}</p>
                               </div>
                             </div>
-                          );
-                        }) : (
-                          <p className="text-sm text-gray-500">No products found for this order.</p>
-                        )}
+
+                            <div className="grid grid-cols-1 gap-3 rounded-xl bg-slate-50 p-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
+                              <div>
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Consignee Name</p>
+                                <p className="mt-1 font-semibold text-slate-800">{selectedCustomer?.consignee_name || order.customer_name || "-"}</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Consignee Phone</p>
+                                <p className="mt-1 text-slate-700">{selectedCustomer?.consignee_phone || order.customer_phone || "-"}</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Alternate Phone</p>
+                                <p className="mt-1 leading-relaxed text-slate-700">{selectedCustomer?.consignee_alternate_phone || selectedCustomer?.alternate_phone || order.customer_alternate_phone || "-"}</p>
+                              </div>
+                              <div className="sm:col-span-2 lg:col-span-3">
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Delivery Address</p>
+                                <p className="mt-1 leading-relaxed text-slate-700">
+                                  {[
+                                    selectedCustomer?.drop_location || selectedCustomer?.street_address || selectedCustomer?.address_line,
+                                    selectedCustomer?.drop_city || selectedCustomer?.city,
+                                    selectedCustomer?.drop_state || selectedCustomer?.state,
+                                    selectedCustomer?.drop_pincode || selectedCustomer?.pincode,
+                                  ].filter(Boolean).join(", ") || "-"}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Payment</p>
+                                <span className={`mt-1 inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${
+                                  activeModalTab === 'paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                                }`}>
+                                  {order.payment_status || "-"}
+                                </span>
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Fulfillment</p>
+                                <span className="mt-1 inline-flex rounded-full bg-sky-100 px-2.5 py-1 text-xs font-bold text-sky-800">{order.fulfillment_status || "-"}</span>
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tracking IDs</p>
+                                <p className="mt-1 break-all text-slate-700">{trackingIds.join(", ") || "-"}</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Ekart Status</p>
+                                <p className="mt-1 text-slate-700">{ekartStatuses.join(", ") || "-"}</p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between gap-3">
+                              <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Products</p>
+                              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{items.length} item{items.length === 1 ? "" : "s"}</span>
+                            </div>
+
+                            {items.length > 0 ? items.map((item, index) => {
+                              const product = item.product || item.product_details || item.product_info || item;
+                              const productName = product.name || product.title || item.product_name || item.product_title || "Unknown Product";
+                              const image = getItemImage(item, product);
+                              const price = item.price_at_purchase || item.price || item.unit_price || product.price || product.mrp || product.selling_price || "0";
+                              const subtotal = item.subtotal || "-";
+                              const quantity = item.quantity || item.qty;
+
+                              return (
+                                <div key={item.id || item.product_id || index} className="flex gap-3 rounded-xl border border-slate-100 bg-[#fcfcfa] p-3 transition-colors hover:border-emerald-200 sm:p-4">
+                                  <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm">
+                                    {image ? (
+                                      <>
+                                        <img
+                                          src={image}
+                                          alt={productName}
+                                          className="h-full w-full object-contain"
+                                          onError={(event) => {
+                                            event.currentTarget.classList.add("hidden");
+                                            event.currentTarget.nextElementSibling?.classList.remove("hidden");
+                                          }}
+                                        />
+                                        <FaBoxOpen size={24} className="hidden text-gray-300" />
+                                      </>
+                                    ) : (
+                                      <FaBoxOpen size={24} className="text-gray-300" />
+                                    )}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <h4 className="font-bold leading-tight text-slate-900">{productName}</h4>
+                                    <p className="mt-1 text-xs font-medium text-emerald-700">PID: {item.pid || item.product_id || "-"}</p>
+                                    <p className="mt-1 text-sm text-slate-700">
+                                      ₹{price}{quantity ? ` × ${quantity}` : ""} | Subtotal: ₹{subtotal}
+                                    </p>
+                                    {(product.description || item.description) && (
+                                      <p className="mt-1 line-clamp-2 text-xs text-slate-500">
+                                        {product.description || item.description}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            }) : (
+                              <p className="text-sm text-gray-500">No products found for this order.</p>
+                            )}
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-10 rounded-2xl bg-slate-50 border border-slate-100 border-dashed">
+                        <FaBoxOpen className="text-slate-300 text-4xl mb-3" />
+                        <p className="text-slate-500 font-medium">
+                          No {activeModalTab} orders found for this customer.
+                        </p>
                       </div>
-                    );
-                  })}
+                    )}
+                  </div>
                 </div>
               ) : null}
             </div>

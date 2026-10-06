@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { FaBullhorn, FaEdit, FaPlus, FaSave, FaTrash } from "react-icons/fa";
 // Apne shop.js ka sahi path yahan dalein
 import { 
-  getAnnouncementList, 
+  getAdminAnnouncementList, 
   createAnnouncement, 
   updateAnnouncement, 
   deleteAnnouncement 
@@ -17,6 +17,7 @@ export default function Announcement() {
   const [formData, setFormData] = useState({ id: null, title: "", message: "", is_active: true });
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [updatingStatusId, setUpdatingStatusId] = useState(null);
 
   // Load announcements on mount
   useEffect(() => {
@@ -25,10 +26,17 @@ export default function Announcement() {
 
   const fetchAnnouncements = async () => {
     try {
-      const data = await getAnnouncementList();
-      if (Array.isArray(data)) {
-        setAnnouncements(data);
-      }
+      const response = await getAdminAnnouncementList();
+      const records = Array.isArray(response)
+        ? response
+        : Array.isArray(response?.results)
+          ? response.results
+          : Array.isArray(response?.data)
+            ? response.data
+            : Array.isArray(response?.data?.results)
+              ? response.data.results
+              : [];
+      setAnnouncements(records);
     } catch (error) {
       console.error("Failed to fetch announcements:", error);
     }
@@ -55,7 +63,7 @@ export default function Announcement() {
       }
       // Reset form and refresh list
       resetForm();
-      fetchAnnouncements();
+      await fetchAnnouncements();
     } catch (error) {
       console.error("Error saving announcement:", error);
       alert("Something went wrong!");
@@ -70,12 +78,35 @@ export default function Announcement() {
     setIsEditing(true);
   };
 
+  const handleToggleStatus = async (announcement) => {
+    const nextActive = !announcement.is_active;
+    setUpdatingStatusId(announcement.id);
+
+    try {
+      await updateAnnouncement(announcement.id, {
+        title: announcement.title,
+        message: announcement.message,
+        is_active: nextActive,
+      });
+      setAnnouncements((currentAnnouncements) =>
+        currentAnnouncements.map((item) =>
+          item.id === announcement.id ? { ...item, is_active: nextActive } : item,
+        ),
+      );
+    } catch (error) {
+      console.error("Error updating announcement status:", error);
+      alert(error.message || "Could not update announcement status.");
+    } finally {
+      setUpdatingStatusId(null);
+    }
+  };
+
   // Delete Button Click
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this announcement?")) {
       try {
         await deleteAnnouncement(id);
-        fetchAnnouncements();
+        await fetchAnnouncements();
       } catch (error) {
         console.error("Error deleting announcement:", error);
       }
@@ -145,14 +176,8 @@ export default function Announcement() {
 
               <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
                 <label className="flex w-fit cursor-pointer items-center gap-2 text-sm text-slate-700">
-                  <input
-                    type="checkbox"
-                    name="is_active"
-                    checked={formData.is_active}
-                    onChange={handleChange}
-                    className="h-4 w-4 accent-[#3A5A1C]"
-                  />
-                  Active
+                  
+                  
                 </label>
                 <div className="flex flex-wrap gap-2">
                 <button
@@ -189,7 +214,8 @@ export default function Announcement() {
                 <p className="text-sm font-medium text-slate-700">No announcements yet</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <>
+              <div className="hidden overflow-x-auto md:block">
                 <table className="w-full min-w-[560px] border-collapse text-left">
                   <thead className="bg-slate-50">
                     <tr className="border-b border-slate-200 text-xs font-semibold uppercase text-slate-500">
@@ -207,17 +233,32 @@ export default function Announcement() {
                           {item.message}
                         </td>
                         <td className="px-4 py-3 text-sm">
-                          <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${item.is_active ? "text-emerald-700" : "text-slate-500"}`}>
-                            <span className={`h-1.5 w-1.5 rounded-full ${item.is_active ? "bg-emerald-500" : "bg-slate-400"}`} />
-                            {item.is_active ? "Active" : "Inactive"}
-                          </span>
+                          <div className="inline-flex items-center gap-2.5">
+                            <button
+                              type="button"
+                              role="switch"
+                              aria-checked={Boolean(item.is_active)}
+                              aria-label={`${item.is_active ? "Deactivate" : "Activate"} ${item.title}`}
+                              disabled={updatingStatusId !== null}
+                              onClick={() => handleToggleStatus(item)}
+                              className={`relative inline-flex h-7 w-14 shrink-0 items-center rounded-full border px-0.5 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-60 ${item.is_active ? "border-emerald-700 bg-emerald-700 focus-visible:ring-emerald-600" : "border-slate-400 bg-slate-500 focus-visible:ring-slate-500"}`}
+                            >
+                              <span
+                                aria-hidden="true"
+                                className={`h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${item.is_active ? "translate-x-0" : "translate-x-7"}`}
+                              />
+                            </button>
+                            <span className={`min-w-14 text-xs font-semibold ${item.is_active ? "text-emerald-800" : "text-slate-600"}`}>
+                              {updatingStatusId === item.id ? "Saving..." : item.is_active ? "Active" : "Inactive"}
+                            </span>
+                          </div>
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex justify-end gap-1">
                             <button
                               type="button"
                               onClick={() => handleEdit(item)}
-                              className="rounded p-2 text-slate-500 transition hover:bg-slate-100 hover:text-[#3A5A1C]"
+                              className="flex h-10 w-10 items-center justify-center rounded p-2 text-slate-500 transition hover:bg-slate-100 hover:text-[#3A5A1C]"
                               title="Edit announcement"
                               aria-label={`Edit ${item.title}`}
                             >
@@ -226,7 +267,7 @@ export default function Announcement() {
                             <button
                               type="button"
                               onClick={() => handleDelete(item.id)}
-                              className="rounded p-2 text-slate-500 transition hover:bg-red-50 hover:text-red-600"
+                              className="flex h-10 w-10 items-center justify-center rounded p-2 text-slate-500 transition hover:bg-red-50 hover:text-red-600"
                               title="Delete announcement"
                               aria-label={`Delete ${item.title}`}
                             >
@@ -239,6 +280,46 @@ export default function Announcement() {
                   </tbody>
                 </table>
               </div>
+              <div className="space-y-3 p-3 md:hidden">
+                {announcements.map((item) => (
+                  <article key={item.id} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                    <div className="flex items-start justify-between gap-3">
+                      <h3 className="min-w-0 break-words font-semibold text-slate-800">{item.title}</h3>
+                      <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${item.is_active ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-700"}`}>
+                        {item.is_active ? "Active" : "Inactive"}
+                      </span>
+                    </div>
+                    <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-5 text-slate-600">{item.message}</p>
+                    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3">
+                      <div className="inline-flex items-center gap-2.5">
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={Boolean(item.is_active)}
+                          aria-label={`${item.is_active ? "Deactivate" : "Activate"} ${item.title}`}
+                          disabled={updatingStatusId !== null}
+                          onClick={() => handleToggleStatus(item)}
+                          className={`relative inline-flex h-7 w-14 shrink-0 items-center rounded-full border px-0.5 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-60 ${item.is_active ? "border-emerald-700 bg-emerald-700 focus-visible:ring-emerald-600" : "border-slate-400 bg-slate-500 focus-visible:ring-slate-500"}`}
+                        >
+                          <span aria-hidden="true" className={`h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${item.is_active ? "translate-x-0" : "translate-x-7"}`} />
+                        </button>
+                        <span className="text-xs font-medium text-slate-500">
+                          {updatingStatusId === item.id ? "Saving..." : item.is_active ? "Enabled" : "Disabled"}
+                        </span>
+                      </div>
+                      <div className="flex gap-2">
+                        <button type="button" onClick={() => handleEdit(item)} className="flex h-10 w-10 items-center justify-center rounded text-slate-500 transition hover:bg-slate-100 hover:text-[#3A5A1C]" title="Edit announcement" aria-label={`Edit ${item.title}`}>
+                          <FaEdit size={15} />
+                        </button>
+                        <button type="button" onClick={() => handleDelete(item.id)} className="flex h-10 w-10 items-center justify-center rounded text-slate-500 transition hover:bg-red-50 hover:text-red-600" title="Delete announcement" aria-label={`Delete ${item.title}`}>
+                          <FaTrash size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+              </>
             )}
           </section>
         </div>

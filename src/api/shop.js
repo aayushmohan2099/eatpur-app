@@ -152,6 +152,10 @@ export const deleteAnnouncement = (announcementId) => {
   });
 }
 
+export const getAdminAnnouncementList = () => {
+  return apiFetch("/shop/admin/announcements/", { method: "GET" });
+}
+
 export const getAnnouncementList = () => {
-  return apiFetch("/announcements/", { method: "GET" });
+  return apiFetch("/shop/announcements/", { method: "GET" });
 }

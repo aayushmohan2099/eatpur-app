@@ -548,7 +548,7 @@ function RecentOrdersPlaceholder() {
         )}
       </div>
 
-      <div className="overflow-x-auto flex-1">
+      <div className="hidden overflow-x-auto flex-1 md:block">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-slate-100 text-sm text-slate-500">
@@ -597,6 +597,27 @@ function RecentOrdersPlaceholder() {
             )}
           </tbody>
         </table>
+      </div>
+      <div className="space-y-3 md:hidden">
+        {filteredOrders.length > 0 ? filteredOrders.map((row) => (
+          <article key={row.id} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
+              <div>
+                <p className="text-xs font-medium text-slate-500">Order</p>
+                <h3 className="mt-1 font-semibold text-slate-900">#ORD-{row.id}</h3>
+              </div>
+              <span className="shrink-0 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700">{row.status}</span>
+            </div>
+            <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+              <div><dt className="text-xs text-slate-500">Customer</dt><dd className="mt-1 break-words text-slate-700">{row.customer}</dd></div>
+              <div><dt className="text-xs text-slate-500">Category</dt><dd className="mt-1 text-slate-700">{row.category}</dd></div>
+              <div><dt className="text-xs text-slate-500">Date</dt><dd className="mt-1 text-slate-700">{row.date}</dd></div>
+              <div><dt className="text-xs text-slate-500">Amount</dt><dd className="mt-1 font-semibold text-slate-800">{row.amount}</dd></div>
+            </dl>
+          </article>
+        )) : (
+          <p className="py-8 text-center text-sm text-slate-400">No orders match your specified date filters or category.</p>
+        )}
       </div>
     </div>
   );

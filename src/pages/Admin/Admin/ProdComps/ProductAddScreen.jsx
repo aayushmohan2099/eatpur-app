@@ -594,7 +594,9 @@ export default function ProductAddScreen() {
                     {/* Nutritional Profile */}
                     <div className="pt-4 border-t border-slate-100">
                       <h4 className="text-xs font-bold uppercase tracking-wider text-eatpur-text-light mb-3">
-                        Nutritional Profile (per 100g/serving)
+                        {selectionType === "combo"
+                          ? "Total Nutritional Profile (per 100g/serving)"
+                          : "Nutritional Profile (per 100g/serving)"}
                       </h4>
                       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                         <div>
@@ -613,6 +615,7 @@ export default function ProductAddScreen() {
                                 "profile",
                               )
                             }
+                            readOnly={selectionType === 'combo'}
                             className="w-full px-3 py-2 border border-slate-300 rounded focus:border-eatpur-green outline-none text-sm"
                           />
                         </div>
@@ -632,6 +635,7 @@ export default function ProductAddScreen() {
                                 "profile",
                               )
                             }
+                            readOnly={selectionType === 'combo'}
                             className="w-full px-3 py-2 border border-slate-300 rounded focus:border-eatpur-green outline-none text-sm"
                           />
                         </div>
@@ -651,6 +655,7 @@ export default function ProductAddScreen() {
                                 "profile",
                               )
                             }
+                            readOnly={selectionType === 'combo'}
                             className="w-full px-3 py-2 border border-slate-300 rounded focus:border-eatpur-green outline-none text-sm"
                           />
                         </div>
@@ -670,6 +675,7 @@ export default function ProductAddScreen() {
                                 "profile",
                               )
                             }
+                            readOnly={selectionType === 'combo'}
                             className="w-full px-3 py-2 border border-slate-300 rounded focus:border-eatpur-green outline-none text-sm"
                           />
                         </div>
@@ -689,6 +695,7 @@ export default function ProductAddScreen() {
                                 "profile",
                               )
                             }
+                            readOnly={selectionType === 'combo'}
                             className="w-full px-3 py-2 border border-slate-300 rounded focus:border-eatpur-green outline-none text-sm"
                           />
                         </div>
@@ -723,6 +730,7 @@ export default function ProductAddScreen() {
                                 "shipping_dimension",
                               )
                             }
+                            readOnly={selectionType === 'combo'}
                             className="w-full px-3 py-2 border border-slate-300 rounded focus:border-eatpur-green outline-none text-sm bg-slate-50"
                             placeholder="e.g. 550"
                           />
@@ -744,6 +752,7 @@ export default function ProductAddScreen() {
                                 "shipping_dimension",
                               )
                             }
+                            readOnly={selectionType === 'combo'}
                             className="w-full px-3 py-2 border border-slate-300 rounded focus:border-eatpur-green outline-none text-sm bg-slate-50"
                             placeholder="e.g. 15"
                           />
@@ -765,6 +774,7 @@ export default function ProductAddScreen() {
                                 "shipping_dimension",
                               )
                             }
+                            readOnly={selectionType === 'combo'}
                             className="w-full px-3 py-2 border border-slate-300 rounded focus:border-eatpur-green outline-none text-sm bg-slate-50"
                             placeholder="e.g. 10"
                           />
@@ -786,6 +796,7 @@ export default function ProductAddScreen() {
                                 "shipping_dimension",
                               )
                             }
+                            readOnly={selectionType === 'combo'}
                             className="w-full px-3 py-2 border border-slate-300 rounded focus:border-eatpur-green outline-none text-sm bg-slate-50"
                             placeholder="e.g. 5"
                           />
@@ -826,6 +837,7 @@ export default function ProductAddScreen() {
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleAddTag(e)}
+                  readOnly={selectionType === 'combo'}
                   className="flex-1 px-4 py-2 border border-slate-300 rounded-[--radius-button] focus:border-eatpur-green outline-none"
                 />
                 <button

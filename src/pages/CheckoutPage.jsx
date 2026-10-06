@@ -1,5 +1,5 @@
 // src/pages/CheckoutPage.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -13,6 +13,7 @@ import {
 import { useCart } from "../context/CartContext";
 import { checkoutOrder, verifyPayment, getCouponList } from "../api/shop";
 import { getProductById } from "../api/inventory";
+import { addAddress, getAddresses } from "../api/userApi";
 import { useUserRole } from "../utils/useUserRole";
 import {
   checkPincodeServiceability,
@@ -45,6 +46,8 @@ export default function CheckoutPage() {
   const [serviceability, setServiceability] = useState(null); // null, true, or false
   const [shippingEstimate, setShippingEstimate] = useState(null);
   const [isEstimating, setIsEstimating] = useState(false);
+  const [dimensionsSignature, setDimensionsSignature] = useState("");
+  const shippingEstimateRequestId = useRef(0);
 
   // --- COUPON STATES ---
   const [couponInput, setCouponInput] = useState("");
@@ -52,6 +55,13 @@ export default function CheckoutPage() {
   const [autoCoupon, setAutoCoupon] = useState(null);
   const [couponError, setCouponError] = useState("");
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+  const [isSavingAddress, setIsSavingAddress] = useState(false);
+  const [addressSaveMessage, setAddressSaveMessage] = useState("");
+  const [isAddressSaveError, setIsAddressSaveError] = useState(false);
+  const savedAddressSignature = useRef(null);
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [isLoadingSavedAddresses, setIsLoadingSavedAddresses] = useState(false);
+  const [showSavedAddresses, setShowSavedAddresses] = useState(false);
 
   // Delivery Form State
   const [deliveryDetails, setDeliveryDetails] = useState({
@@ -78,6 +88,40 @@ export default function CheckoutPage() {
     (total, item) => total + item.price * item.quantity,
     0,
   );
+  const cartSignature = state.items
+    .map((item) => `${item.id}:${item.quantity}`)
+    .join("|");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadSavedAddresses = async () => {
+      setIsLoadingSavedAddresses(true);
+      try {
+        const response = await getAddresses();
+        const addresses = Array.isArray(response)
+          ? response
+          : Array.isArray(response?.results)
+            ? response.results
+            : Array.isArray(response?.data?.results)
+              ? response.data.results
+              : Array.isArray(response?.data)
+                ? response.data
+                : [];
+
+        if (isMounted) setSavedAddresses(addresses);
+      } catch (error) {
+        console.error("Failed to load saved addresses:", error);
+      } finally {
+        if (isMounted) setIsLoadingSavedAddresses(false);
+      }
+    };
+
+    loadSavedAddresses();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Redirect if cart is empty
   useEffect(() => {
@@ -88,6 +132,8 @@ export default function CheckoutPage() {
 
   // Fetch actual Dimensions per product on cart load/change
   useEffect(() => {
+    let isCurrentCart = true;
+
     const calculateAccurateDimensions = async () => {
       let tWeight = 0;
       let tLength = 0;
@@ -117,18 +163,28 @@ export default function CheckoutPage() {
         }
       }
 
+      if (!isCurrentCart) return;
+
       setCartDimensions({
         weight: tWeight,
         length: tLength,
         height: tHeight,
         width: tWidth,
       });
+      setDimensionsSignature(cartSignature);
     };
 
     if (state.items.length > 0) {
       calculateAccurateDimensions();
+    } else {
+      setCartDimensions({ weight: 0, length: 0, height: 0, width: 0 });
+      setDimensionsSignature(cartSignature);
     }
-  }, [state.items]);
+
+    return () => {
+      isCurrentCart = false;
+    };
+  }, [state.items, cartSignature]);
 
   // Handle Cart Quantity Changes
   const handleQuantityChange = (id, delta, currentQty) => {
@@ -138,8 +194,8 @@ export default function CheckoutPage() {
     } else {
       dispatch({ type: "UPDATE_QUANTITY", payload: { id, quantity: newQty } });
     }
+    shippingEstimateRequestId.current += 1;
     setShippingEstimate(null);
-    setServiceability(null);
   };
 
   // Handle Form Inputs
@@ -148,18 +204,115 @@ export default function CheckoutPage() {
     setDeliveryDetails((prev) => ({ ...prev, [name]: value }));
   };
 
+  const selectSavedAddress = (address) => {
+    const fullName = String(address.consignee_name || address.name || "").trim();
+    const [firstName = "", ...lastNameParts] = fullName.split(/\s+/);
+    const selectedPincode = String(
+      address.pincode || address.drop_pincode || "",
+    ).replace(/\D/g, "");
+    const alreadyChecked =
+      selectedPincode === pincode && serviceability !== null;
+
+    setDeliveryDetails((prev) => ({
+      ...prev,
+      firstName,
+      lastName: lastNameParts.join(" "),
+      phone: String(address.consignee_phone || address.phone || ""),
+      alt_phone: String(address.alternative_phone || address.alt_phone || ""),
+      address_line: String(
+        address.street_address || address.address_line || address.address || "",
+      ),
+      city: String(address.city || ""),
+      state: String(address.state || ""),
+      saveAddress: false,
+    }));
+    setPincode(selectedPincode);
+    setShowSavedAddresses(false);
+    setAddressSaveMessage("");
+    setIsAddressSaveError(false);
+
+    if (!alreadyChecked) {
+      setServiceability(null);
+      setShippingEstimate(null);
+      if (/^\d{6}$/.test(selectedPincode)) {
+        handleCheckPincode(selectedPincode);
+      }
+    }
+  };
+
+  const getCheckoutAddress = () => ({
+    title: "Checkout Address",
+    consignee_name: [deliveryDetails.firstName, deliveryDetails.lastName]
+      .map((name) => name.trim())
+      .filter(Boolean)
+      .join(" "),
+    consignee_phone: deliveryDetails.phone.trim(),
+    alternative_phone: deliveryDetails.alt_phone.trim(),
+    street_address: deliveryDetails.address_line.trim(),
+    city: deliveryDetails.city.trim(),
+    state: deliveryDetails.state.trim(),
+    pincode,
+  });
+
+  const handleSaveAddressChange = async (event) => {
+    if (!event.target.checked) {
+      setDeliveryDetails((prev) => ({ ...prev, saveAddress: false }));
+      setAddressSaveMessage("");
+      setIsAddressSaveError(false);
+      return;
+    }
+
+    const address = getCheckoutAddress();
+    const requiredFields = [
+      address.consignee_name,
+      address.consignee_phone,
+      address.street_address,
+      address.city,
+      address.state,
+      address.pincode,
+    ];
+
+    if (requiredFields.some((value) => !value)) {
+      setAddressSaveMessage("Fill in the name, phone, address, city, state, and pincode first.");
+      setIsAddressSaveError(true);
+      return;
+    }
+
+    const signature = JSON.stringify(address);
+    setIsSavingAddress(true);
+    setAddressSaveMessage("Saving address...");
+    setIsAddressSaveError(false);
+
+    try {
+      if (savedAddressSignature.current !== signature) {
+        await addAddress(address);
+        savedAddressSignature.current = signature;
+      }
+      setDeliveryDetails((prev) => ({ ...prev, saveAddress: true }));
+      setAddressSaveMessage("Address saved to your account.");
+    } catch (error) {
+      console.error("Failed to save checkout address:", error);
+      setAddressSaveMessage(error.message || "Could not save this address.");
+      setIsAddressSaveError(true);
+    } finally {
+      setIsSavingAddress(false);
+    }
+  };
+
   // Check Pincode Serviceability
-  const handleCheckPincode = async () => {
-    if (!pincode || pincode.length !== 6) {
+  const handleCheckPincode = async (pincodeToCheck = pincode) => {
+    const normalizedPincode = String(pincodeToCheck || "").replace(/\D/g, "");
+    if (!/^\d{6}$/.test(normalizedPincode)) {
       alert("Please enter a valid 6-digit Pincode.");
       return;
     }
     setIsCheckingPincode(true);
+    shippingEstimateRequestId.current += 1;
     setServiceability(null);
     setShippingEstimate(null);
 
     try {
-      const res = await checkPincodeServiceability(pincode);
+      const res = await checkPincodeServiceability(normalizedPincode);
       if (res.is_serviceable || res.status === true) {
         setServiceability(true);
         if (res.details) {
@@ -169,7 +322,6 @@ export default function CheckoutPage() {
             state: res.details.state || prev.state,
           }));
         }
-        await fetchShippingEstimate(pincode);
         await applyAutomaticCoupon();
       } else {
         setServiceability(false);
@@ -222,23 +374,26 @@ export default function CheckoutPage() {
   };
 
   // Fetch Accurate Shipping Cost Estimates
-  const fetchShippingEstimate = async (validPincode) => {
+  const fetchShippingEstimate = useCallback(async (validPincode, dimensions, invoiceAmount) => {
+    const requestId = ++shippingEstimateRequestId.current;
     setIsEstimating(true);
     try {
       const payload = {
         pickupPincode: 226022,
         dropPincode: parseInt(validPincode),
-        invoiceAmount: subtotal, // Should calculate accurately
-        weight: cartDimensions.weight || 500,
-        length: cartDimensions.length || 10,
-        height: cartDimensions.height || 10,
-        width: cartDimensions.width || 10,
+        invoiceAmount,
+        weight: dimensions.weight || 500,
+        length: dimensions.length || 10,
+        height: dimensions.height || 10,
+        width: dimensions.width || 10,
         serviceType: "SURFACE",
         codAmount: 0,
         shippingDirection: "FORWARD",
       };
 
       const res = await getShippingEstimate(payload);
+      if (requestId !== shippingEstimateRequestId.current) return;
+
       if (res.success && res.pricing) {
         setShippingEstimate(res.pricing);
       } else {
@@ -246,13 +401,37 @@ export default function CheckoutPage() {
         alert("We couldn't calculate exact shipping charges for this location.");
       }
     } catch (err) {
+      if (requestId !== shippingEstimateRequestId.current) return;
       console.error("Failed to fetch estimate:", err);
       setShippingEstimate(null);
       alert("Ekart API failed to return shipping estimates.");
     } finally {
-      setIsEstimating(false);
+      if (requestId === shippingEstimateRequestId.current) {
+        setIsEstimating(false);
+      }
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (
+      serviceability !== true ||
+      !pincode ||
+      !cartSignature ||
+      dimensionsSignature !== cartSignature
+    ) {
+      return;
+    }
+
+    fetchShippingEstimate(pincode, cartDimensions, subtotal);
+  }, [
+    serviceability,
+    pincode,
+    cartSignature,
+    dimensionsSignature,
+    cartDimensions,
+    subtotal,
+    fetchShippingEstimate,
+  ]);
 
   // --- COUPON HANDLERS ---
   const handleApplyCoupon = async () => {
@@ -277,6 +456,22 @@ export default function CheckoutPage() {
         );
 
         if (!couponDetails) throw new Error("Invalid coupon code.");
+
+        const endDate = couponDetails.end_date || couponDetails.expire_date;
+        const parsedEndDate = endDate ? new Date(endDate) : null;
+        const couponStatus = (
+          couponDetails.status || couponDetails.status_name || ""
+        ).toUpperCase();
+        const isExpired =
+          couponStatus === "EXPIRED" ||
+          (parsedEndDate &&
+            !Number.isNaN(parsedEndDate.getTime()) &&
+            parsedEndDate < new Date());
+
+        if (isExpired) {
+          setCouponError("This coupon has expired. Please try another coupon.");
+          return;
+        }
       } catch (error) {
         if (error.message === "Invalid coupon code.") throw error;
         console.warn("Coupon API validation deferred to checkout:", error);
@@ -354,7 +549,9 @@ export default function CheckoutPage() {
       drop_pincode: pincode,
       pickup_location_alias: "Primary Warehouse",
       service_type: "SURFACE",
-      save_address: deliveryDetails.saveAddress,
+      save_address:
+        deliveryDetails.saveAddress &&
+        savedAddressSignature.current !== JSON.stringify(getCheckoutAddress()),
       subtotal: Number(subtotal.toFixed(2)),
       discount_amount: Number(discountAmount.toFixed(2)),
       shipping_charge: Number(shippingCharge.toFixed(2)),
@@ -555,15 +752,15 @@ export default function CheckoutPage() {
                   placeholder="Enter 6-digit Pincode"
                   value={pincode}
                   onChange={(e) => {
+                    shippingEstimateRequestId.current += 1;
                     setPincode(e.target.value.replace(/\D/g, ""));
                     setServiceability(null);
                     setShippingEstimate(null);
                   }}
                   className={`w-full bg-eatpur-white-warm border pl-11 pr-4 py-3 rounded-xl text-eatpur-dark focus:outline-none transition-colors shadow-inner font-mono text-lg tracking-widest ${
-                    serviceability === true && shippingEstimate
+                    serviceability === true
                       ? "border-eatpur-green-dark bg-green-50"
-                      : serviceability === false ||
-                          (serviceability === true && !shippingEstimate)
+                      : serviceability === false
                         ? "border-red-400 bg-red-50"
                         : "border-black/10 focus:border-eatpur-green-dark"
                   }`}
@@ -572,10 +769,10 @@ export default function CheckoutPage() {
 
               <button
                 type="button"
-                onClick={handleCheckPincode}
+                onClick={() => handleCheckPincode()}
                 disabled={
                   isCheckingPincode ||
-                  pincode.length !== 6 ||
+                    !/^\d{6}$/.test(pincode) ||
                   state.items.length === 0
                 }
                 className="btn-primary w-full sm:w-1/3 py-3 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
@@ -585,7 +782,7 @@ export default function CheckoutPage() {
             </div>
 
             <AnimatePresence mode="wait">
-              {serviceability === true && shippingEstimate && (
+              {serviceability === true && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
@@ -607,14 +804,7 @@ export default function CheckoutPage() {
           </div>
 
           {/* STEP 2: DELIVERY DETAILS & PAYMENT */}
-          <form
-            onSubmit={handlePlaceOrder}
-            className={`space-y-12 font-sans transition-opacity duration-300 ${
-              !serviceability || !shippingEstimate
-                ? "opacity-40 pointer-events-none select-none grayscale-[50%]"
-                : "opacity-100"
-            }`}
-          >
+          <form onSubmit={handlePlaceOrder} className="space-y-12 font-sans">
             {/* Delivery Details Fields */}
             <div className="space-y-6">
               <h3 className="text-2xl font-display text-eatpur-dark border-b border-black/10 pb-3 flex items-center gap-3">
@@ -623,6 +813,66 @@ export default function CheckoutPage() {
                 </span>
                 Shipping Address
               </h3>
+
+              {showSavedAddresses && (
+                <div className="rounded-xl border border-eatpur-green-dark/20 bg-white p-3 shadow-sm">
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-eatpur-dark">Saved addresses</p>
+                    <button
+                      type="button"
+                      onClick={() => setShowSavedAddresses(false)}
+                      className="text-xs font-medium text-eatpur-text-light hover:text-eatpur-dark"
+                    >
+                      Close
+                    </button>
+                  </div>
+                  {isLoadingSavedAddresses ? (
+                    <p className="px-2 py-3 text-sm text-eatpur-text-light">Loading addresses...</p>
+                  ) : savedAddresses.length === 0 ? (
+                    <p className="px-2 py-3 text-sm text-eatpur-text-light">No saved addresses yet.</p>
+                  ) : (
+                    <div className="max-h-72 space-y-2 overflow-y-auto">
+                      {savedAddresses.map((address, index) => (
+                        <button
+                          key={address.id || address.address_id || index}
+                          type="button"
+                          onClick={() => selectSavedAddress(address)}
+                          className="block w-full rounded-lg border border-black/5 px-3 py-3 text-left transition-colors hover:border-eatpur-green-dark/40 hover:bg-green-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-eatpur-green-dark"
+                        >
+                          <span className="block text-xs font-semibold uppercase text-eatpur-green-dark">
+                            {address.title || "Saved address"}
+                          </span>
+                          <span className="mt-1 block text-sm font-semibold text-eatpur-dark">
+                            {address.consignee_name || address.name || "Name not provided"}
+                          </span>
+                          <span className="mt-1 block text-xs font-medium text-eatpur-text-light">
+                            {[address.consignee_phone || address.phone, address.alternative_phone || address.alt_phone]
+                              .filter(Boolean)
+                              .join(" · ") || "Phone not provided"}
+                          </span>
+                          <span className="mt-2 block text-sm leading-5 text-eatpur-text">
+                            {[
+                              address.street_address ||
+                                address.address_line ||
+                                address.address_line1 ||
+                                address.line1 ||
+                                address.address,
+                              address.street_address2 || address.address_line2 || address.line2,
+                              address.landmark,
+                              address.city,
+                              address.state,
+                              address.pincode || address.drop_pincode,
+                              address.country,
+                            ]
+                              .filter(Boolean)
+                              .join(", ") || "Address details not provided"}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -635,6 +885,7 @@ export default function CheckoutPage() {
                     name="firstName"
                     value={deliveryDetails.firstName}
                     onChange={handleInputChange}
+                    onFocus={() => setShowSavedAddresses(true)}
                     className="w-full bg-eatpur-white-warm border border-black/10 rounded-xl px-4 py-3 text-eatpur-dark focus:outline-none focus:border-eatpur-green-dark transition-colors shadow-inner font-serif"
                   />
                 </div>
@@ -647,6 +898,7 @@ export default function CheckoutPage() {
                     name="lastName"
                     value={deliveryDetails.lastName}
                     onChange={handleInputChange}
+                    onFocus={() => setShowSavedAddresses(true)}
                     className="w-full bg-eatpur-white-warm border border-black/10 rounded-xl px-4 py-3 text-eatpur-dark focus:outline-none focus:border-eatpur-green-dark transition-colors shadow-inner font-serif"
                   />
                 </div>
@@ -663,6 +915,7 @@ export default function CheckoutPage() {
                     name="address_line"
                     value={deliveryDetails.address_line}
                     onChange={handleInputChange}
+                    onFocus={() => setShowSavedAddresses(true)}
                     placeholder="House/Flat No., Building, Street, Area"
                     className="w-full bg-eatpur-white-warm border border-black/10 rounded-xl px-4 py-3 text-eatpur-dark focus:outline-none focus:border-eatpur-green-dark transition-colors shadow-inner font-serif"
                   />
@@ -677,6 +930,7 @@ export default function CheckoutPage() {
                     name="city"
                     value={deliveryDetails.city}
                     onChange={handleInputChange}
+                    onFocus={() => setShowSavedAddresses(true)}
                     className="w-full bg-eatpur-white-warm border border-black/10 rounded-xl px-4 py-3 text-eatpur-dark focus:outline-none focus:border-eatpur-green-dark transition-colors shadow-inner font-serif"
                   />
                 </div>
@@ -690,6 +944,7 @@ export default function CheckoutPage() {
                     name="state"
                     value={deliveryDetails.state}
                     onChange={handleInputChange}
+                    onFocus={() => setShowSavedAddresses(true)}
                     className="w-full bg-eatpur-white-warm border border-black/10 rounded-xl px-4 py-3 text-eatpur-dark focus:outline-none focus:border-eatpur-green-dark transition-colors shadow-inner font-serif"
                   />
                 </div>
@@ -703,6 +958,7 @@ export default function CheckoutPage() {
                     name="phone"
                     maxLength={10}
                     value={deliveryDetails.phone}
+                    onFocus={() => setShowSavedAddresses(true)}
                     onChange={(e) =>
                       setDeliveryDetails((prev) => ({
                         ...prev,
@@ -723,6 +979,7 @@ export default function CheckoutPage() {
                     name="alt_phone"
                     maxLength={10}
                     value={deliveryDetails.alt_phone}
+                    onFocus={() => setShowSavedAddresses(true)}
                     onChange={(e) =>
                       setDeliveryDetails((prev) => ({
                         ...prev,
@@ -752,12 +1009,8 @@ export default function CheckoutPage() {
                   id="saveAddress"
                   name="saveAddress"
                   checked={deliveryDetails.saveAddress}
-                  onChange={(e) =>
-                    setDeliveryDetails((prev) => ({
-                      ...prev,
-                      saveAddress: e.target.checked,
-                    }))
-                  }
+                  onChange={handleSaveAddressChange}
+                  disabled={isSavingAddress}
                   className="w-5 h-5 accent-eatpur-green-dark border-black/20 rounded cursor-pointer"
                 />
                 <label
@@ -767,6 +1020,14 @@ export default function CheckoutPage() {
                   Save this New Address
                 </label>
               </div>
+              {addressSaveMessage && (
+                <p
+                  className={`mt-2 text-sm ${isAddressSaveError ? "text-red-600" : "text-eatpur-green-dark"}`}
+                  role="status"
+                >
+                  {addressSaveMessage}
+                </p>
+              )}
             </div>
 
             {/* Order Summary & Logistics Cost */}
@@ -845,7 +1106,10 @@ export default function CheckoutPage() {
                       type="text"
                       placeholder="Enter Promo Code (e.g. WELCOME10)"
                       value={couponInput}
-                      onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                      onChange={(e) => {
+                        setCouponInput(e.target.value.toUpperCase());
+                        setCouponError("");
+                      }}
                       className="flex-1 bg-white border border-black/10 rounded-lg px-4 py-2.5 text-eatpur-dark focus:outline-none focus:border-eatpur-green-dark uppercase"
                     />
                     <button
@@ -864,7 +1128,7 @@ export default function CheckoutPage() {
                       <span className="text-green-700 font-bold tracking-wider">
                         {appliedCoupon.code}
                       </span>
-                      <span className="text-green-600 text-sm">Applied</span>
+                      <span className="text-green-600 text-sm">Coupon Applied</span>
                     </div>
                     <button
                       type="button"
@@ -877,7 +1141,9 @@ export default function CheckoutPage() {
                   </div>
                 )}
                 {couponError && (
-                  <p className="text-red-500 text-sm mt-2">{couponError}</p>
+                  <p className="mt-2 text-sm font-medium text-red-600" role="alert">
+                    {couponError}
+                  </p>
                 )}
               </div>
 
@@ -914,7 +1180,10 @@ export default function CheckoutPage() {
                 {appliedCoupon && (
                   <div className="flex justify-between items-center text-green-700 mb-4 font-medium text-sm">
                     <span className="flex items-center gap-2">
-                      <FaTag /> Coupon Applied 
+                      <FaTag />
+                      {appliedCoupon.source === "auto"
+                        ? "Flat Discount"
+                        : "Coupon Applied"}
                     </span>
                     <span>
                       {discountAmount > 0

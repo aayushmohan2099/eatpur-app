@@ -272,7 +272,8 @@ export default function CreateCoupon() {
         {loading && coupons.length === 0 ? (
           <p className="text-slate-500">Loading coupons...</p>
         ) : (
-          <div className="overflow-x-auto border border-slate-200 rounded-xl">
+          <>
+          <div className="hidden overflow-x-auto border border-slate-200 rounded-xl md:block">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 text-slate-600 text-sm border-b border-slate-200">
@@ -315,10 +316,10 @@ export default function CreateCoupon() {
                       </span>
                     </td>
                     <td className="p-4 flex items-center justify-end gap-3">
-                      <button onClick={() => handleEdit(coupon)} className="text-blue-500 hover:text-blue-700 p-2 bg-blue-50 rounded-lg">
+                      <button onClick={() => handleEdit(coupon)} aria-label={`Edit coupon ${coupon.coupon_code}`} className="flex h-10 w-10 items-center justify-center text-blue-500 hover:text-blue-700 p-2 bg-blue-50 rounded-lg">
                         <FaEdit />
                       </button>
-                      <button onClick={() => handleDelete(coupon.id)} className="text-red-500 hover:text-red-700 p-2 bg-red-50 rounded-lg">
+                      <button onClick={() => handleDelete(coupon.id)} aria-label={`Delete coupon ${coupon.coupon_code}`} className="flex h-10 w-10 items-center justify-center text-red-500 hover:text-red-700 p-2 bg-red-50 rounded-lg">
                         <FaTrash />
                       </button>
                     </td>
@@ -334,6 +335,35 @@ export default function CreateCoupon() {
               </tbody>
             </table>
           </div>
+          <div className="space-y-3 md:hidden">
+            {coupons.map((coupon, index) => (
+              <article key={coupon.id} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-slate-500">Coupon {index + 1}</p>
+                    <h4 className="mt-1 break-all font-bold uppercase tracking-wide text-slate-800">{coupon.coupon_code}</h4>
+                  </div>
+                  <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${getCouponStatus(coupon) === "EXPIRED" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+                    {getCouponStatus(coupon)}
+                  </span>
+                </div>
+                <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                  <div><dt className="text-xs text-slate-500">Discount</dt><dd className="mt-1 font-medium text-slate-700">{coupon.discount_type === "percentage" ? `${coupon.discount_value}%` : `₹${coupon.discount_value}`}</dd></div>
+                  <div><dt className="text-xs text-slate-500">Minimum order</dt><dd className="mt-1 font-medium text-slate-700">{coupon.min_order_value ? `₹${coupon.min_order_value}` : "-"}</dd></div>
+                  <div><dt className="text-xs text-slate-500">Start date</dt><dd className="mt-1 text-slate-700">{coupon.start_date ? new Date(coupon.start_date).toLocaleDateString() : "-"}</dd></div>
+                  <div><dt className="text-xs text-slate-500">Expire date</dt><dd className="mt-1 text-slate-700">{coupon.end_date ? new Date(coupon.end_date).toLocaleDateString() : "-"}</dd></div>
+                </dl>
+                <div className="mt-4 flex justify-end gap-2 border-t border-slate-100 pt-3">
+                  <button onClick={() => handleEdit(coupon)} aria-label={`Edit coupon ${coupon.coupon_code}`} className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 p-2 text-blue-500 hover:text-blue-700"><FaEdit /></button>
+                  <button onClick={() => handleDelete(coupon.id)} aria-label={`Delete coupon ${coupon.coupon_code}`} className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-50 p-2 text-red-500 hover:text-red-700"><FaTrash /></button>
+                </div>
+              </article>
+            ))}
+            {coupons.length === 0 && !loading && (
+              <p className="rounded-lg border border-slate-200 bg-white p-8 text-center text-sm text-slate-400">No coupons found. Create one above!</p>
+            )}
+          </div>
+          </>
         )}
       </div>
     </div>

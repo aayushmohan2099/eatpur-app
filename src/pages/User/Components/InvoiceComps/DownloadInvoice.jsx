@@ -24,23 +24,39 @@ export default function DownloadInvoice({
         invoiceData = await getInvoiceDetails(orderId);
       } catch (error) {
         console.warn("Invoice download failed.", error);
+      }
+
+      const parseInvoiceResponse = (response) => {
+        if (typeof response !== "string") return response;
+        try {
+          return JSON.parse(response);
+        } catch {
+          return null;
+        }
+      };
+      invoiceData = parseInvoiceResponse(invoiceData);
+
+      const hasInvoiceDetails =
+        invoiceData &&
+        typeof invoiceData === "object" &&
+        !(invoiceData instanceof Blob) &&
+        invoiceData.invoice_details &&
+        typeof invoiceData.invoice_details === "object" &&
+        Array.isArray(invoiceData.items);
+      const hasPdfFile =
+        invoiceData instanceof Blob &&
+        (!invoiceData.type || invoiceData.type.toLowerCase().includes("pdf"));
+
+      if (!hasInvoiceDetails && !hasPdfFile) {
         const shouldGenerate = window.confirm(
           "The invoice is not ready to download. Would you like to create and download a copy now?",
         );
 
         if (!shouldGenerate) return;
-        invoiceData = await generateLocalInvoice(orderId);
+        invoiceData = parseInvoiceResponse(await generateLocalInvoice(orderId));
       }
 
-      if (typeof invoiceData === "string") {
-        try {
-          invoiceData = JSON.parse(invoiceData);
-        } catch {
-          throw new Error("Invoice response was not valid JSON text.");
-        }
-      }
-
-      if (invoiceData && typeof invoiceData === "object" && !(invoiceData instanceof Blob)) {
+      if (hasInvoiceDetails || (invoiceData?.invoice_details && Array.isArray(invoiceData.items))) {
         generatePrintableInvoice(invoiceData);
         return;
       }
@@ -103,18 +119,52 @@ export default function DownloadInvoice({
       const amount = Number(value);
       return Number.isFinite(amount) ? amount.toFixed(2) : escapeHtml(value);
     };
-    const formatDate = (value) =>
-      value ? escapeHtml(new Date(value).toLocaleDateString("en-GB")) : "";
+    const formatDate = (value) => {
+      if (!value) return "";
+
+      let date;
+      if (value instanceof Date) {
+        date = value;
+      } else if (typeof value === "string") {
+        const dateOnlyMatch = value.trim().match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+        const dayFirstMatch = value.trim().match(
+          /^(\d{1,2})[/-](\d{1,2})[/-](\d{4})(?:\s+\d{1,2}:\d{2}(?::\d{2})?\s*(?:AM|PM)?)?$/i,
+        );
+
+        if (dateOnlyMatch) {
+          date = new Date(
+            Number(dateOnlyMatch[1]),
+            Number(dateOnlyMatch[2]) - 1,
+            Number(dateOnlyMatch[3]),
+          );
+        } else if (dayFirstMatch) {
+          date = new Date(
+            Number(dayFirstMatch[3]),
+            Number(dayFirstMatch[2]) - 1,
+            Number(dayFirstMatch[1]),
+          );
+        } else {
+          date = new Date(value);
+        }
+      } else {
+        date = new Date(value);
+      }
+
+      return Number.isNaN(date.getTime())
+        ? ""
+        : escapeHtml(date.toLocaleDateString("en-GB"));
+    };
     const itemRows = items.map((item, index) => `
       <tr>
         <td>${index + 1}</td>
         <td class="product-name">${escapeHtml([item.name || item.product_name, item.sku].filter(Boolean).join(" - "))}</td>
-        <td>${formatAmount(item.unit_price)}</td>
+        <td>${formatAmount(totals.total_mrp)}</td>
         <td>${escapeHtml(item.quantity)}</td>
+        
         <td>${formatAmount(item.taxable_amount)}</td>
         <td>${escapeHtml(item.tax_rate)}</td>
         <td>${escapeHtml(item.tax_type)}</td>
-        <td>${formatAmount(item.tax_amount)}</td>
+        <td>${formatAmount(item.tax_value)}</td>
         <td>${formatAmount(item.subtotal)}</td>
       </tr>
     `).join("");
@@ -182,7 +232,7 @@ export default function DownloadInvoice({
               </tr>
               <tr>
                 <td>Invoice Date: <strong>${formatDate(invoice.date )}</strong></td>
-                <td>Order Date: <strong>${formatDate(invoice.order_date )}</strong></td>
+                <td>Order Date: <strong>${formatDate(orderDate)}</strong></td>
               </tr>
               <tr>
                 <td>State: <strong>${escapeHtml(customer.state)}</strong></td>
@@ -231,6 +281,7 @@ export default function DownloadInvoice({
                   <th class="text-left">PRODUCT NAME - SKU</th>
                   <th>UNIT<br>PRICE<br>(Rs.)</th>
                   <th>QTY</th>
+                  
                   <th>TAXABLE<br>AMOUNT<br>(Rs.)</th>
                   <th>TAX<br>RATE<br>(%)</th>
                   <th>TAX<br>TYPE</th>
@@ -258,7 +309,7 @@ export default function DownloadInvoice({
                 <td>Subtotal (Rs.)</td>
                 <td class="text-right">${formatAmount(data?.totals?.taxable_amount)}</td>
               </tr>
-              <tr><td>Total Tax (Rs.)</td><td class="text-right">${formatAmount(data?.totals?.tax_amount)}</td></tr>
+              <tr><td>Total Tax (Rs.)</td><td class="text-right">${formatAmount(data?.totals?.total_tax_amount)}</td></tr>
               <tr><td>Discount (Rs.)</td><td class="text-right">(-) ${formatAmount(data?.totals?.discount)}</td></tr>
               <tr>
                 <td>Total Invoice Amount in Words:<br><strong>${escapeHtml(data?.totals?.amount_in_words)}</strong></td>

@@ -140,7 +140,16 @@ export async function apiFetch(endpoint, options = {}) {
 
     if (responseType === "blob") {
       const contentType = (res.headers.get("content-type") || "").toLowerCase();
-      const rawText = await res.text();
+      const responseBlob = await res.blob();
+      const isPdfContent =
+        contentType.includes("application/pdf") ||
+        (await responseBlob.slice(0, 5).text()) === "%PDF-";
+      const shouldReadAsText =
+        contentType.includes("application/json") ||
+        contentType.includes("text/plain") ||
+        contentType.includes("text/json") ||
+        (!contentType && !isPdfContent);
+      const rawText = shouldReadAsText ? await responseBlob.text() : "";
 
       if (!res.ok) {
         let errorData = null;
@@ -206,10 +215,6 @@ export async function apiFetch(endpoint, options = {}) {
           return rawText || null;
         }
       }
-
-      const responseBlob = new Blob([rawText], {
-        type: contentType || "application/octet-stream",
-      });
 
       const blobType = (responseBlob.type || "").toLowerCase();
       if (blobType.includes("application/json") || blobType.includes("text/json")) {

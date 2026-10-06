@@ -12,6 +12,7 @@ import DownloadInvoice from "../../../User/Components/InvoiceComps/DownloadInvoi
 import OrderHeader from "./OrderHeader";
 import { createPrintLabel } from "./createPrintLabel";
 import { FaCircleInfo } from "react-icons/fa6";
+import { FaEnvelope, FaWhatsapp } from "react-icons/fa";
 
 // Helper component for beautiful info tooltips
 const InfoTooltip = ({ content }) => (
@@ -58,8 +59,11 @@ export default function AllOrders({
 
   // Timeline Modal State
   const [isTimelineModalOpen, setIsTimelineModalOpen] = useState(false);
-  const [selectedOrderIdForTimeline, setSelectedOrderIdForTimeline] =
+  const [selectedOrderForTimeline, setSelectedOrderForTimeline] =
     useState(null);
+  const [selectedOrders, setSelectedOrders] = useState({});
+  const [whatsappQueue, setWhatsappQueue] = useState([]);
+  const [whatsappQueueIndex, setWhatsappQueueIndex] = useState(0);
 
   const fetchOrders = async (page = 1) => {
     setLoading(true);
@@ -182,6 +186,84 @@ export default function AllOrders({
     } finally {
       setActionLoading(false);
     }
+  };
+
+  const handleToggleOrderSelection = (order, isSelected) => {
+    setSelectedOrders((current) => {
+      const next = { ...current };
+      const orderKey = String(order.id);
+      if (isSelected) next[orderKey] = order;
+      else delete next[orderKey];
+      return next;
+    });
+  };
+
+  const handleToggleVisibleOrders = (visibleOrders, isSelected) => {
+    setSelectedOrders((current) => {
+      const next = { ...current };
+      visibleOrders.forEach((order) => {
+        const orderKey = String(order.id);
+        if (isSelected) next[orderKey] = order;
+        else delete next[orderKey];
+      });
+      return next;
+    });
+  };
+
+  const selectedOrderList = Object.values(selectedOrders);
+  const selectedEmails = [
+    ...new Set(
+      selectedOrderList
+        .map((order) => order.customer_email || order.consignee_email || order.email)
+        .filter(Boolean),
+    ),
+  ];
+  const selectedWhatsappNumbers = [
+    ...new Set(
+      selectedOrderList
+        .map((order) => {
+          const phone =
+            order.customer_phone || order.consignee_phone || order.phone || "";
+          const digits = String(phone).replace(/\D/g, "");
+          return digits.length === 10 ? `91${digits}` : digits;
+        })
+        .filter((phone) => phone.length >= 10),
+    ),
+  ];
+
+  const handleBulkEmail = () => {
+    if (!selectedEmails.length) return;
+    const subject = encodeURIComponent("Regarding your EatPur order");
+    const recipients = encodeURIComponent(selectedEmails.join(","));
+    window.open(
+      `https://mail.google.com/mail/?view=cm&fs=1&to=${recipients}&su=${subject}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
+  };
+
+  const handleBulkWhatsApp = () => {
+    if (!selectedWhatsappNumbers.length) return;
+    setWhatsappQueue(selectedWhatsappNumbers);
+    setWhatsappQueueIndex(0);
+    window.open(
+      `https://wa.me/${selectedWhatsappNumbers[0]}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
+  };
+
+  const handleNextWhatsapp = () => {
+    const nextIndex = whatsappQueueIndex + 1;
+    const nextNumber = whatsappQueue[nextIndex];
+    if (!nextNumber) {
+      setWhatsappQueue([]);
+      setWhatsappQueueIndex(0);
+      return;
+    }
+
+    window.open(`https://wa.me/${nextNumber}`, "_blank", "noopener,noreferrer");
+    setWhatsappQueueIndex(nextIndex);
   };
 
   const getPaymentBadgeType = (status) => {
@@ -467,12 +549,52 @@ export default function AllOrders({
         </div>
       ) : (
         <div className="flex flex-col gap-4">
+          {selectedOrderList.length > 0 && (
+            <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm font-semibold text-slate-700">
+                {selectedOrderList.length} order{selectedOrderList.length === 1 ? "" : "s"} selected
+              </p>
+              <div className="flex flex-wrap justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={handleBulkWhatsApp}
+                  disabled={!selectedWhatsappNumbers.length}
+                  className="inline-flex items-center gap-2 rounded-md bg-emerald-700 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <FaWhatsapp aria-hidden="true" /> Sent to WhatsApp
+                </button>
+                <button
+                  type="button"
+                  onClick={handleBulkEmail}
+                  disabled={!selectedEmails.length}
+                  className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <FaEnvelope aria-hidden="true" /> Sent to Email
+                </button>
+                {whatsappQueue.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={handleNextWhatsapp}
+                    className="rounded-md border border-emerald-700 px-3 py-2 text-sm font-semibold text-emerald-800 hover:bg-emerald-50"
+                  >
+                    {whatsappQueueIndex < whatsappQueue.length - 1
+                      ? `Open next WhatsApp (${whatsappQueueIndex + 2}/${whatsappQueue.length})`
+                      : "Finish WhatsApp list"}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
           <EatpurTable
             columns={columns}
             data={formattedData}
             showActions={true}
+            selectable
+            selectedIds={Object.keys(selectedOrders)}
+            onToggleRow={handleToggleOrderSelection}
+            onToggleAll={handleToggleVisibleOrders}
             onViewClick={(order) => {
-              setSelectedOrderIdForTimeline(order.id);
+              setSelectedOrderForTimeline(order);
               setIsTimelineModalOpen(true);
             }}
           />
@@ -520,7 +642,8 @@ export default function AllOrders({
       <OrderTimeline
         isOpen={isTimelineModalOpen}
         onClose={() => setIsTimelineModalOpen(false)}
-        orderId={selectedOrderIdForTimeline}
+        orderId={selectedOrderForTimeline?.id}
+        order={selectedOrderForTimeline}
       />
     </div>
   );
