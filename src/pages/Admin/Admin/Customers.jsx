@@ -192,7 +192,7 @@ function CustomerList({
     { header: "State", accessor: "dropState" },
     { header: "Pincode", accessor: "dropPincode" },
     { header: "Order Count", accessor: "orderCount" },
-    { header: "Unpaid Orders", accessor: "unpaidOrder" },
+    { header: "Unpaid Orders", accessor: "orderunpaidcount" },
     { header: "Action", accessor: "actionBtn" },
   ];
 
@@ -207,7 +207,7 @@ function CustomerList({
       dropState: customer.drop_state || customer.state || "-",
       dropPincode: customer.drop_pincode || customer.pincode || "-",
       orderCount: customer.order_count ?? "0",
-      unpaidOrders: customer.unpaid_order_count ?? "0",
+      orderunpaidcount: customer.order_unpaid_count ?? "0",
       actionBtn: (
         <button
           onClick={() => handleViewClick(customer)}
