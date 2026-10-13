@@ -1,7 +1,8 @@
 // src/api/client.js
 import { decryptResponse } from "../utils/decrypt";
 
-const BASE_URL = "https://eatpur.in/api";
+//const BASE_URL = "http://localhost:8000/api";  // Replace with your actual backend URL
+const BASE_URL = "https://eatpur.in/api";  // Replace with your actual backend URL
 
 // Queue for holding requests while the token is seamlessly refreshing
 let isRefreshing = false;
