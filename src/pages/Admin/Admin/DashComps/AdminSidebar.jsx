@@ -1,5 +1,5 @@
 // src/pages/Admin/Admin/AdminSidebar.jsx
-import React, { useState } from "react";
+import React from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
 
 export default function AdminSidebar({
@@ -7,15 +7,16 @@ export default function AdminSidebar({
   activeSubTab,
   setActiveSubTab,
   sidebarSubLinks,
+  isOpen,
+  onToggle,
 }) {
-  const [isOpen, setIsOpen] = useState(true);
   const currentSubLinks = sidebarSubLinks[activeTab] || [];
 
   return (
     <>
       {/* Sidebar Container */}
       <aside
-        className={`w-full md:w-64 shrink-0 md:fixed md:left-0 md:top-[135px] lg:top-[147px] md:h-[calc(100vh-147px)] md:border-r md:border-slate-200/60 md:bg-white z-40 transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "md:-translate-x-full"
+        className={`w-full md:w-64 shrink-0 md:fixed md:left-0 md:top-[125px] lg:top-[134px] md:h-[calc(100vh-125px)] lg:h-[calc(100vh-134px)] md:border-r md:border-slate-200/60 md:bg-white z-40 transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "md:-translate-x-full"
           }`}
       >
         <div className="p-4 bg-white md:bg-transparent sticky top-40 md:top-0 h-full flex flex-col justify-between">
@@ -55,7 +56,7 @@ export default function AdminSidebar({
 
       {/* Desktop Toggle Button positioned precisely adjacent to the sidebar edge */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={onToggle}
         className={`hidden md:flex fixed top-[50%] -translate-y-1/2 z-50 items-center justify-center w-7 h-12 bg-white border border-slate-200 text-slate-600 shadow-md hover:bg-slate-50 transition-all duration-300 ${isOpen ? "left-64 rounded-r-lg border-l-0" : "left-0 rounded-r-lg border-l-0"
           }`}
         aria-label="Toggle Sidebar"

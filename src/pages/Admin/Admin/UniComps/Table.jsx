@@ -7,12 +7,14 @@ export default function EatpurTable({
   maxRows,
   showActions = true,
   onViewClick,
+  onRowClick,
   selectable = false,
   selectedIds = [],
   onToggleRow,
   onToggleAll,
   currentPage = 1,     
   itemsPerPage = 10,    
+  compact = false,
 }) {
   // Slice data array cleanly if a maximum number of rows is passed
   const displayedData = maxRows ? data.slice(0, maxRows) : data;
@@ -22,6 +24,12 @@ export default function EatpurTable({
   const selectionColumn = columns.find(
     (column) => column.header?.toLowerCase() === "select",
   );
+  const handleRowClick = (event, row) => {
+    if (event.target.closest("button, a, input, select, textarea")) {
+      return;
+    }
+    onRowClick?.(row);
+  };
 
   return (
     <div className="w-full overflow-hidden rounded-xl border border-[--color-eatpur-yellow-light] bg-white shadow-sm">
@@ -128,7 +136,16 @@ export default function EatpurTable({
           displayedData.map((row, rowIdx) => (
             <article
               key={row.id ?? rowIdx}
-              className="rounded-lg border border-[--color-eatpur-yellow-light] bg-[--color-eatpur-white-warm] p-3 shadow-sm"
+              onClick={onRowClick ? (event) => handleRowClick(event, row) : undefined}
+              onKeyDown={(event) => {
+                if (onRowClick && event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) {
+                  event.preventDefault();
+                  onRowClick(row);
+                }
+              }}
+              role={onRowClick ? "button" : undefined}
+              tabIndex={onRowClick ? 0 : undefined}
+              className={`rounded-lg border border-[--color-eatpur-yellow-light] bg-[--color-eatpur-white-warm] p-3 shadow-sm ${onRowClick ? "cursor-pointer" : ""}`}
             >
               <div className="mb-3 flex items-center justify-between gap-3 border-b border-[--color-eatpur-yellow-light] pb-3">
                 <span className="text-xs font-semibold uppercase tracking-wide text-[--color-eatpur-text-light]">
@@ -189,10 +206,10 @@ export default function EatpurTable({
         )}
       </div>
 
-      <div className="hidden overflow-x-auto md:block">
+      <div className={`hidden md:block ${compact ? "overflow-x-hidden" : "overflow-x-auto"}`}>
         <table
-          className="w-full text-left border-collapse"
-          style={{ fontFamily: "var(--font-sans)" }}
+          className={`w-full text-left border-collapse ${compact ? "table-fixed" : ""}`}
+          style={{ fontFamily: "var(--font-sans)", ...(compact ? { tableLayout: "fixed" } : {}) }}
         >
           <thead>
             <tr className="border-b border-[--color-eatpur-yellow-light] bg-[--color-eatpur-white-warm]">
@@ -209,19 +226,19 @@ export default function EatpurTable({
                   />
                 </th>
               )}
-              <th className="px-6 py-4 text-xs font-semibold tracking-wider uppercase text-[--color-eatpur-dark] w-16">
+              <th className={`${compact ? "w-10 px-1.5 py-2 text-[10px] leading-tight" : "w-16 px-6 py-4 text-xs"} font-semibold tracking-wider uppercase text-[--color-eatpur-dark]`}>
                 S.No.
               </th>
               {columns.map((col, idx) => (
                 <th
                   key={idx}
-                  className="px-6 py-4 text-xs font-semibold tracking-wider uppercase text-[--color-eatpur-dark]"
+                  className={`${compact ? "px-1.5 py-2 text-[10px] leading-tight break-words" : "px-6 py-4 text-xs"} font-semibold tracking-wider uppercase text-[--color-eatpur-dark]`}
                 >
                   {col.header}
                 </th>
               ))}
               {showActions && (
-                <th className="px-6 py-4 text-xs font-semibold tracking-wider uppercase text-[--color-eatpur-dark] text-right">
+                <th className={`${compact ? "px-1.5 py-2 text-[10px] leading-tight" : "px-6 py-4 text-xs"} font-semibold tracking-wider uppercase text-[--color-eatpur-dark] text-right`}>
                   Actions
                 </th>
               )}
@@ -233,7 +250,16 @@ export default function EatpurTable({
               displayedData.map((row, rowIdx) => (
                 <tr
                   key={rowIdx}
-                  className="hover:bg-[--color-eatpur-white-warm]/40 transition-colors duration-150 border-b border-[--color-eatpur-yellow-light] last:border-none"
+                  onClick={onRowClick ? (event) => handleRowClick(event, row) : undefined}
+                  onKeyDown={(event) => {
+                    if (onRowClick && event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) {
+                      event.preventDefault();
+                      onRowClick(row);
+                    }
+                  }}
+                  role={onRowClick ? "row" : undefined}
+                  tabIndex={onRowClick ? 0 : undefined}
+                  className={`hover:bg-[--color-eatpur-white-warm]/40 transition-colors duration-150 border-b border-[--color-eatpur-yellow-light] last:border-none ${onRowClick ? "cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600" : ""}`}
                 >
                   {/* YAHAN S.NO CALCULATION CHANGE KI HAI */}
                   {selectable && (
@@ -249,14 +275,14 @@ export default function EatpurTable({
                       />
                     </td>
                   )}
-                  <td className="px-6 py-3.5 text-sm font-semibold text-[--color-eatpur-dark]">
+                  <td className={`${compact ? "px-1.5 py-2 text-xs" : "px-6 py-3.5 text-sm"} font-semibold text-[--color-eatpur-dark]`}>
                     {row.rowNumber ?? ((currentPage - 1) * itemsPerPage + rowIdx + 1)}
                   </td>
                   
                   {columns.map((col, colIdx) => (
                     <td
                       key={colIdx}
-                      className="px-6 py-3.5 text-sm font-normal text-[--color-eatpur-text]"
+                      className={`${compact ? "px-1.5 py-2 text-xs leading-tight break-words" : "px-6 py-3.5 text-sm"} font-normal text-[--color-eatpur-text]`}
                     >
                       {row[col.accessor] !== undefined &&
                       row[col.accessor] !== null
@@ -268,7 +294,7 @@ export default function EatpurTable({
                   ))}
 
                   {showActions && (
-                    <td className="px-6 py-3.5 text-sm text-right whitespace-nowrap">
+                    <td className={`${compact ? "px-1.5 py-2 text-xs" : "px-6 py-3.5 text-sm"} text-right whitespace-nowrap`}>
                       <div className="inline-flex justify-end w-full">
                         <button
                           onClick={() => onViewClick?.(row)}

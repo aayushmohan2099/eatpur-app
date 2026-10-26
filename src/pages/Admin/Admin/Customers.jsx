@@ -8,10 +8,44 @@ import { FaEye, FaTimes, FaBoxOpen, FaSearch } from "react-icons/fa";
 
 const normalizeCustomers = (response) => {
   const payload = response?.data && !Array.isArray(response.data) ? response.data : response;
-  const customers = Array.isArray(payload) ? payload : payload?.results || payload?.data || [];
+  const customerGroups = Array.isArray(payload) ? payload : payload?.results || payload?.data || [];
+  const customers = customerGroups.map((customer) => {
+    if (!Array.isArray(customer?.addresses)) return customer;
+
+    const addresses = customer.addresses;
+    const uniqueValues = (field) => [...new Set(
+      addresses.map((address) => address?.[field]).filter(Boolean).map(String),
+    )].join(", ");
+
+    return {
+      ...customer,
+      addresses,
+      consignee_name: uniqueValues("consignee_name"),
+      consignee_phone: uniqueValues("consignee_phone"),
+      consignee_alternate_phone: uniqueValues("consignee_alternate_phone"),
+      drop_location: uniqueValues("drop_location"),
+      drop_city: uniqueValues("drop_city"),
+      drop_state: uniqueValues("drop_state"),
+      drop_pincode: uniqueValues("drop_pincode"),
+      order_count: addresses.reduce(
+        (total, address) => total + (Number(address?.order_count) || 0),
+        0,
+      ),
+      order_unpaid_count: addresses.reduce(
+        (total, address) => total + (Number(address?.order_unpaid_count) || 0),
+        0,
+      ),
+      order_ids: [...new Set([
+        ...(Array.isArray(customer.order_ids) ? customer.order_ids : []),
+        ...addresses.flatMap((address) =>
+          Array.isArray(address?.order_ids) ? address.order_ids : [],
+        ),
+      ].map(String))],
+    };
+  });
 
   return {
-    customers: Array.isArray(customers) ? customers : [],
+    customers,
     total: Number(payload?.count || payload?.total || customers.length),
     hasNext: Boolean(payload?.next),
     hasPrevious: Boolean(payload?.previous),
@@ -56,11 +90,18 @@ const getOrderItems = (order) => {
   return [];
 };
 
+const getOrderId = (order) => {
+  if (!order || typeof order !== "object") return order;
+
+  const reference = order.id ?? order.order_id ?? order.sale_order_id ?? order.order;
+  return reference && typeof reference === "object" ? getOrderId(reference) : reference;
+};
+
 const normalizeOrderDetails = (orders) => {
   const groupedOrders = new Map();
 
   orders.forEach((order, index) => {
-    const orderId = order?.id ?? order?.order_id ?? `order-${index}`;
+    const orderId = getOrderId(order) ?? `order-${index}`;
     const items = getOrderItems(order);
     const existingOrder = groupedOrders.get(orderId);
 
@@ -80,15 +121,134 @@ const normalizeOrderDetails = (orders) => {
 
 const getOrderResponseData = (response) => {
   let payload = response?.data ?? response;
-  if (payload?.data && !Array.isArray(payload.data)) payload = payload.data;
+  while (payload?.data && !Array.isArray(payload.data)) payload = payload.data;
 
   return {
     orders: Array.isArray(payload) ? payload : payload?.results || payload?.orders || [],
     count: Number(payload?.count) || 0,
+    hasPagination: Boolean(payload && Object.prototype.hasOwnProperty.call(payload, "next")),
+    hasNext: Boolean(payload?.next),
   };
 };
 
-const normalizePhone = (value) => String(value || "").replace(/\D/g, "");
+const collectOrderPages = async (params, firstResponse) => {
+  const firstPage = getOrderResponseData(firstResponse);
+  const orders = [...firstPage.orders];
+  const pageSize = firstPage.orders.length;
+  const maxPages = pageSize > 0
+    ? Math.ceil(Math.max(firstPage.count, pageSize) / pageSize)
+    : 1;
+
+  for (let page = 2; page <= maxPages; page += 1) {
+    const pageData = getOrderResponseData(
+      await getAdminOrders({ ...params, page }),
+    );
+    if (pageData.orders.length === 0) break;
+    orders.push(...pageData.orders);
+  }
+
+  return orders;
+};
+
+const getAddressForOrder = (customer, order) => {
+  const orderId = String(order?.id ?? order?.order_id ?? "");
+  if (!orderId) return null;
+
+  return customer?.addresses?.find((address) =>
+    Array.isArray(address?.order_ids) &&
+    address.order_ids.some((id) => String(id?.id ?? id?.order_id ?? id) === orderId),
+  ) || null;
+};
+
+const getOrderDeliveryAddress = (order, customerAddress) => {
+  const orderAddress = order?.shipping_address || order?.delivery_address || order?.address || {};
+  const stringAddress = typeof orderAddress === "string" ? orderAddress : "";
+  const parts = [
+    customerAddress?.drop_location ||
+      customerAddress?.address_line ||
+      order?.drop_location ||
+      order?.consignee_address ||
+      (typeof orderAddress === "object"
+        ? orderAddress.drop_location || orderAddress.address_line || orderAddress.street
+        : ""),
+    customerAddress?.drop_city || order?.drop_city || order?.city ||
+      (typeof orderAddress === "object" ? orderAddress.city : ""),
+    customerAddress?.drop_state || order?.drop_state || order?.state ||
+      (typeof orderAddress === "object" ? orderAddress.state : ""),
+    customerAddress?.drop_pincode || order?.drop_pincode || order?.pincode ||
+      (typeof orderAddress === "object" ? orderAddress.pincode || orderAddress.postal_code : ""),
+  ].filter(Boolean);
+
+  return [...new Set(parts.map(String))].join(", ") || stringAddress || "-";
+};
+
+const customerOrderDetailsCache = new Map();
+const customerOrderDetailsRequests = new Map();
+
+const fetchCustomerOrderDetails = async (orderIds) => {
+  const cacheKey = JSON.stringify([...orderIds].sort());
+  if (customerOrderDetailsCache.has(cacheKey)) {
+    return customerOrderDetailsCache.get(cacheKey);
+  }
+  if (customerOrderDetailsRequests.has(cacheKey)) {
+    return customerOrderDetailsRequests.get(cacheKey);
+  }
+
+  const requestedIds = new Set(orderIds.map(String));
+  const request = (async () => {
+    const params = { order_ids: orderIds.join(","), page_size: orderIds.length };
+    const firstPage = getOrderResponseData(
+      await getAdminOrders({ ...params, page: 1 }),
+    );
+    const ordersById = new Map();
+    const collectOrders = (orders) => {
+      orders.forEach((order) => {
+        const id = getOrderId(order);
+        if (id !== undefined && requestedIds.has(String(id))) {
+          ordersById.set(String(id), order);
+        }
+      });
+    };
+
+    collectOrders(firstPage.orders);
+    const seenPages = new Set([
+      firstPage.orders.map((order) => String(getOrderId(order) ?? "")).join(","),
+    ]);
+
+    for (
+      let page = 2;
+      page <= orderIds.length && ordersById.size < requestedIds.size;
+      page += 1
+    ) {
+      const pageData = getOrderResponseData(
+        await getAdminOrders({ ...params, page }),
+      );
+      if (pageData.orders.length === 0) break;
+
+      const pageSignature = pageData.orders
+        .map((order) => String(getOrderId(order) ?? ""))
+        .join(",");
+      if (seenPages.has(pageSignature)) break;
+      seenPages.add(pageSignature);
+
+      collectOrders(pageData.orders);
+      if (pageData.hasPagination && !pageData.hasNext) break;
+    }
+
+    if (ordersById.size === 0) return [];
+
+    const details = normalizeOrderDetails([...ordersById.values()]);
+    if (ordersById.size === requestedIds.size) {
+      customerOrderDetailsCache.set(cacheKey, details);
+    }
+    return details;
+  })().finally(() => {
+    customerOrderDetailsRequests.delete(cacheKey);
+  });
+
+  customerOrderDetailsRequests.set(cacheKey, request);
+  return request;
+};
 
 function CustomerList({
   customers,
@@ -124,48 +284,46 @@ function CustomerList({
         ...(Array.isArray(customer?.order_ids) ? customer.order_ids : []),
         customer?.order_id,
       ]
-        .map((order) => (typeof order === "object" ? order?.id ?? order?.order_id : order))
+        .map(getOrderId)
         .filter(Boolean);
       const requestedOrderIds = new Set(orderIds.map(String));
       let matchingOrders = [];
 
       if (orderIds.length > 0) {
-        const response = await getAdminOrders({
-          order_ids: orderIds.join(","),
-          page_size: orderIds.length,
-        });
-        const { orders } = getOrderResponseData(response);
-        matchingOrders = orders.filter((order) =>
-          requestedOrderIds.has(String(order?.id ?? order?.order_id)),
-        );
+        matchingOrders = await fetchCustomerOrderDetails(orderIds);
       }
 
-      if (matchingOrders.length === 0) {
-        const phone = normalizePhone(customer?.consignee_phone);
-        const email = String(customer?.consignee_email || "").trim().toLowerCase();
-        const searchTerms = [customer?.consignee_phone, customer?.consignee_email].filter(Boolean);
+      if (matchingOrders.length < requestedOrderIds.size) {
+        const searchTerms = [...new Set([
+          customer?.customer_email,
+          customer?.email,
+          customer?.customer_phone,
+          customer?.phone,
+          ...(Array.isArray(customer?.addresses)
+            ? customer.addresses.map((address) => address?.consignee_phone)
+            : [customer?.consignee_phone]),
+        ].map((term) => String(term || "").trim()).filter(Boolean))];
+        const ordersById = new Map(
+          matchingOrders.map((order) => [String(getOrderId(order)), order]),
+        );
 
         for (const search of searchTerms) {
-          const firstResponse = await getAdminOrders({ search, page: 1, page_size: 100 });
-          const firstPage = getOrderResponseData(firstResponse);
-          const searchedOrders = [...firstPage.orders];
-          const pageCount = firstPage.count ? Math.ceil(firstPage.count / 100) : 1;
-
-          for (let page = 2; page <= pageCount; page += 1) {
-            const response = await getAdminOrders({ search, page, page_size: 100 });
-            searchedOrders.push(...getOrderResponseData(response).orders);
-          }
-
-          matchingOrders = searchedOrders.filter((order) => {
-            const orderPhone = normalizePhone(order?.customer_phone || order?.consignee_phone);
-            const orderEmail = String(order?.customer_email || order?.consignee_email || "")
-              .trim()
-              .toLowerCase();
-            return (phone && orderPhone === phone) || (email && orderEmail === email);
+          const params = { search, page: 1, page_size: 100 };
+          const searchedOrders = await collectOrderPages(
+            params,
+            await getAdminOrders(params),
+          );
+          searchedOrders.forEach((order) => {
+            const orderId = getOrderId(order);
+            if (orderId !== undefined && requestedOrderIds.has(String(orderId))) {
+              ordersById.set(String(orderId), order);
+            }
           });
 
-          if (matchingOrders.length > 0) break;
+          if (ordersById.size === requestedOrderIds.size) break;
         }
+
+        matchingOrders = [...ordersById.values()];
       }
 
       if (matchingOrders.length === 0) throw new Error("No order details found.");
@@ -184,30 +342,22 @@ function CustomerList({
   };
 
   const columns = [
-    { header: "Name", accessor: "consigneeName" },
-    { header: "Phone", accessor: "consigneePhone" },
-    { header: "Alternative Phone", accessor: "consigneeAlternatePhone" },
-    { header: "Location", accessor: "dropLocation" },
-    { header: "City", accessor: "dropCity" },
-    { header: "State", accessor: "dropState" },
-    { header: "Pincode", accessor: "dropPincode" },
+    { header: "Customer Name", accessor: "customerName" },
+    { header: "Phone Number", accessor: "customerPhone" },
     { header: "Order Count", accessor: "orderCount" },
-    { header: "Unpaid Orders", accessor: "orderunpaidcount" },
+    { header: "Unpaid Order Count", accessor: "orderunpaidcount" },
+    { header: "Email", accessor: "customerEmail" },
     { header: "Action", accessor: "actionBtn" },
   ];
 
   const rows = customers.map((customer) => {
     return {
       ...customer,
-      consigneeName: customer.consignee_name || "-",
-      consigneePhone: customer.consignee_phone || "-",
-      consigneeAlternatePhone: customer.consignee_alternate_phone || customer.consignee_alternate_phone || "-",
-      dropLocation: customer.drop_location || customer.street_address || customer.address_line || "-",
-      dropCity: customer.drop_city || customer.city || "-",
-      dropState: customer.drop_state || customer.state || "-",
-      dropPincode: customer.drop_pincode || customer.pincode || "-",
+      customerName: customer.customer_name || customer.name || customer.consignee_name || "-",
+      customerPhone: customer.customer_phone || customer.phone || customer.consignee_phone || "-",
       orderCount: customer.order_count ?? "0",
       orderunpaidcount: customer.order_unpaid_count ?? "0",
+      customerEmail: customer.customer_email || customer.email || "-",
       actionBtn: (
         <button
           onClick={() => handleViewClick(customer)}
@@ -225,6 +375,9 @@ function CustomerList({
   
   const paidOrdersList = orderDetails.filter((order) => isPaidOrder(order.payment_status));
   const unpaidOrdersList = orderDetails.filter((order) => !isPaidOrder(order.payment_status));
+  const expectedPaidOrders = Number(selectedCustomer?.order_count) || 0;
+  const expectedUnpaidOrders = Number(selectedCustomer?.order_unpaid_count) || 0;
+  const expectedTotalOrders = expectedPaidOrders + expectedUnpaidOrders;
   
   const currentOrdersToDisplay = activeModalTab === "paid" ? paidOrdersList : unpaidOrdersList;
 
@@ -321,19 +474,23 @@ function CustomerList({
                   <div className="grid grid-cols-1 gap-4 rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm sm:grid-cols-2 sm:p-5 lg:grid-cols-4">
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Customer User Name</p>
-                      <p className="mt-1 font-semibold text-slate-900">{orderDetails[0]?.customer_name || selectedCustomer?.consignee_name || "-"}</p>
+                      <p className="mt-1 font-semibold text-slate-900">{selectedCustomer?.customer_name || orderDetails[0]?.customer_name || selectedCustomer?.consignee_name || "-"}</p>
                     </div>
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Customer Phone</p>
-                      <p className="mt-1 font-semibold text-slate-900">{orderDetails[0]?.customer_phone || selectedCustomer?.consignee_phone || "-"}</p>
+                      <p className="mt-1 font-semibold text-slate-900">{selectedCustomer?.customer_phone || orderDetails[0]?.customer_phone || selectedCustomer?.consignee_phone || "-"}</p>
                     </div>
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Customer Email</p>
-                      <p className="mt-1 break-all text-slate-700">{orderDetails[0]?.customer_email || selectedCustomer?.consignee_email || "-"}</p>
+                      <p className="mt-1 break-all text-slate-700">{selectedCustomer?.customer_email || orderDetails[0]?.customer_email || selectedCustomer?.consignee_email || "-"}</p>
                     </div>
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Total Orders</p>
-                      <p className="mt-1 font-semibold text-slate-900">{selectedCustomer?.order_count ?? orderDetails.length}</p>
+                      <p className="mt-1 font-semibold text-slate-900">
+                        {(Number(selectedCustomer?.order_count) || 0) +
+                          (Number(selectedCustomer?.order_unpaid_count) || 0) ||
+                          orderDetails.length}
+                      </p>
                     </div>
                   </div>
 
@@ -347,7 +504,7 @@ function CustomerList({
                       }`}
                       onClick={() => setActiveModalTab("paid")}
                     >
-                      Paid Orders ({paidOrdersList.length})
+                      Paid Orders ({expectedPaidOrders || paidOrdersList.length})
                     </button>
                     <button
                       className={`pb-3 text-sm font-bold transition-all ${
@@ -357,15 +514,22 @@ function CustomerList({
                       }`}
                       onClick={() => setActiveModalTab("unpaid")}
                     >
-                      Unpaid Orders ({unpaidOrdersList.length})
+                      Unpaid Orders ({expectedUnpaidOrders || unpaidOrdersList.length})
                     </button>
                   </div>
+
+                  {expectedTotalOrders > orderDetails.length && (
+                    <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                      Showing details for {orderDetails.length} of {expectedTotalOrders} orders. The orders API has not returned all order records yet.
+                    </p>
+                  )}
 
                   {/* Display Orders based on Active Tab */}
                   <div className="space-y-4">
                     {currentOrdersToDisplay.length > 0 ? (
                       currentOrdersToDisplay.map((order, orderIndex) => {
                         const items = getOrderItems(order);
+                        const orderAddress = getAddressForOrder(selectedCustomer, order);
                         const orderDate = order.order_date ? new Date(order.order_date).toLocaleString() : "-";
                         const trackingIds = Array.isArray(order.tracking_ids) ? order.tracking_ids : [];
                         const ekartStatuses = Array.isArray(order.ekart_statuses) ? order.ekart_statuses : [];
@@ -388,25 +552,26 @@ function CustomerList({
                             <div className="grid grid-cols-1 gap-3 rounded-xl bg-slate-50 p-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
                               <div>
                                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Consignee Name</p>
-                                <p className="mt-1 font-semibold text-slate-800">{selectedCustomer?.consignee_name || order.customer_name || "-"}</p>
+                                <p className="mt-1 font-semibold text-slate-800">
+                                  {orderAddress?.consignee_name || order.consignee_name || order.consignee?.name || order.customer_name || "-"}
+                                </p>
                               </div>
                               <div>
                                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Consignee Phone</p>
-                                <p className="mt-1 text-slate-700">{selectedCustomer?.consignee_phone || order.customer_phone || "-"}</p>
+                                <p className="mt-1 text-slate-700">
+                                  {orderAddress?.consignee_phone || order.consignee_phone || order.consignee?.phone || "-"}
+                                </p>
                               </div>
                               <div>
                                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Alternate Phone</p>
-                                <p className="mt-1 leading-relaxed text-slate-700">{selectedCustomer?.consignee_alternate_phone || selectedCustomer?.alternate_phone || order.customer_alternate_phone || "-"}</p>
+                                <p className="mt-1 leading-relaxed text-slate-700">
+                                  {orderAddress?.consignee_alternate_phone || order.consignee_alternate_phone || order.alternate_phone || "-"}
+                                </p>
                               </div>
                               <div className="sm:col-span-2 lg:col-span-3">
                                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Delivery Address</p>
                                 <p className="mt-1 leading-relaxed text-slate-700">
-                                  {[
-                                    selectedCustomer?.drop_location || selectedCustomer?.street_address || selectedCustomer?.address_line,
-                                    selectedCustomer?.drop_city || selectedCustomer?.city,
-                                    selectedCustomer?.drop_state || selectedCustomer?.state,
-                                    selectedCustomer?.drop_pincode || selectedCustomer?.pincode,
-                                  ].filter(Boolean).join(", ") || "-"}
+                                  {getOrderDeliveryAddress(order, orderAddress)}
                                 </p>
                               </div>
                               <div>
@@ -537,12 +702,18 @@ export default function CustomerWorkspace() {
   }, [fetchCustomers]);
 
   const filteredCustomers = customers.filter((customer) => {
-    const query = searchQuery.toLowerCase();
-    const name = (customer.consignee_name || "").toLowerCase();
-    const phone = (customer.consignee_phone || "").toLowerCase();
-    const pincode = (customer.drop_pincode || customer.pincode || "").toLowerCase();
+    const query = searchQuery.trim().toLowerCase();
+    const searchableValues = [
+      customer.customer_name,
+      customer.customer_email,
+      customer.customer_phone,
+      customer.consignee_name,
+      customer.consignee_phone,
+      customer.drop_pincode,
+      customer.pincode,
+    ];
 
-    return name.includes(query) || phone.includes(query) || pincode.includes(query);
+    return searchableValues.some((value) => String(value || "").toLowerCase().includes(query));
   });
 
   useEffect(() => {

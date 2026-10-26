@@ -58,29 +58,53 @@ export default function OrderTimeline({ isOpen, onClose, orderId, order }) {
       const orderIdString = String(orderId);
 
       const matchingRecord = records.find((record) => {
+        const addresses = Array.isArray(record.addresses) ? record.addresses : [];
         const recordOrderIds = [
           ...(Array.isArray(record.order_ids) ? record.order_ids : []),
+          ...addresses.flatMap((address) =>
+            Array.isArray(address.order_ids) ? address.order_ids : [],
+          ),
           record.order_id,
           record.sale_order_id,
           record.order,
         ]
           .filter((id) => id !== undefined && id !== null)
-          .map(String);
+          .map((id) => String(id?.id ?? id?.order_id ?? id));
         const recordPhone = String(
-          record.consignee_phone || record.customer_phone || record.phone || "",
+          record.customer_phone || record.consignee_phone || record.phone || "",
         ).replace(/\D/g, "");
         const recordEmail = String(
-          record.consignee_email || record.customer_email || record.email || "",
+          record.customer_email || record.consignee_email || record.email || "",
         ).toLowerCase();
 
         return (
           recordOrderIds.includes(orderIdString) ||
+          addresses.some((address) =>
+            Array.isArray(address.order_ids) &&
+            address.order_ids.some((id) =>
+              String(id?.id ?? id?.order_id ?? id) === orderIdString,
+            ),
+          ) ||
           (orderPhone && recordPhone === orderPhone) ||
           (orderEmail && recordEmail === orderEmail)
         );
       });
 
-      setCustomerAddress(matchingRecord || null);
+      const matchingAddress = matchingRecord?.addresses?.find((address) =>
+        Array.isArray(address.order_ids) &&
+        address.order_ids.some((id) =>
+          String(id?.id ?? id?.order_id ?? id) === orderIdString,
+        ),
+      );
+      setCustomerAddress(
+        matchingRecord
+          ? {
+              ...matchingRecord,
+              ...matchingAddress,
+              customer_id: matchingRecord.customer_id ?? matchingRecord.id,
+            }
+          : null,
+      );
     } catch (addressError) {
       console.error("Failed to load customer address history:", addressError);
       setCustomerAddress(null);
@@ -196,18 +220,22 @@ export default function OrderTimeline({ isOpen, onClose, orderId, order }) {
       .replace(/₹/g, "\u20B9");
   };
 
-  const customerName =
-    order?.customer_name ||
+  const consigneeName =
     order?.consignee_name ||
-    order?.customer?.name ||
+    order?.shipping_address?.consignee_name ||
+    order?.delivery_address?.consignee_name ||
     customerAddress?.consignee_name ||
+    order?.customer_name ||
+    order?.customer?.name ||
     "-";
   const customerPhone =
-    order?.customer_phone ||
     order?.consignee_phone ||
+    order?.shipping_address?.consignee_phone ||
+    order?.delivery_address?.consignee_phone ||
+    customerAddress?.consignee_phone ||
+    order?.customer_phone ||
     order?.phone ||
     order?.customer?.phone ||
-    customerAddress?.consignee_phone ||
     "";
   const customerEmail =
     order?.customer_email ||
@@ -216,6 +244,27 @@ export default function OrderTimeline({ isOpen, onClose, orderId, order }) {
     order?.customer?.email ||
     customerAddress?.consignee_email ||
     "";
+  const consigneeAlternatePhone =
+    order?.consignee_alternate_phone ||
+    order?.alternative_phone ||
+    order?.alternate_phone ||
+    order?.shipping_address?.consignee_alternate_phone ||
+    order?.delivery_address?.consignee_alternate_phone ||
+    customerAddress?.consignee_alternate_phone ||
+    customerAddress?.alternative_phone ||
+    "";
+  const couponcode =
+    order?.coupon_code ||
+    order?.coupon?.coupon_code ||
+    order?.coupon?.code ||
+    order?.discount_code ||
+    "";
+  const orderItems =
+    order?.items ||
+    order?.order_items ||
+    order?.line_items ||
+    order?.products ||
+    [];
   const address = [
     order?.drop_location ||
       order?.street_address ||
@@ -241,8 +290,8 @@ export default function OrderTimeline({ isOpen, onClose, orderId, order }) {
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={`Journey of Order #ORD-${orderId}`}
-      maxWidth="max-w-2xl"
+      title={`Order #ORD-${orderId} details & journey`}
+      maxWidth="max-w-3xl"
       footer={
         <div className="flex w-full flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap gap-2">
@@ -272,25 +321,57 @@ export default function OrderTimeline({ isOpen, onClose, orderId, order }) {
       }
     >
       <div className="min-h-[400px] max-h-[70vh] overflow-y-auto custom-scrollbar p-2">
+        <section className="mb-5 rounded-xl border border-emerald-100 bg-emerald-50/50 p-4 shadow-sm sm:p-5">
+          <h3 className="mb-4 border-b border-emerald-100 pb-3 text-xs font-semibold uppercase text-emerald-800">
+            Order summary
+          </h3>
+          <dl className="grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <dt className="text-xs font-semibold uppercase text-slate-400">Order ID</dt>
+              <dd className="mt-1 font-semibold text-slate-900">#{orderId}</dd>
+            </div>
+            <div>
+              <dt className="text-xs font-semibold uppercase text-slate-400">Order date</dt>
+              <dd className="mt-1 text-slate-800">
+                {order?.order_date ? new Date(order.order_date).toLocaleString("en-IN") : "Not provided"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs font-semibold uppercase text-slate-400">Total amount</dt>
+              <dd className="mt-1 font-semibold text-slate-900">
+                ₹{order?.total_amount ?? order?.total ?? "0"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs font-semibold uppercase text-slate-400">Payment / fulfillment</dt>
+              <dd className="mt-1 text-slate-800">
+                {order?.payment_status || "Not provided"} / {order?.fulfillment_status || "Not provided"}
+              </dd>
+            </div>
+            
+            
+          </dl>
+        </section>
+
         <section className="mb-5 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
           <div className="mb-4 border-b border-slate-100 pb-3">
             <p className="text-xs font-semibold uppercase text-emerald-700">
-              Customer contact
+              Delivery details
             </p>
           </div>
 
-          <dl className="grid gap-4 text-sm sm:grid-cols-3">
+          <dl className="grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
             <div className="min-w-0">
-              <dt className="text-xs font-semibold uppercase text-slate-400">Customer Name</dt>
-              <dd className="mt-1 break-words font-semibold text-slate-900">{customerName}</dd>
+              <dt className="text-xs font-semibold uppercase text-slate-400">Consignee name (delivered to)</dt>
+              <dd className="mt-1 break-words font-semibold text-slate-900">{consigneeName}</dd>
             </div>
             <div>
-              <dt className="text-xs font-semibold uppercase text-slate-400">Phone</dt>
+              <dt className="text-xs font-semibold uppercase text-slate-400">Consignee phone</dt>
               <dd className="mt-1 break-all text-slate-800">{customerPhone || "Not provided"}</dd>
             </div>
             <div>
-              <dt className="text-xs font-semibold uppercase text-slate-400">Email</dt>
-              <dd className="mt-1 break-all text-slate-800">{customerEmail || "Not provided"}</dd>
+              <dt className="text-xs font-semibold uppercase text-slate-400">Alternate phone</dt>
+              <dd className="mt-1 break-all text-slate-800">{consigneeAlternatePhone || "Not provided"}</dd>
             </div>
             <div className="sm:col-span-3">
               <dt className="text-xs font-semibold uppercase text-slate-400">Delivery address</dt>
@@ -298,6 +379,47 @@ export default function OrderTimeline({ isOpen, onClose, orderId, order }) {
             </div>
           </dl>
 
+        </section>
+
+        <section className="mb-5 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+          <h3 className="mb-4 border-b border-slate-100 pb-3 text-xs font-semibold uppercase text-slate-500">
+            Order items
+          </h3>
+          {Array.isArray(orderItems) && orderItems.length > 0 ? (
+            <div className="space-y-3">
+              {orderItems.map((item, index) => {
+                const product = item?.product || item?.product_details || item;
+                const productName =
+                  product?.name || product?.title || item?.product_name || "Product";
+                const quantity = item?.quantity ?? item?.qty ?? 1;
+                const price =
+                  item?.price_at_purchase ??
+                  item?.unit_price ??
+                  item?.price ??
+                  product?.selling_price ??
+                  product?.price;
+
+                return (
+                  <div
+                    key={item?.id ?? item?.product_id ?? index}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-slate-50 p-3 text-sm"
+                  >
+                    <div>
+                      <p className="font-semibold text-slate-800">{productName}</p>
+                      {item?.product_id != null && (
+                        <p className="text-xs text-slate-500">Product ID: {item.product_id}</p>
+                      )}
+                    </div>
+                    <p className="text-slate-700">
+                      Qty: {quantity}{price != null ? ` · ₹${price} each` : ""}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-slate-500">Item details were not included in the order list response.</p>
+          )}
         </section>
 
         {loading ? (
