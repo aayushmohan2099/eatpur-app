@@ -119,6 +119,7 @@ export default function AdminDashboard() {
 
   const [activeTab, setActiveTab] = useState("Dashboard");
   const [activeSubTab, setActiveSubTab] = useState("Overview");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   // Helper arrays for your components to consume cleanly
   const navLinkNames = navRegistry.map((item) => item.name);
@@ -198,15 +199,19 @@ export default function AdminDashboard() {
         handleTabChange={handleTabChange}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 flex flex-col md:flex-row gap-8">
+      <div
+        className={`${["Customers", "Orders"].includes(activeTab) ? `max-w-none w-full md:gap-0 transition-[width,margin] duration-300 ${isSidebarOpen ? "md:ml-64 md:w-[calc(100%-16rem)]" : ""}` : "max-w-7xl mx-auto"} px-4 sm:px-6 lg:px-8 mt-8 flex flex-col md:flex-row gap-8`}
+      >
         <AdminSidebar
           activeTab={activeTab}
           activeSubTab={activeSubTab}
           setActiveSubTab={handleSubTabChange}
           sidebarSubLinks={sidebarSubLinks}
+          isOpen={isSidebarOpen}
+          onToggle={() => setIsSidebarOpen((open) => !open)}
         />
 
-        <main className="flex-1 space-y-6 overflow-hidden">
+        <main className="min-w-0 flex-1 space-y-6 overflow-hidden">
           <div className="flex items-center justify-between mb-2">
             <div className="text-sm text-slate-500 bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm">
               Last updated: Just now

@@ -158,7 +158,7 @@ export default function DownloadInvoice({
       <tr>
         <td>${index + 1}</td>
         <td class="product-name">${escapeHtml([item.name || item.product_name, item.sku].filter(Boolean).join(" - "))}</td>
-        <td>${formatAmount(totals.total_mrp)}</td>
+        <td>${formatAmount(item.unit_price)}</td>
         <td>${escapeHtml(item.quantity)}</td>
         
         <td>${formatAmount(item.taxable_amount)}</td>

@@ -116,7 +116,6 @@ export default function HomePage() {
     drag.startScrollLeft = track.scrollLeft;
     drag.moved = false;
     bestSellersPausedRef.current = true;
-    track.setPointerCapture(event.pointerId);
   };
 
   const handleBestSellersPointerMove = (event) => {
@@ -134,16 +133,22 @@ export default function HomePage() {
     }
   };
 
-  const handleBestSellersPointerUp = (event) => {
+  const handleBestSellersPointerUp = () => {
     const drag = bestSellersDragRef.current;
     const track = bestSellersTrackRef.current;
     if (!drag.active) return;
 
     drag.active = false;
-    if (track?.hasPointerCapture(event.pointerId)) {
-      track.releasePointerCapture(event.pointerId);
-    }
     bestSellersPausedRef.current = Boolean(track?.matches(":hover"));
+  };
+
+  const handleBestSellersPointerLeave = () => {
+    const drag = bestSellersDragRef.current;
+    if (!drag.active) return;
+
+    drag.active = false;
+    drag.moved = false;
+    bestSellersPausedRef.current = false;
   };
 
   // Shailendra Merger: Producty to cart addons
@@ -695,6 +700,7 @@ export default function HomePage() {
           onPointerMove={handleBestSellersPointerMove}
           onPointerUp={handleBestSellersPointerUp}
           onPointerCancel={handleBestSellersPointerUp}
+          onPointerLeave={handleBestSellersPointerLeave}
           onClickCapture={(event) => {
             if (bestSellersDragRef.current.moved) {
               event.preventDefault();
@@ -755,8 +761,16 @@ export default function HomePage() {
                     return (
                       <div
                         key={`${loopIndex}-${product.id}`}
+                        role={loopIndex === 0 ? "button" : undefined}
+                        tabIndex={loopIndex === 0 ? 0 : -1}
+                        aria-label={loopIndex === 0 ? `View ${product.name}` : undefined}
+                        onKeyDown={(event) => {
+                          if (loopIndex === 0 && (event.key === "Enter" || event.key === " ")) {
+                            event.preventDefault();
+                            event.currentTarget.click();
+                          }
+                        }}
                         onClick={() => {
-                          if (isOutOfStock) return;
                           setActiveTab("nutrition");
                           setQuickViewReviews([]);
                           setReviewForm({ rating: 0, content: "", images: [] });

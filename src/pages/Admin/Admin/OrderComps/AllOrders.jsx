@@ -70,7 +70,7 @@ export default function AllOrders({
     setError(null);
     try {
       const params = {
-        page: 1,
+        page,
         page_size: PAGE_SIZE,
         search,
         payment_status: paymentFilter,
@@ -79,7 +79,7 @@ export default function AllOrders({
         date_from: dateFrom,
         date_to: dateTo,
       };
-      const firstResponse = await getAdminOrders(params);
+      const response = await getAdminOrders(params);
       const getPageData = (response) => {
         const data = response?.data ?? response;
         return {
@@ -88,34 +88,11 @@ export default function AllOrders({
         };
       };
 
-      const firstPage = getPageData(firstResponse);
-      const allOrders = [...firstPage.results];
-      const totalCount = Number(firstPage.count) || allOrders.length;
-      const apiPageCount = firstPage.results.length
-        ? Math.ceil(totalCount / firstPage.results.length)
-        : 1;
-
-      // Fetch the remaining pages so the client-side pagination cannot lose rows.
-      if (firstPage.count && firstPage.results.length < totalCount) {
-        for (let apiPage = 2; apiPage <= apiPageCount; apiPage += 1) {
-          const response = await getAdminOrders({ ...params, page: apiPage });
-          allOrders.push(...getPageData(response).results);
-        }
-      }
-
-      const uniqueOrders = Array.from(
-        new Map(allOrders.map((order) => [order.id, order])).values(),
-      );
-      const startIndex = (page - 1) * PAGE_SIZE;
-      setOrders(uniqueOrders.slice(startIndex, startIndex + PAGE_SIZE));
+      const pageData = getPageData(response);
+      const totalCount = Number(pageData.count) || pageData.results.length;
+      setOrders(pageData.results);
       setTotalRecords(totalCount);
       setTotalPages(Math.max(1, Math.ceil(totalCount / PAGE_SIZE)));
-      if (uniqueOrders.length !== totalCount) {
-        setTotalRecords(uniqueOrders.length);
-        setTotalPages(Math.max(1, Math.ceil(uniqueOrders.length / PAGE_SIZE)));
-      } else {
-        setTotalRecords(totalCount);
-      }
     } catch (err) {
       console.error(err);
       if (page > 1) {
@@ -372,7 +349,7 @@ export default function AllOrders({
                   openDispatchModal(order);
                 }}
                 disabled={actionLoading}
-                className="text-xs font-bold uppercase tracking-wider bg-eatpur-green-dark text-white px-3 py-1.5 rounded hover:bg-[--color-eatpur-dark] transition-colors disabled:opacity-50"
+                className="inline-flex w-fit max-w-full items-center justify-center whitespace-nowrap text-xs font-bold uppercase tracking-wider bg-eatpur-green-dark text-white px-3 py-1.5 rounded hover:bg-[--color-eatpur-dark] transition-colors disabled:opacity-50"
               >
                 Dispatch Order
               </button>
@@ -593,6 +570,10 @@ export default function AllOrders({
             selectedIds={Object.keys(selectedOrders)}
             onToggleRow={handleToggleOrderSelection}
             onToggleAll={handleToggleVisibleOrders}
+            onRowClick={(order) => {
+              setSelectedOrderForTimeline(order);
+              setIsTimelineModalOpen(true);
+            }}
             onViewClick={(order) => {
               setSelectedOrderForTimeline(order);
               setIsTimelineModalOpen(true);

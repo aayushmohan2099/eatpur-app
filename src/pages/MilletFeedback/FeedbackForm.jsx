@@ -42,7 +42,7 @@ export default function FeedbackForm() {
       email: formData.email || "N/A",
       address: formData.address || "N/A",
       stars: rating, // Explicitly sending stars
-      response_description: formData.review || "No written review provided.",
+      response_description: formData.review || "-",
       response_url: "Direct Platform Survey",
     };
 
