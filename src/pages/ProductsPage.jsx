@@ -292,14 +292,14 @@ export default function ProductsPage() {
       return;
     }
 
-    const isAuthenticated = !!localStorage.getItem("access");
+    // const isAuthenticated = !!localStorage.getItem("access");
 
-    if (!isAuthenticated) {
-      navigate("/login", {
-        state: { returnTo: "/products" },
-      });
-      return;
-    }
+    // if (!isAuthenticated) {
+    //   navigate("/login", {
+    //     state: { returnTo: "/products" },
+    //   });
+    //   return;
+    // }
 
     setQuickViewProduct(product);
     setActiveTab("nutrition");

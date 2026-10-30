@@ -46,7 +46,7 @@ export default function HomePage() {
 
   // Shailendra Merger: Navigation controls
   const navigate = useNavigate();
-  const redirectToLoginAfterCartAnimation = useRef(false);
+  // const redirectToLoginAfterCartAnimation = useRef(false);
   const isDeployedServer =
     import.meta.env.PROD &&
     !["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
@@ -129,7 +129,7 @@ export default function HomePage() {
     const loopWidth = track.scrollWidth / 2;
     if (loopWidth > 0) {
       track.scrollLeft =
-        ((drag.startScrollLeft - deltaX) % loopWidth + loopWidth) % loopWidth;
+        (((drag.startScrollLeft - deltaX) % loopWidth) + loopWidth) % loopWidth;
     }
   };
 
@@ -152,13 +152,8 @@ export default function HomePage() {
   };
 
   // Shailendra Merger: Producty to cart addons
-  const handleAddToCart = (product, image) => {
-    if (!localStorage.getItem("access")) {
-      dispatch({ type: "TOGGLE_CART", payload: false });
-      redirectToLoginAfterCartAnimation.current = true;
-      return;
-    }
 
+  const handleAddToCart = (product, image) => {
     dispatch({
       type: "ADD_ITEM",
       payload: {
@@ -376,10 +371,10 @@ export default function HomePage() {
         </div>
         {/* Floating 3D Images Background */}
         <FloatingImagesBackground />
-        
+
         {/* Soft Gradient Overlay */}
         <div className="absolute top-0 right-0 w-full md:w-1/2 h-full bg-gradient-to-l from-eatpur-green-light/90 to-transparent pointer-events-none z-[1]" />
-        
+
         {/* Content Container */}
         <div className="w-full max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-12 relative z-10">
           {/* LEFT SIDE: Image Carousel */}
@@ -763,9 +758,14 @@ export default function HomePage() {
                         key={`${loopIndex}-${product.id}`}
                         role={loopIndex === 0 ? "button" : undefined}
                         tabIndex={loopIndex === 0 ? 0 : -1}
-                        aria-label={loopIndex === 0 ? `View ${product.name}` : undefined}
+                        aria-label={
+                          loopIndex === 0 ? `View ${product.name}` : undefined
+                        }
                         onKeyDown={(event) => {
-                          if (loopIndex === 0 && (event.key === "Enter" || event.key === " ")) {
+                          if (
+                            loopIndex === 0 &&
+                            (event.key === "Enter" || event.key === " ")
+                          ) {
                             event.preventDefault();
                             event.currentTarget.click();
                           }
@@ -1275,12 +1275,7 @@ export default function HomePage() {
                     onClick={() => handleAddToCart(quickViewProduct)}
                     onAnimationComplete={() => {
                       setQuickViewProduct(null);
-                      if (redirectToLoginAfterCartAnimation.current) {
-                        redirectToLoginAfterCartAnimation.current = false;
-                        navigate("/login", {
-                          state: { returnTo: "/" },
-                        });
-                      }
+                      dispatch({ type: "OPEN_CART" });
                     }}
                     className="!h-[58px]"
                   />
