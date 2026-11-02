@@ -91,16 +91,6 @@ export default function Navbar() {
 
   // Shailendra Merger: Updated handleCartClick to check for authentication before toggling the cart
   const handleCartClick = () => {
-    if (!localStorage.getItem("access")) {
-      navigate("/login", {
-        state: {
-          returnTo: `${location.pathname}${location.search}`,
-          openCart: true,
-        },
-      });
-      return;
-    }
-
     dispatch({ type: "TOGGLE_CART" });
   };
 
@@ -293,11 +283,19 @@ export default function Navbar() {
                           onClick={async () => {
                             const refresh = localStorage.getItem("refresh");
                             await logoutUser(refresh);
+
                             localStorage.removeItem("access");
                             localStorage.removeItem("refresh");
-                            // Shailendra Merger: Removing the role from localStorage and notifying the application about the authentication change to update user role and other related states
                             localStorage.removeItem("role");
+                            localStorage.removeItem("user_id");
+
                             notifyAuthChange();
+
+                            // Reload cart as guest (empty cart)
+                            window.dispatchEvent(
+                              new Event("eatpur-auth-change"),
+                            );
+
                             setUser(null);
                             setLoadingUser(false);
                             setIsUserMenuOpen(false);
@@ -390,11 +388,17 @@ export default function Navbar() {
                     onClick={async () => {
                       const refresh = localStorage.getItem("refresh");
                       await logoutUser(refresh);
+
                       localStorage.removeItem("access");
                       localStorage.removeItem("refresh");
-                      // Shailendra Merger: Removing the role from localStorage and notifying the application about the authentication change to update user role and other related states
                       localStorage.removeItem("role");
+                      localStorage.removeItem("user_id");
+
                       notifyAuthChange();
+
+                      // Reload cart as guest (empty cart)
+                      window.dispatchEvent(new Event("eatpur-auth-change"));
+
                       setUser(null);
                       setIsMobileMenuOpen(false);
                       window.location.href = "/login";

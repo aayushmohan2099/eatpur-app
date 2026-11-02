@@ -8,6 +8,20 @@ import { FaMinus, FaPlus, FaTrash, FaXmark } from "react-icons/fa6";
 export default function CartSidebar() {
   const { state, dispatch } = useCart();
   const navigate = useNavigate();
+  const handleCheckout = () => {
+    dispatch({ type: "TOGGLE_CART", payload: false });
+
+    if (!localStorage.getItem("access")) {
+      navigate("/login", {
+        state: {
+          returnTo: "/products/checkout",
+        },
+      });
+      return;
+    }
+
+    navigate("/products/checkout");
+  };
 
   const subtotal = state.items.reduce(
     (total, item) => total + item.price * item.quantity,
@@ -134,10 +148,7 @@ export default function CartSidebar() {
                   </span>
                 </div>
                 <button
-                  onClick={() => {
-                    dispatch({ type: "TOGGLE_CART", payload: false });
-                    navigate("/products/checkout");
-                  }}
+                  onClick={handleCheckout}
                   className="w-full btn-primary flex justify-center py-4 font-medium tracking-wide shadow-md"
                 >
                   Proceed to Checkout

@@ -65,8 +65,12 @@ export default function AuthPage() {
         localStorage.setItem("access", res.access);
         localStorage.setItem("refresh", res.refresh);
         localStorage.setItem("role", res.user?.role_name || "CUSTOMER");
+        if (res.user?.id) {
+          localStorage.setItem("user_id", String(res.user.id));
+        }
         // Shailendra Merger: Notify the application about the authentication change to update user role and other related states
         notifyAuthChange();
+        window.dispatchEvent(new Event("eatpur-auth-change"));
         setErrors({});
         setSuccessMessage("Google Login successful! Redirecting...");
         setTimeout(() => {
@@ -119,8 +123,13 @@ export default function AuthPage() {
         localStorage.setItem("refresh", res.refresh);
         const userRole = res.user?.role_name || "CUSTOMER";
         localStorage.setItem("role", userRole);
+        if (res.user?.id) {
+          localStorage.setItem("user_id", String(res.user.id));
+        }
+
         // Shailendra Merger: Notify the application about the authentication change to update user role and other related states
         notifyAuthChange();
+        window.dispatchEvent(new Event("eatpur-auth-change"));
 
         setErrors({});
         setSuccessMessage(
@@ -204,8 +213,6 @@ export default function AuthPage() {
         newErrors.password_confirm = "Please confirm password";
       }
 
-      
-
       if (
         form.password &&
         form.password_confirm &&
@@ -259,7 +266,6 @@ export default function AuthPage() {
                     Password must include:
                     <ul className="ml-4 mt-1 space-y-1 text-white/70 italic text-sm">
                       <li>- 4+ characters</li>
-                     
                     </ul>
                   </div>
                 </li>
@@ -372,7 +378,7 @@ export default function AuthPage() {
             <div>
               <input
                 type="text"
-                placeholder="Name"
+                placeholder="Username"
                 className="w-full p-3.5 rounded-xl bg-eatpur-white-warm border border-black/10 focus:border-eatpur-green-dark outline-none text-eatpur-dark placeholder:text-eatpur-text-light shadow-inner font-serif transition-colors"
                 onChange={(e) => setForm({ ...form, username: e.target.value })}
               />
