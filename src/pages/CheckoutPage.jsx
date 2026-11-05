@@ -70,7 +70,7 @@ export default function CheckoutPage() {
     firstName: "",
     lastName: "",
     phone: "",
-    alt_phone: "",
+    // alt_phone: "",
     address_line: "",
     city: "",
     state: "",
@@ -261,7 +261,7 @@ export default function CheckoutPage() {
       firstName,
       lastName: lastNameParts.join(" "),
       phone: String(address.consignee_phone || address.phone || ""),
-      alt_phone: String(address.alternative_phone || address.alt_phone || ""),
+      // alt_phone: String(address.alternative_phone || address.alt_phone || ""),
       address_line: String(address.street_address || address.address_line || address.address || ""),
       city: String(address.city || ""),
       state: String(address.state || ""),
@@ -285,7 +285,7 @@ export default function CheckoutPage() {
     title: "Checkout Address",
     consignee_name: [deliveryDetails.firstName, deliveryDetails.lastName].map((n) => n.trim()).filter(Boolean).join(" "),
     consignee_phone: deliveryDetails.phone.trim(),
-    alternative_phone: deliveryDetails.alt_phone.trim(),
+    // alternative_phone: deliveryDetails.alt_phone.trim(),
     street_address: deliveryDetails.address_line.trim(),
     city: deliveryDetails.city.trim(),
     state: deliveryDetails.state.trim(),
@@ -524,24 +524,24 @@ export default function CheckoutPage() {
       payload.coupon_code = appliedCoupon.code;
     }
 
-    if (deliveryDetails.alt_phone.trim()) {
-      payload.consignee_alternate_phone = deliveryDetails.alt_phone.trim();
-    }
+    // if (deliveryDetails.alt_phone.trim()) {
+    //   payload.consignee_alternate_phone = deliveryDetails.alt_phone.trim();
+    // }
     return payload;
   };
 
-  const validatePhoneNumbers = () => {
-    if (deliveryDetails.phone.trim() && deliveryDetails.phone.trim() === deliveryDetails.alt_phone.trim()) {
-      alert("Phone Number and Alternate Phone Number cannot be the same!");
-      return false;
-    }
-    return true;
-  };
+  // const validatePhoneNumbers = () => {
+  //   if (deliveryDetails.phone.trim() && deliveryDetails.phone.trim() === deliveryDetails.alt_phone.trim()) {
+  //     alert("Phone Number and Alternate Phone Number cannot be the same!");
+  //     return false;
+  //   }
+  //   return true;
+  // };
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
     if (state.items.length === 0) return;
-    if (!validatePhoneNumbers()) return;
+    // if (!validatePhoneNumbers()) return;
     if (!serviceability || !shippingEstimate) {
       alert("Please check serviceability to calculate shipping costs first.");
       return;
@@ -574,7 +574,7 @@ export default function CheckoutPage() {
         prefill: {
           name: payload.consignee_name,
           email: orderData.customer?.email || "",
-          contact: payload.consignee_alternate_phone,
+          contact: payload.consignee_phone,
         },
         theme: { color: "#6B8E23" },
         handler: async function (response) {
@@ -741,10 +741,10 @@ export default function CheckoutPage() {
                   <label className="block text-eatpur-dark text-sm mb-2 font-medium">Mobile Number <span className="text-red-500">*</span></label>
                   <input required type="tel" name="phone" maxLength={10} value={deliveryDetails.phone} onChange={(e) => setDeliveryDetails((p) => ({ ...p, phone: e.target.value.replace(/\D/g, "") }))} onFocus={() => setShowSavedAddresses(true)} className="w-full bg-eatpur-white-warm border border-black/10 rounded-xl px-4 py-3 focus:outline-none focus:border-eatpur-green-dark font-mono tracking-widest" />
                 </div>
-                <div>
+                {/* <div>
                   <label className="block text-eatpur-dark text-sm mb-2 font-medium">Alternate Mobile <span className="text-red-500">*</span></label>
                   <input required type="tel" name="alt_phone" maxLength={10} value={deliveryDetails.alt_phone} onChange={(e) => setDeliveryDetails((p) => ({ ...p, alt_phone: e.target.value.replace(/\D/g, "") }))} onFocus={() => setShowSavedAddresses(true)} className="w-full bg-eatpur-white-warm border border-black/10 rounded-xl px-4 py-3 focus:outline-none focus:border-eatpur-green-dark font-mono tracking-widest" />
-                </div>
+                </div> */}
                 <div>
                   <label className="block text-eatpur-text-light text-sm mb-2 font-medium">Pincode</label>
                   <input type="text" value={pincode} readOnly className="w-full bg-gray-100 border border-black/5 rounded-xl px-4 py-3 text-eatpur-text-light cursor-not-allowed font-mono tracking-widest" />
