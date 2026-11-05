@@ -20,6 +20,8 @@ import {
   getShippingEstimate,
 } from "../api/logistics";
 
+const CHECKOUT_ALTERNATE_PHONE = "+91-8948679990";
+
 // Helper to dynamically load the Razorpay script
 const loadRazorpayScript = () => {
   return new Promise((resolve) => {
@@ -511,6 +513,7 @@ export default function CheckoutPage() {
       drop_city: deliveryDetails.city,
       drop_state: deliveryDetails.state,
       drop_pincode: pincode,
+      consignee_alternate_phone: CHECKOUT_ALTERNATE_PHONE,
       pickup_location_alias: "Primary Warehouse",
       service_type: "SURFACE",
       save_address: deliveryDetails.saveAddress && savedAddressSignature.current !== JSON.stringify(getCheckoutAddress()),
