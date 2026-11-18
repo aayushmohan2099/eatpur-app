@@ -166,6 +166,14 @@ export default function HomePage() {
   };
 
   const BASE_URL = "https://eatpur.in";
+  const resolveProductImage = (image) => {
+    if (typeof image !== "string" || !image) return image;
+    if (/^(https?:)?\/\//i.test(image) || image.startsWith("data:")) {
+      return image;
+    }
+
+    return new URL(image, `${BASE_URL}/`).toString();
+  };
 
   const fixUrlsDeep = (data) => {
     if (typeof data === "string") {
@@ -722,16 +730,19 @@ export default function HomePage() {
                 >
                   {trendingProducts.map((product) => {
                     const fallbackImage = "/home/prod-carousel/MultiFlour.jpeg";
-                    const productImages =
-                      product.cover_image ||
-                      product.media
-                        ?.map((media) => media.image)
-                        .filter(Boolean) ||
-                      [];
+                    const mediaImage = Array.isArray(product.media)
+                      ? product.media
+                          .map((media) => media?.image)
+                          .find(Boolean)
+                      : null;
+                    const coverImage = Array.isArray(product.cover_image)
+                      ? product.cover_image[0]
+                      : product.cover_image;
+                    const productImage = mediaImage || coverImage;
                     const displayImg =
-                      product.media?.[0]?.image ||
-                      product.cover_image ||
-                      fallbackImage;
+                      typeof productImage === "string" && productImage
+                        ? resolveProductImage(productImage)
+                        : fallbackImage;
                     const healthScore = 90; // Defaulting health score as it's not in the API currently
                     const catalogRating = Number(
                       productRatings[product.pid]?.average ??
@@ -796,7 +807,7 @@ export default function HomePage() {
                           </span>
                         )}
 
-                        <div className="h-64 overflow-hidden p-6 pb-0 flex items-center justify-center bg-gray-50 relative">
+                        <div className="h-64 overflow-hidden p-6 pb-0 flex items-center justify-center bg-white relative">
                           <motion.img
                             whileHover={{ scale: 1.05 }}
                             transition={{ duration: 0.4 }}

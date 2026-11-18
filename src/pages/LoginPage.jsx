@@ -97,8 +97,14 @@ export default function AuthPage() {
 
     if (!validateForm()) return;
 
+    const loginIdentifier = form.username.trim();
+    const isEmailIdentifier = loginIdentifier.includes("@");
+    const isMobileIdentifier = /^\d{10,15}$/.test(loginIdentifier);
     const payload = {
       ...form,
+      username: isLogin ? loginIdentifier : form.mobile,
+      email: isLogin ? (isEmailIdentifier ? loginIdentifier : "") : form.email,
+      mobile: isLogin ? (isMobileIdentifier ? loginIdentifier : "") : form.mobile,
       captcha_id: captcha?.captcha_id,
     };
 
@@ -186,32 +192,36 @@ export default function AuthPage() {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!form.username) newErrors.username = "Username is required";
+    //if (!form.username) newErrors.username = "Username is required";
     if (!form.password) newErrors.password = "Password is required";
-    if (!form.captcha_answer) newErrors.captcha = "Captcha is required";
+    //if (!form.captcha_answer) newErrors.captcha = "Captcha is required";
+
+    if (isLogin) {
+      if (!form.username.trim()) {
+        newErrors.username = "Mobile number, username, or email is required";
+      }
+    } else if (!form.mobile) {
+      newErrors.mobile = "Mobile number is required";
+    } else if (!/^\d{10}$/.test(form.mobile)) {
+      newErrors.mobile = "Mobile must be exactly 10 digits";
+    }
 
     if (!isLogin) {
-      if (!form.email) {
-        newErrors.email = "Email is required";
-      } else if (
-        !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com|in|org|net)$/.test(form.email)
-      ) {
-        newErrors.email = "Enter valid email (example@gmail.com)";
-      }
+      // if (!form.email) {
+      //   newErrors.email = "Email is required";
+      // } else if (
+      //   !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com|in|org|net)$/.test(form.email)
+      // ) {
+      //   newErrors.email = "Enter valid email (example@gmail.com)";
+      // }
 
-      if (!form.mobile) {
-        newErrors.mobile = "Mobile number is required";
-      } else if (!/^\d{10,15}$/.test(form.mobile)) {
-        newErrors.mobile = "Mobile must be 10–15 digits";
-      }
+      // if (!form.age) {
+      //   newErrors.age = "Age is required";
+      // }
 
-      if (!form.age) {
-        newErrors.age = "Age is required";
-      }
-
-      if (!form.password_confirm) {
-        newErrors.password_confirm = "Please confirm password";
-      }
+      // if (!form.password_confirm) {
+      //   newErrors.password_confirm = "Please confirm password";
+      // }
 
       if (
         form.password &&
@@ -248,14 +258,8 @@ export default function AuthPage() {
                 Create Your Account 🚀
               </h1>
               <ul className="text-white/80 space-y-3 font-serif text-[15px]">
-                <li className="flex items-center gap-2">
-                  <span className="w-1 h-1 rounded-full bg-white opacity-70"></span>{" "}
-                  Username must be unique
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1 h-1 rounded-full bg-white opacity-70"></span>{" "}
-                  Enter a valid email (example@gmail.com)
-                </li>
+               
+                
                 <li className="flex items-center gap-2">
                   <span className="w-1 h-1 rounded-full bg-white opacity-70"></span>{" "}
                   Mobile must be exactly 10 digits
@@ -269,14 +273,8 @@ export default function AuthPage() {
                     </ul>
                   </div>
                 </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1 h-1 rounded-full bg-white opacity-70"></span>{" "}
-                  Confirm password must match
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1 h-1 rounded-full bg-white opacity-70"></span>{" "}
-                  Complete CAPTCHA to verify
-                </li>
+               
+                
               </ul>
             </div>
           )}
@@ -375,9 +373,9 @@ export default function AuthPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5 font-sans">
-            <div>
+            {/* <div>
               <input
-                type="text"
+                type="tel"
                 placeholder="Username"
                 className="w-full p-3.5 rounded-xl bg-eatpur-white-warm border border-black/10 focus:border-eatpur-green-dark outline-none text-eatpur-dark placeholder:text-eatpur-text-light shadow-inner font-serif transition-colors"
                 onChange={(e) => setForm({ ...form, username: e.target.value })}
@@ -389,22 +387,44 @@ export default function AuthPage() {
                     : errors.username}
                 </p>
               )}
-            </div>
+            </div> */}
 
-            {!isLogin && (
-              <>
+            <>
                 <div>
                   <input
                     type="text"
-                    placeholder="Mobile Number"
-                    value={form.mobile}
-                    maxLength={10}
+                    placeholder={
+                      isLogin
+                        ? "Mobile Number / Username / Email"
+                        : "Mobile Number"
+                    }
+                    value={isLogin ? form.username : form.mobile}
+                    maxLength={isLogin ? undefined : 10}
+                    inputMode={isLogin ? undefined : "numeric"}
+                    autoComplete={isLogin ? "username" : "tel"}
+                    aria-label={
+                      isLogin
+                        ? "Mobile Number, Username, or Email"
+                        : "Mobile Number"
+                    }
                     className="w-full p-3.5 rounded-xl bg-eatpur-white-warm border border-black/10 focus:border-eatpur-green-dark outline-none text-eatpur-dark placeholder:text-eatpur-text-light shadow-inner font-serif transition-colors"
                     onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, "");
-                      setForm({ ...form, mobile: value });
+                      const value = isLogin
+                        ? e.target.value
+                        : e.target.value.replace(/\D/g, "");
+                      setForm((prev) => ({
+                        ...prev,
+                        [isLogin ? "username" : "mobile"]: value,
+                      }));
                     }}
                   />
+                  {errors.username && (
+                    <p className="text-red-500 text-xs mt-1.5 ml-1 font-medium">
+                      {Array.isArray(errors.username)
+                        ? errors.username[0]
+                        : errors.username}
+                    </p>
+                  )}
                   {errors.mobile && (
                     <p className="text-red-500 text-xs mt-1.5 ml-1 font-medium">
                       {Array.isArray(errors.mobile)
@@ -413,7 +433,7 @@ export default function AuthPage() {
                     </p>
                   )}
                 </div>
-                <div>
+                {/* <div>
                   <input
                     type="age"
                     placeholder="Tell us your age"
@@ -425,8 +445,8 @@ export default function AuthPage() {
                       {Array.isArray(errors.age) ? errors.age[0] : errors.age}
                     </p>
                   )}
-                </div>
-                <div>
+                </div> */}
+                {/* <div>
                   <input
                     type="email"
                     placeholder="Email"
@@ -448,14 +468,14 @@ export default function AuthPage() {
                         : errors.email}
                     </p>
                   )}
-                </div>
+                </div> */}
 
                 {/* Confirm Password Input with Fixed Eye Icon */}
-                <div>
+                {/* <div>
                   <div className="relative w-full">
                     <input
                       type={showConfirmPassword ? "text" : "password"}
-                      placeholder="Confirm Password"
+                      placeholder="Confirm Your Password"
                       className="w-full p-3.5 pr-12 rounded-xl bg-eatpur-white-warm border border-black/10 focus:border-eatpur-green-dark outline-none text-eatpur-dark placeholder:text-eatpur-text-light shadow-inner font-serif transition-colors"
                       onChange={(e) =>
                         setForm({ ...form, password_confirm: e.target.value })
@@ -513,16 +533,15 @@ export default function AuthPage() {
                         : errors.password_confirm}
                     </p>
                   )}
-                </div>
-              </>
-            )}
+                </div> */}
+            </>
 
             {/* Password Input with Fixed Eye Icon */}
             <div>
               <div className="relative w-full">
                 <input
                   type={showPassword ? "text" : "password"}
-                  placeholder="Password"
+                  placeholder="Choose Your Own Password"
                   className="w-full p-3.5 pr-12 rounded-xl bg-eatpur-white-warm border border-black/10 focus:border-eatpur-green-dark outline-none text-eatpur-dark placeholder:text-eatpur-text-light shadow-inner font-serif transition-colors"
                   onChange={(e) =>
                     setForm({ ...form, password: e.target.value })
@@ -581,7 +600,7 @@ export default function AuthPage() {
             </div>
 
             {/* CAPTCHA */}
-            {captcha && (
+            {/* {captcha && (
               <div className="space-y-3 pt-2">
                 <div className="flex items-center justify-between bg-eatpur-white-warm p-2 rounded-xl border border-black/5 shadow-inner">
                   <img
@@ -616,7 +635,7 @@ export default function AuthPage() {
                   )}
                 </div>
               </div>
-            )}
+            )} */}
 
             <div className="pt-4">
               <button className="btn-primary w-full py-3.5 text-base tracking-wide font-medium shadow-md">
