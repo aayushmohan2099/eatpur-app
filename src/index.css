@@ -227,3 +227,32 @@
   background-size: 400% 400%;
   animation: eatpurGradient 18s ease infinite;
 }
+
+.farmer-page {
+  background-color: #f7f5ef;
+}
+
+.farmer-section {
+  isolation: isolate;
+}
+
+.farmer-section::before,
+.farmer-section::after {
+  position: absolute;
+  z-index: 0;
+  right: 0;
+  left: 0;
+  height: clamp(5rem, 10vw, 9rem);
+  content: "";
+  pointer-events: none;
+}
+
+.farmer-section::before {
+  top: 0;
+  background: linear-gradient(to bottom, #f7f5ef, transparent);
+}
+
+.farmer-section::after {
+  bottom: 0;
+  background: linear-gradient(to top, #f7f5ef, transparent);
+}

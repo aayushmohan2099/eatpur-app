@@ -7,6 +7,8 @@ import BlogWriter from "./pages/Blog/BlogWriter";
 import PreviewBlog from "./pages/Blog/PreviewBlog";
 import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
+import ForFarmersPage from "./pages/ForFarmersPage";
+import FarmerPopLogo from  "./pages/FarmerPopLogo";
 import ProductsPage from "./pages/ProductsPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import EatpurSurveyPage from "./pages/MilletSurvey/EatpurSurveyPage";
@@ -49,6 +51,7 @@ const FeedbackRedirect = () => {
 
 export default function AppRoutes() {
   return (
+    <>
     <Routes>
       <Route element={<MainLayout />}>
         {/* Core Pages */}
@@ -60,6 +63,8 @@ export default function AppRoutes() {
         <Route path="/recipes/:id" element={<RecipeDetailPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />
+        <Route path="/for-farmers" element={<ForFarmersPage />} />
+        
 
         {/* Existing Blogs functionally untouched */}
         <Route path="/blogs" element={<BlogsPage />} />
@@ -95,5 +100,7 @@ export default function AppRoutes() {
       <Route path="/feedback" element={<FeedbackForm />} />
       <Route path="/survey" element={<EatpurSurveyPage />} />
     </Routes>
+    <FarmerPopLogo formRoute="/for-farmers" />
+   </>
   );
 }

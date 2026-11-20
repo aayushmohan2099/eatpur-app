@@ -144,3 +144,26 @@ export const deleteAddress = (addressId) => {
     method: "DELETE",
   });
 };
+
+export const getFarmerContactdeatails = () => {
+  return apiFetch("/farmer-contacts/");
+};
+
+export const createFarmerContact = (data) => {
+  return apiFetch("/farmer-contacts/", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+};
+export const updateFarmerContactStatus = (id, status) => {
+  return apiFetch(`/farmer-contacts/${id}/`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+};
+
+export const deleteFarmerContact = (id) => {
+  return apiFetch(`/farmer-contacts/${id}/`, {
+    method: "DELETE",
+  });
+};

@@ -1,0 +1,86 @@
+.up-map {
+  background: transparent;
+  height: 100%;
+  width: 100%;
+  display: block;
+  margin-bottom: 5%;
+  overflow: visible;
+}
+
+.state-outline {
+  fill: none;
+  stroke: #000;
+  stroke-width: 3;
+}
+
+.district-shape {
+  stroke: #1e1e1e;
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+  cursor: pointer;
+  will-change: filter;
+
+  transition:
+    fill 0.2s ease,
+    stroke 0.2s ease,
+    stroke-width 0.15s ease,
+    filter 0.2s ease;
+}
+
+.district-shape.active {
+  stroke: #000;
+  stroke-width: 3;
+  filter: brightness(1.2);
+}
+
+/* Hover effect */
+.district-shape:hover {
+  stroke: #000;
+  stroke-width: 2.2;
+  filter: brightness(1.15) drop-shadow(0 0 2px rgba(0, 0, 0, 0.4));
+  pointer-events: auto;
+}
+
+/* Distinct, muted map palette (no gradient) */
+
+/* Western UP - Muted Terracotta / Dusty Peach */
+.d1 {
+  fill: #d4a488;
+}
+
+/* Central UP - Warm Ochre / Soft Khaki */
+.d2 {
+  fill: #d4cb9e;
+}
+
+/* Eastern UP - Muted Sage Green */
+.d3 {
+  fill: #b4be9e;
+}
+
+/* Bundelkhand - Olive / Moss Green */
+.d4 {
+  fill: #b5b583;
+}
+
+/* Southern UP - Earthy Taupe / Warm Beige */
+.d5 {
+  fill: #c6b7a4;
+}
+
+.map-region-labels {
+  fill: #26352e;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.map-region-labels text {
+  paint-order: stroke;
+  stroke: rgba(255, 253, 245, 0.8);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+

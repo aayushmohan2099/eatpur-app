@@ -541,7 +541,9 @@ export default function AuthPage() {
               <div className="relative w-full">
                 <input
                   type={showPassword ? "text" : "password"}
-                  placeholder="Choose Your Own Password"
+                  placeholder={isLogin ? "Enter Your Password" : "Choose Your Own Password"
+
+                  }
                   className="w-full p-3.5 pr-12 rounded-xl bg-eatpur-white-warm border border-black/10 focus:border-eatpur-green-dark outline-none text-eatpur-dark placeholder:text-eatpur-text-light shadow-inner font-serif transition-colors"
                   onChange={(e) =>
                     setForm({ ...form, password: e.target.value })
