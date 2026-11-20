@@ -115,6 +115,7 @@ export default function Navbar() {
     { label: "Blogs / Recipes", path: "/blogs" },
     { label: "News", path: "/news" }, //
     { label: "Contact", path: "/contact" },
+    { label: "Let's grow together(For Farmers)", path: "/for-farmers" },
   ];
 
   return (
