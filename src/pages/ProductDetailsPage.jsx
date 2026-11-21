@@ -1,3 +1,4 @@
+//src\pages\ProductDetailsPage.jsx
 import React, { useEffect, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
@@ -228,7 +229,7 @@ export default function ProductDetailsPage() {
     return wrapInPortal(
       <div
         className={`flex items-center justify-center bg-eatpur-white-warm ${
-          isModal ? "fixed inset-0 z-[9999]" : "min-h-screen"
+          isModal ? "fixed inset-0 z-[9998]" : "min-h-screen"
         }`}
       >
         <p className="text-eatpur-green-dark font-semibold">
@@ -242,7 +243,7 @@ export default function ProductDetailsPage() {
     return wrapInPortal(
       <div
         className={`flex flex-col items-center justify-center gap-4 bg-eatpur-white-warm ${
-          isModal ? "fixed inset-0 z-[9999]" : "min-h-screen"
+          isModal ? "fixed inset-0 z-[9998]" : "min-h-screen"
         }`}
       >
         <h2 className="text-2xl font-bold text-eatpur-dark">
@@ -621,6 +622,8 @@ export default function ProductDetailsPage() {
                 });
               }}
               onAnimationComplete={() => {
+                // Modal stays open; the cart sidebar renders above it (z-index
+                // higher than the modal, see CartSidebar.jsx).
                 dispatch({ type: "OPEN_CART" });
               }}
             />
@@ -636,7 +639,7 @@ export default function ProductDetailsPage() {
   if (isModal) {
     return createPortal(
       <div
-        className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4"
+        className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4"
         onClick={handleClose}
       >
         <div
