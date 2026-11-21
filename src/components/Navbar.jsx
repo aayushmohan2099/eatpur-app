@@ -12,6 +12,7 @@ import { useCart } from "../context/CartContext";
 import Chatbot from "./Chatbot";
 import { getMe, logoutUser } from "../api/authApi";
 import Logo from "../assets/Logo3D.png";
+
 import ShopNowButton from "./SpcBtns/ShopNow/ShopNow";
 import { useUserRole, notifyAuthChange } from "../utils/useUserRole";
 
