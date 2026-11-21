@@ -33,7 +33,7 @@ import {
 } from "../components/ui/ThreeDScrollTrigger";
 import LeafButton from "../components/ui/LeafButton";
 import DraggableGrid from "../components/ui/DraggableGrid";
-import FssaiLicense from "../certificates/EATPURFssaiLicense.pdf";
+import FssaiLicense from "../certificates/Fassi.pdf";
 import MSMECertificate from "../certificates/EATPUR _ Udyam Registration Certificate.pdf";
 import StartupMOU from "../certificates/Startup certificate.pdf";
 import NutriDoc from "../certificates/EATPUR NATURALS LLP MoU with Nutrihub,ICAR-IIMR soft copy_signed.pdf";
