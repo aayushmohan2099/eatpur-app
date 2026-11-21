@@ -8,8 +8,9 @@ import PreviewBlog from "./pages/Blog/PreviewBlog";
 import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
 import ForFarmersPage from "./pages/ForFarmersPage";
-import FarmerPopLogo from  "./pages/FarmerPopLogo";
+import FarmerPopLogo from "./pages/FarmerPopLogo";
 import ProductsPage from "./pages/ProductsPage";
+import ProductDetailsPage from "./pages/ProductDetailsPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import EatpurSurveyPage from "./pages/MilletSurvey/EatpurSurveyPage";
 
@@ -52,55 +53,55 @@ const FeedbackRedirect = () => {
 export default function AppRoutes() {
   return (
     <>
-    <Routes>
-      <Route element={<MainLayout />}>
-        {/* Core Pages */}
-        <Route path="/" element={<HomePage />} />
-        <Route path="/products" element={<ProductsPage />} />
-        <Route path="/products/checkout" element={<CheckoutPage />} />
-        <Route path="/recipes" element={<RecipesPage />} />
-        <Route path="/recipes/new" element={<PublishRecipePage />} />
-        <Route path="/recipes/:id" element={<RecipeDetailPage />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/contact" element={<ContactPage />} />
-        <Route path="/for-farmers" element={<ForFarmersPage />} />
-        
+      <Routes>
+        <Route element={<MainLayout />}>
+          {/* Core Pages */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/products" element={<ProductsPage />} />
+          <Route path="/products/:id" element={<ProductDetailsPage />} />
+          <Route path="/products/checkout" element={<CheckoutPage />} />
+          <Route path="/recipes" element={<RecipesPage />} />
+          <Route path="/recipes/new" element={<PublishRecipePage />} />
+          <Route path="/recipes/:id" element={<RecipeDetailPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/for-farmers" element={<ForFarmersPage />} />
 
-        {/* Existing Blogs functionally untouched */}
-        <Route path="/blogs" element={<BlogsPage />} />
-        <Route path="/blogs/:id" element={<PreviewBlog />} />
+          {/* Existing Blogs functionally untouched */}
+          <Route path="/blogs" element={<BlogsPage />} />
+          <Route path="/blogs/:id" element={<PreviewBlog />} />
 
-        {/* Authoring tools */}
-        <Route path="/write-blog" element={<BlogWriter />} />
-        <Route path="/preview-blog" element={<PreviewBlog />} />
-        <Route path="/preview-blog/:id" element={<PreviewBlog />} />
+          {/* Authoring tools */}
+          <Route path="/write-blog" element={<BlogWriter />} />
+          <Route path="/preview-blog" element={<PreviewBlog />} />
+          <Route path="/preview-blog/:id" element={<PreviewBlog />} />
 
-        {/* News Page Route */}
-        <Route path="/news" element={<NewsPage />} />
+          {/* News Page Route */}
+          <Route path="/news" element={<NewsPage />} />
 
-        {/* Login */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<LoginPage />} />
+          {/* Login */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<LoginPage />} />
 
-        {/* Role-Specific Dashboard Routes */}
-        <Route path="/user/dashboard" element={<Dashboard />} />
-        {/* Admin Dashboard Routes */}
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route
-          path="/admin/dashboard/:tab/:subTab"
-          element={<AdminDashboard />}
-        />
-        <Route path="/staff/dashboard" element={<StaffDashboard />} />
-        <Route
-          path="/inventory/dashboard"
-          element={<InventoryManagerDashboard />}
-        />
-      </Route>
-      {/* Google form */}
-      <Route path="/feedback" element={<FeedbackForm />} />
-      <Route path="/survey" element={<EatpurSurveyPage />} />
-    </Routes>
-    <FarmerPopLogo formRoute="/for-farmers" />
-   </>
+          {/* Role-Specific Dashboard Routes */}
+          <Route path="/user/dashboard" element={<Dashboard />} />
+          {/* Admin Dashboard Routes */}
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route
+            path="/admin/dashboard/:tab/:subTab"
+            element={<AdminDashboard />}
+          />
+          <Route path="/staff/dashboard" element={<StaffDashboard />} />
+          <Route
+            path="/inventory/dashboard"
+            element={<InventoryManagerDashboard />}
+          />
+        </Route>
+        {/* Google form */}
+        <Route path="/feedback" element={<FeedbackForm />} />
+        <Route path="/survey" element={<EatpurSurveyPage />} />
+      </Routes>
+      <FarmerPopLogo formRoute="/for-farmers" />
+    </>
   );
 }
