@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { HomeAnalytics } from "../api/homepage"; // Ensure this uses the updated client/axios interceptor
+import { getBanners } from "../api/authApi";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FaLeaf,
@@ -69,6 +70,8 @@ export default function HomePage() {
 
   // Live API Data States
   const [heroImages, setHeroImages] = useState([]);
+  const [isCustomHeroBanner, setIsCustomHeroBanner] = useState(false);
+  const [heroImageFailed, setHeroImageFailed] = useState(false);
   const [trendingProducts, setTrendingProducts] = useState([]);
   const [productRatings, setProductRatings] = useState([]);
 
@@ -175,6 +178,54 @@ export default function HomePage() {
     return new URL(image, `${BASE_URL}/`).toString();
   };
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchFeaturedBanners = async () => {
+      try {
+        const response = await getBanners();
+        const data =
+          response?.data?.results ||
+          response?.results ||
+          response?.data ||
+          response;
+        const banners = (Array.isArray(data) ? data : [])
+          .filter((banner) => banner?.is_featured && banner?.image)
+          .sort(
+            (first, second) =>
+              Number(first.display_order || 0) -
+              Number(second.display_order || 0),
+          );
+
+        if (!isMounted) return;
+
+        if (banners.length > 0) {
+          const bannerUrls = banners
+            .map((banner) => resolveProductImage(banner.image))
+            .filter(Boolean);
+          setHeroImageFailed(false);
+          setHeroImages(bannerUrls);
+          setCurrentHeroIndex(0);
+          setIsCustomHeroBanner(true);
+        } else {
+          setHeroImages([]);
+          setHeroImageFailed(false);
+          setIsCustomHeroBanner(false);
+        }
+      } catch (error) {
+        console.error("Failed to load featured homepage banners", error);
+        setHeroImages([]);
+        setHeroImageFailed(false);
+        if (isMounted) setIsCustomHeroBanner(false);
+      }
+    };
+
+    fetchFeaturedBanners();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const fixUrlsDeep = (data) => {
     if (typeof data === "string") {
       return data
@@ -270,17 +321,21 @@ export default function HomePage() {
 
         // 4. Map Featured Banners for Hero Carousel
         if (data.featured_banners && data.featured_banners.length > 0) {
-          const bannerUrls = data.featured_banners.map(
-            (banner) => banner.image,
-          );
+          const bannerUrls = data.featured_banners
+            .sort(
+              (first, second) =>
+                Number(first.display_order || 0) -
+                Number(second.display_order || 0),
+            )
+            .map((banner) => resolveProductImage(banner.image))
+            .filter(Boolean);
           setHeroImages(bannerUrls);
+          setIsCustomHeroBanner(bannerUrls.length > 0);
         } else {
           // Fallback if no banners are set in admin
-          setHeroImages([
-            "/home/home-carousel/pic1.jpeg",
-            "/home/home-carousel/pic2.jpeg",
-            "/home/home-carousel/pic3.jpeg",
-          ]);
+          setIsCustomHeroBanner(false);
+          setHeroImages([]);
+          setHeroImageFailed(false);
         }
       } catch (err) {
         console.error("Error fetching home analytics", err);
@@ -373,69 +428,31 @@ export default function HomePage() {
   return (
     <div className="w-full relative min-h-screen bg-[#FAFAFA]">
       {/* Hero Section */}
-      <section className="relative isolate w-full min-w-0 pt-20 pb-20 md:pt-28 md:pb-32 px-4 sm:px-6 overflow-hidden bg-cover bg-center bg-no-repeat bg-[url('/home/Mobanner.png')]">
+      <section
+        className="relative left-1/2 isolate h-[56.25vw] min-h-[220px] w-screen -translate-x-1/2 min-w-0 overflow-hidden bg-white md:h-[70vh] md:min-h-[520px]"
+      >
         <div className="absolute inset-x-0 top-0 z-20">
           <AnnouncementTicker />
         </div>
-        {/* Floating 3D Images Background */}
-        <FloatingImagesBackground />
-
-        {/* Soft Gradient Overlay */}
-        <div className="absolute top-0 right-0 w-full md:w-1/2 h-full bg-gradient-to-l from-eatpur-green-light/90 to-transparent pointer-events-none z-[1]" />
-
-        {/* Content Container */}
-        <div className="w-full max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-12 relative z-10">
-          {/* LEFT SIDE: Image Carousel */}
-          <div className="flex-1 w-full flex justify-center md:justify-start lg:pr-12">
-            <div className="relative w-full max-w-[min(100%,340px)] md:max-w-[500px] aspect-[3/4]">
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, ease: "easeOut", delay: 1.2 }}
-                className="absolute inset-0 flex items-center justify-center"
-              >
-                {/* PURE IMAGE + SHADOW */}
-                <div className="w-full h-full drop-shadow-[0_25px_40px_rgba(0,0,0,0.25)]">
-                  {heroImages.length > 0 && (
-                    <DistortedGallery images={heroImages} />
-                  )}
-                </div>
-              </motion.div>
-            </div>
+        {(heroImages.length === 0 || heroImageFailed) && (
+          <div className="absolute inset-0 z-[5] bg-[url('/home/Mobanner.png')] bg-cover bg-center">
+            <FloatingImagesBackground />
           </div>
+        )}
+        {heroImages[currentHeroIndex] && !heroImageFailed && (
+          <img
+            key={heroImages[currentHeroIndex]}
+            src={heroImages[currentHeroIndex]}
+            alt="EatPur featured banner"
+            className="absolute inset-0 z-[5] h-full w-full object-contain md:object-fill"
+            onError={(event) => {
+              setHeroImageFailed(true);
+              setHeroImages([]);
+              event.currentTarget.style.display = "none";
+            }}
+          />
+        )}
 
-          {/* RIGHT SIDE: Texts and Buttons */}
-          <motion.div
-            className="w-full flex-1 flex flex-col items-center md:items-start text-center md:text-left lg:pl-8"
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-          >
-            <div className="inline-flex items-center gap-2 bg-eatpur-green-dark/10 text-eatpur-dark px-4 py-1.5 rounded-full text-sm font-medium mb-6 backdrop-blur-sm border border-eatpur-green-dark/20 shadow-sm">
-              <FaLeaf className="text-eatpur-green-dark" />
-              <span>Natural • No Maida • High Fiber</span>
-            </div>
-
-            <h1 className="w-full text-4xl sm:text-5xl md:text-7xl font-display text-eatpur-dark leading-tight mb-6 tracking-tight drop-shadow-sm">
-              Millets... <br />
-              Fuel Your Body
-              <br />
-              <span className="italic text-eatpur-green-dark">Naturally</span>
-            </h1>
-
-            <p className="w-full text-eatpur-text text-lg md:text-xl mb-10 max-w-md font-display leading-relaxed drop-shadow-sm">
-              Smart nutrition for modern life – ready in minutes. Pure,
-              wholesome, and tradition-rich grains.
-            </p>
-            {/* <Link
-                to="/products"
-                className="btn-primary flex items-center gap-2 shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
-              >
-                Shop Now
-              </Link> */}
-            <LeafButton>Explore Recipes</LeafButton>
-          </motion.div>
-        </div>
       </section>
 
       {/* Trusted & Certified */}
