@@ -9,6 +9,8 @@ import {
   FaTruckFast,
   FaTag,
   FaXmark,
+  FaChevronRight,
+  FaArrowRight,
 } from "react-icons/fa6";
 import { useCart } from "../context/CartContext";
 import { checkoutOrder, verifyPayment, getCouponList } from "../api/shop";
@@ -21,6 +23,27 @@ import {
 } from "../api/logistics";
 
 const CHECKOUT_ALTERNATE_PHONE = "+91-8948679990";
+
+const getCouponType = (coupon) =>
+  String(
+    coupon.coupon_type || coupon.discount_type || coupon.type || "FLAT",
+  ).toUpperCase();
+
+const isFreeShippingCoupon = (coupon) =>
+  getCouponType(coupon) === "FREE_SHIPPING";
+
+const toAppliedCoupon = (coupon, source = "manual") => ({
+  code: coupon.coupon_code,
+  type: getCouponType(coupon),
+  value: parseFloat(coupon.discount_value || 0),
+  source,
+});
+
+const getCouponsFromResponse = (response) => {
+  const data = response?.data ?? response;
+  const results = data?.results ?? data;
+  return Array.isArray(results) ? results : [];
+};
 
 // Helper to dynamically load the Razorpay script
 const loadRazorpayScript = () => {
@@ -53,8 +76,9 @@ export default function CheckoutPage() {
 
   // --- COUPON STATES ---
   const [couponInput, setCouponInput] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [appliedCoupons, setAppliedCoupons] = useState([]);
   const [availableCoupons, setAvailableCoupons] = useState([]); 
+  const [ineligibleCoupons, setIneligibleCoupons] = useState([]);
   const [couponError, setCouponError] = useState("");
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   
@@ -170,44 +194,54 @@ export default function CheckoutPage() {
   }, [state.items, cartSignature]);
 
   // ==========================================
-  // FETCH ONLY AUTO-APPLY COUPONS FOR THE LIST
+  // FETCH ALL ACTIVE, ELIGIBLE COUPONS
   // ==========================================
   const fetchAvailableCoupons = useCallback(async () => {
     if (state.items.length === 0) return;
 
     try {
       const response = await getCouponList();
-      const coupons = Array.isArray(response) ? response : response?.results || response?.data || [];
+      const coupons = getCouponsFromResponse(response);
       const now = new Date();
       
-      const eligibleCoupons = coupons.filter((item) => {
+      const activeCoupons = coupons.filter((item) => {
         const startDate = item.start_date ? new Date(item.start_date) : null;
         const endDate = item.end_date ? new Date(item.end_date) : null;
         const status = String(item.status || item.status_name || "").toUpperCase();
-        const isAuto = item.is_auto_apply === true || String(item.is_auto_apply).toLowerCase() === "true";
 
         return (
-          isAuto && 
-          status === "ONGOING" &&
+          (!status || status === "ONGOING") &&
           (!startDate || startDate <= now) &&
-          (!endDate || endDate >= now) &&
-          subtotal >= Number(item.min_order_value || 0)
+          (!endDate || endDate >= now)
         );
       });
+      const eligibleCoupons = activeCoupons.filter(
+        (item) => subtotal >= Number(item.min_order_value || 0),
+      );
+      const belowMinimumCoupons = activeCoupons.filter(
+        (item) => subtotal < Number(item.min_order_value || 0),
+      );
 
       setAvailableCoupons(eligibleCoupons);
+      setIneligibleCoupons(belowMinimumCoupons);
 
       // Remove applied coupon if subtotal drops below its minimum requirement
-      setAppliedCoupon((prevApplied) => {
-        if (prevApplied) {
-          const originalCoupon = coupons.find(c => String(c.coupon_code).toUpperCase() === prevApplied.code);
-          if (originalCoupon && subtotal < Number(originalCoupon.min_order_value || 0)) {
+      setAppliedCoupons((prevApplied) => {
+        const validAppliedCoupons = prevApplied.filter((applied) => {
+          const originalCoupon = coupons.find(
+            (coupon) =>
+              String(coupon.coupon_code).toUpperCase() ===
+              String(applied.code).toUpperCase(),
+          );
+          const isEligible = originalCoupon &&
+            subtotal >= Number(originalCoupon.min_order_value || 0);
+
+          if (!isEligible && originalCoupon) {
             setCouponError(`Subtotal dropped below ₹${originalCoupon.min_order_value}. Coupon removed.`);
-            return null;
           }
-          return prevApplied;
-        }
-        return null;
+          return isEligible;
+        });
+        return validAppliedCoupons;
       });
 
     } catch (error) {
@@ -219,20 +253,44 @@ export default function CheckoutPage() {
     fetchAvailableCoupons();
   }, [subtotal, fetchAvailableCoupons]);
 
+  // Automatically apply an eligible free-delivery coupon unless another
+  // coupon has already been selected by the customer.
+  useEffect(() => {
+    if (availableCoupons.length === 0) return;
+
+    const freeDeliveryCoupon = [...availableCoupons]
+      .filter(isFreeShippingCoupon)
+      .sort((first, second) => {
+        const firstIsAuto = first.is_auto_apply === true ||
+          String(first.is_auto_apply).toLowerCase() === "true";
+        const secondIsAuto = second.is_auto_apply === true ||
+          String(second.is_auto_apply).toLowerCase() === "true";
+        return Number(secondIsAuto) - Number(firstIsAuto);
+      })[0];
+
+    if (freeDeliveryCoupon) {
+      setAppliedCoupons((current) => {
+        if (current.some(isFreeShippingCoupon)) return current;
+        return [...current, toAppliedCoupon(freeDeliveryCoupon, "auto")];
+      });
+    }
+  }, [availableCoupons]);
+
 
   // ==========================================
   // DIRECT LIST CLICK HANDLER
   // ==========================================
   const handleSelectAvailableCoupon = (couponDetails) => {
     setCouponError("");
-    const couponType = String(couponDetails.coupon_type || couponDetails.discount_type || "FLAT").toUpperCase();
-    
-    setAppliedCoupon({
-      code: couponDetails.coupon_code,
-      type: couponType,
-      value: parseFloat(couponDetails.discount_value || 0),
-      source: "manual",
-    });
+    const selectedCoupon = toAppliedCoupon(couponDetails);
+    setAppliedCoupons((current) => [
+      ...current.filter((coupon) =>
+        isFreeShippingCoupon(selectedCoupon)
+          ? !isFreeShippingCoupon(coupon)
+          : isFreeShippingCoupon(coupon),
+      ),
+      selectedCoupon,
+    ]);
     setCouponInput("");
   };
 
@@ -420,8 +478,7 @@ export default function CheckoutPage() {
 
       try {
         const response = await getCouponList();
-        const responseData = response?.data ?? response;
-        const coupons = Array.isArray(responseData) ? responseData : responseData?.results || [];
+        const coupons = getCouponsFromResponse(response);
         
         couponDetails = coupons.find((c) => c.coupon_code?.trim().toUpperCase() === code);
         if (!couponDetails) throw new Error("Invalid coupon code.");
@@ -453,14 +510,15 @@ export default function CheckoutPage() {
         if (error.message === "Invalid coupon code.") throw error;
       }
 
-      const couponType = String(couponDetails.coupon_type || couponDetails.discount_type || "FLAT").toUpperCase();
-
-      setAppliedCoupon({
-        code: couponDetails.coupon_code,
-        type: couponType,
-        value: parseFloat(couponDetails.discount_value || 0),
-        source: "manual",
-      });
+      const selectedCoupon = toAppliedCoupon(couponDetails);
+      setAppliedCoupons((current) => [
+        ...current.filter((coupon) =>
+          isFreeShippingCoupon(selectedCoupon)
+            ? !isFreeShippingCoupon(coupon)
+            : isFreeShippingCoupon(coupon),
+        ),
+        selectedCoupon,
+      ]);
       setCouponInput("");
     } catch (error) {
       setCouponError(error.message || "Error applying coupon. Try again.");
@@ -470,7 +528,9 @@ export default function CheckoutPage() {
   };
 
   const handleRemoveCoupon = () => {
-    setAppliedCoupon(null);
+    setAppliedCoupons((current) => current.filter((coupon) =>
+      isFreeShippingCoupon(coupon),
+    ));
     setCouponError("");
   };
 
@@ -478,22 +538,20 @@ export default function CheckoutPage() {
   // FINAL TOTAL CALCULATIONS
   // ==========================================
   let discountAmount = 0;
-  let isFreeShipping = false;
+  const isFreeShipping = appliedCoupons.some(isFreeShippingCoupon);
+  const discountCoupons = appliedCoupons.filter(
+    (coupon) => !isFreeShippingCoupon(coupon),
+  );
 
-  if (appliedCoupon) {
-    const cType = String(appliedCoupon.type).toUpperCase();
-    
+  discountCoupons.forEach((coupon) => {
+    const cType = String(coupon.type).toUpperCase();
     if (cType === "PERCENT" || cType === "ONE_TIME" || cType === "PERCENTAGE") {
-      discountAmount = (subtotal * appliedCoupon.value) / 100;
+      discountAmount += (subtotal * coupon.value) / 100;
     } else if (cType === "FLAT") {
-      discountAmount = appliedCoupon.value;
-    } else if (cType === "FREE_SHIPPING") {
-      isFreeShipping = true; 
-      discountAmount = 0;
+      discountAmount += coupon.value;
     }
-    
-    discountAmount = Math.min(discountAmount, subtotal);
-  }
+  });
+  discountAmount = Math.min(discountAmount, subtotal);
 
   const rawShippingCharge = shippingEstimate ? parseFloat(shippingEstimate.shipping_charge) : 0;
   const shippingCharge = isFreeShipping ? 0 : rawShippingCharge;
@@ -523,8 +581,9 @@ export default function CheckoutPage() {
       total_amount: Number(finalTotal.toFixed(2)),
     };
 
-    if (appliedCoupon?.code) {
-      payload.coupon_code = appliedCoupon.code;
+    if (appliedCoupons.length > 0) {
+      payload.coupon_code = discountCoupons[0]?.code || appliedCoupons[0].code;
+      payload.coupon_codes = appliedCoupons.map((coupon) => coupon.code);
     }
 
     // if (deliveryDetails.alt_phone.trim()) {
@@ -798,7 +857,7 @@ export default function CheckoutPage() {
                   </h4>
                   
                   {/* Manual Input */}
-                  {!appliedCoupon ? (
+                  {discountCoupons.length === 0 ? (
                     <div className="flex flex-col sm:flex-row gap-3">
                       <input type="text" placeholder="Enter Promo Code (e.g. FLAT50)" value={couponInput} onChange={(e) => { setCouponInput(e.target.value.toUpperCase()); setCouponError(""); }} className="flex-1 bg-white border border-black/10 rounded-lg px-4 py-2.5 focus:outline-none focus:border-eatpur-green-dark uppercase" />
                       <button type="button" onClick={handleApplyCoupon} disabled={!couponInput.trim() || isApplyingCoupon} className="bg-eatpur-dark text-white px-6 py-2.5 rounded-lg hover:bg-black font-medium disabled:opacity-50">
@@ -809,7 +868,9 @@ export default function CheckoutPage() {
                     <div className="flex items-center justify-between bg-green-50 border border-green-200 p-3 rounded-lg">
                       <div className="flex items-center gap-2">
                         <FaCheck className="text-green-600" />
-                        <span className="text-green-700 font-bold tracking-wider">{appliedCoupon.code}</span>
+                        <span className="text-green-700 font-bold tracking-wider">
+                          {appliedCoupons.map((coupon) => coupon.code).join(" + ")}
+                        </span>
                         <span className="text-green-600 text-sm">Applied</span>
                       </div>
                       <button type="button" onClick={handleRemoveCoupon} className="text-red-500 hover:text-red-700 p-1" title="Remove Coupon"><FaXmark /></button>
@@ -817,41 +878,143 @@ export default function CheckoutPage() {
                   )}
                   {couponError && <p className="mt-2 text-sm font-medium text-red-600">{couponError}</p>}
 
-                  {/* Available Coupons List (ONLY AUTO APPLY COUPONS, BUT REQUIRED MANUAL CLICK TO APPLY) */}
+                  {/* Available Coupons List */}
                   {availableCoupons.length > 0 && (
-                    <div className="mt-5 space-y-3 pt-3 border-t border-black/5">
-                      <p className="text-sm font-semibold text-eatpur-dark">Select an offer from below:</p>
+                    <div className="mt-5 rounded-2xl border border-green-200 bg-gradient-to-br from-green-50/90 to-white p-4 md:p-5">
+                      <div className="mb-4 flex items-center gap-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-eatpur-green-dark text-white shadow-sm">
+                          <FaTag size={14} />
+                        </div>
+                        <div>
+                          <p className="text-base font-bold text-eatpur-dark">Select an offer from the list below</p>
+                         
+                        </div>
+                      </div>
+                      <div className="space-y-3">
                       {availableCoupons.map((coupon) => (
-                        <div key={coupon.id} className="flex items-center justify-between p-3 border border-eatpur-green-dark/20 bg-white rounded-lg shadow-sm">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="bg-green-50 border border-eatpur-green-dark/30 text-eatpur-green-dark font-bold px-2 py-1 rounded text-xs tracking-widest border-dashed uppercase">
+                        <div key={coupon.id} className="flex items-center justify-between gap-3 rounded-xl border border-eatpur-green-dark/20 bg-white p-3.5 shadow-sm transition-all hover:border-eatpur-green-dark/50 hover:shadow-md md:p-4">
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="rounded-md border border-dashed border-eatpur-green-dark/40 bg-green-50 px-2.5 py-1 text-xs font-extrabold tracking-widest text-eatpur-green-dark uppercase">
                                 {coupon.coupon_code}
                               </span>
-                              <span className="text-sm font-bold text-eatpur-dark">
+                              <span className="text-base font-bold text-eatpur-dark">
                                 {String(coupon.coupon_type).toUpperCase() === "FREE_SHIPPING" ? "Free Delivery" : 
                                  String(coupon.coupon_type).toUpperCase() === "PERCENT" || String(coupon.coupon_type).toUpperCase() === "ONE_TIME" ? `${parseFloat(coupon.discount_value)}% OFF` : 
                                  `₹${parseFloat(coupon.discount_value)} OFF`}
                               </span>
                             </div>
-                            {coupon.description && <p className="text-xs text-eatpur-text-light mt-1.5">{coupon.description}</p>}
+                            <p className="mt-1.5 text-xs leading-5 text-green-700 md:text-sm font-bold"> 
+                              {coupon.description || `Valid on orders above ₹${coupon.min_order_value}`}
+                            </p>
                           </div>
 
-                          {appliedCoupon?.code === coupon.coupon_code ? (
-                            <span className="text-eatpur-green-dark font-bold text-sm flex items-center gap-1.5 px-3">
+                          {appliedCoupons.some((applied) =>
+                            String(applied.code).toUpperCase() ===
+                            String(coupon.coupon_code).toUpperCase(),
+                          ) ? (
+                            <span className="flex shrink-0 items-center gap-1.5 rounded-lg bg-green-100 px-3 py-2 text-sm font-bold text-eatpur-green-dark">
                               <FaCheck /> Applied
                             </span>
                           ) : (
                             <button 
                               type="button" 
                               onClick={() => handleSelectAvailableCoupon(coupon)}
-                              className="text-white bg-eatpur-green-dark hover:bg-eatpur-dark transition-colors font-semibold text-xs px-4 py-2 rounded-lg"
+                              className="flex shrink-0 items-center gap-1.5 rounded-lg bg-eatpur-green-dark px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-eatpur-dark hover:shadow-md cursor-pointer"
                             >
-                              Apply
+                              Apply <FaArrowRight size={11} />
                             </button>
                           )}
                         </div>
                       ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {ineligibleCoupons.length > 0 && (
+                    <div className="mt-6 space-y-3 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-green-50 p-4 shadow-sm md:p-5">
+                      <p className="flex items-center gap-2 border-b border-amber-200/70 pb-3 text-base font-bold text-eatpur-dark">
+                        <FaTag className="text-amber-600" />
+                        Unlock more savings:
+                      </p>
+
+                      {[...ineligibleCoupons]
+                        .sort(
+                          (first, second) =>
+                            Number(first.min_order_value || 0) -
+                            Number(second.min_order_value || 0),
+                        )
+                        .map((coupon) => {
+                          const minOrder = Number(coupon.min_order_value || 0);
+                          const amountNeeded = Math.max(0, minOrder - subtotal);
+                          const progress =
+                            minOrder > 0
+                              ? Math.min(100, (subtotal / minOrder) * 100)
+                              : 0;
+                          const couponType = getCouponType(coupon);
+                          const offerSummary =
+                            
+                            (couponType === "FREE_SHIPPING"
+                              ? `Get Free delivery on orders above ₹${minOrder}`
+                              :  couponType === "ONE_TIME" 
+                                ? `Get ${coupon.discount_value} OFF on Your First Order above ₹${minOrder}`
+                              :couponType === "FLAT"
+                                ? `Save ₹${coupon.discount_value} on orders above ₹${minOrder}`
+                              : couponType === "PERCENT" 
+                                 
+                                ? `Get ${coupon.discount_value} OFF on Order above ₹${minOrder}`
+                                : coupon.discount_value
+                                  ? `Save ₹${coupon.discount_value} on orders above ₹${minOrder}`
+                                  : `Valid on orders above ₹${minOrder}`);
+
+                          return (
+                            <div
+                              key={coupon.id || coupon.coupon_code}
+                              className="space-y-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="min-w-0">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <span className="rounded-md bg-green-100 px-2.5 py-1 text-xs font-extrabold uppercase tracking-widest text-eatpur-green-dark">
+                                      {coupon.coupon_code}
+                                    </span>
+                                    <span className="text-xs font-medium text-slate-500">
+                                      Min. order ₹{minOrder}
+                                    </span>
+                                  </div>
+                                  <p className="mt-2 text-sm font-semibold text-eatpur-dark">
+                                    {offerSummary}
+                                  </p>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => navigate("/products")}
+                                  className="group/cta mt-5 flex shrink-0 items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-xs font-bold text-amber-700 transition-all hover:bg-amber-100 hover:shadow-sm cursor-pointer flex-nowrap md:px-3 md:py-2 md:text-sm "
+                                >
+                                  Shop ₹{Math.ceil(amountNeeded)} more
+                                  <FaArrowRight
+                                    size={10}
+                                    className="transition-transform group-hover/cta:translate-x-0.5"
+                                  />
+                                </button>
+                              </div>
+
+                              {minOrder > 0 && (
+                                <div className="space-y-1">
+                                 
+                                 
+                                  <p className="text-xs leading-5 text-slate-600">
+                                    Add items worth{" "}
+                                    <span className="font-bold text-eatpur-dark">
+                                      ₹{Math.ceil(amountNeeded)}
+                                    </span>{" "}
+                                    more to unlock this offer
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                     </div>
                   )}
                 </div>
@@ -866,10 +1029,10 @@ export default function CheckoutPage() {
 
                 <div className="flex justify-between items-center text-eatpur-text mb-4 font-medium">
                   <span className="flex items-center gap-2">
-                    {appliedCoupon && isFreeShipping ? (
+                    {isFreeShipping ? (
                       <>
                         <FaTag className="text-eatpur-green-dark" />
-                        Free Delivery Applied ({appliedCoupon.code})
+                        Free Delivery Applied ({appliedCoupons.find(isFreeShippingCoupon).code})
                       </>
                     ) : (
                       <>
@@ -894,10 +1057,10 @@ export default function CheckoutPage() {
                 </div>
 
                 {/* Show standard discount if it's NOT a free shipping coupon */}
-                {appliedCoupon && !isFreeShipping && discountAmount > 0 && (
+                {discountCoupons.length > 0 && discountAmount > 0 && (
                   <div className="flex justify-between items-center text-green-700 mb-4 font-medium text-sm">
                     <span className="flex items-center gap-2">
-                      <FaTag /> Coupon Applied ({appliedCoupon.code})
+                      <FaTag /> Coupon Applied ({discountCoupons.map((coupon) => coupon.code).join(" + ")})
                     </span>
                     <span>- ₹{discountAmount.toFixed(2)}</span>
                   </div>

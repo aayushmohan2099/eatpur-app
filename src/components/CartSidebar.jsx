@@ -1,5 +1,6 @@
 // src/components/CartSidebar.jsx
 import React from "react";
+import { createPortal } from "react-dom";
 import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -28,7 +29,9 @@ export default function CartSidebar() {
     0,
   );
 
-  return (
+  // Rendered in a portal on document.body with z-index values higher than the
+  // product details modal (z-[9998]), so the cart always appears on top of it.
+  return createPortal(
     <AnimatePresence>
       {state.isOpen && (
         <>
@@ -37,7 +40,7 @@ export default function CartSidebar() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[10000]"
             onClick={() => dispatch({ type: "TOGGLE_CART", payload: false })}
           />
 
@@ -47,7 +50,7 @@ export default function CartSidebar() {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 h-full w-full max-w-md bg-eatpur-white-warm backdrop-blur-[30px] border-l border-black/5 z-[9999] flex flex-col shadow-2xl"
+            className="fixed top-0 right-0 h-full w-full max-w-md bg-eatpur-white-warm backdrop-blur-[30px] border-l border-black/5 z-[10001] flex flex-col shadow-2xl"
           >
             <div className="p-6 flex items-center justify-between border-b border-black/5 bg-white">
               <h2 className="text-3xl text-eatpur-dark font-display tracking-tight">
@@ -158,6 +161,7 @@ export default function CartSidebar() {
           </motion.div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 }

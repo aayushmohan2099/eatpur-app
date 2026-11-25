@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import eatpurFarmerPopLogo from "../assets/temp/EatpurFarmerPopLogo.png";
+import eatpurFarmerPopLogo from "../assets/temp/EatPurFarmerPopLogo.png";
 
 export default function FarmerPopLogo({ onOpenForm, formRoute = "/farmer-form" }) {
   const [isVisible, setIsVisible] = useState(false);

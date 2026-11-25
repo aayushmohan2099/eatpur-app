@@ -2,15 +2,20 @@ import React, { useState, useRef, useEffect } from "react";
 import classNames from "classnames";
 import "../styles/distortedGallery.css";
 
-export default function DistortedGallery({ images }) {
+export default function DistortedGallery({ images, fullBleed = false }) {
   const [active, setActive] = useState(0);
 
   useEffect(() => {
+    setActive(0);
+  }, [images]);
+
+  useEffect(() => {
+    if (!images.length) return;
     const t = setInterval(() => {
       setActive((prev) => (prev + 1) % images.length);
     }, 3500);
     return () => clearInterval(t);
-  }, []);
+  }, [images.length]);
 
   const getIndex = (i) => {
     if (i < 0) return images.length - 1;
@@ -22,7 +27,11 @@ export default function DistortedGallery({ images }) {
   const right = getIndex(active + 1);
 
   return (
-    <div className="distorted-gallery w-full h-full relative">
+    <div
+      className={classNames("distorted-gallery w-full h-full relative", {
+        "distorted-gallery--full-bleed": fullBleed,
+      })}
+    >
       {images.map((src, i) => (
         <img
           key={i}
@@ -31,6 +40,11 @@ export default function DistortedGallery({ images }) {
             "s--active": i === active,
           })}
           alt=""
+          onError={(event) => {
+            if (event.currentTarget.dataset.fallbackApplied) return;
+            event.currentTarget.dataset.fallbackApplied = "true";
+            event.currentTarget.src = "/home/home-carousel/pic1.jpeg";
+          }}
         />
       ))}
 
