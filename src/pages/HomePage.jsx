@@ -24,10 +24,10 @@ import { useCart } from "../context/CartContext";
 import Chatbot from "../components/Chatbot";
 import FloatingImagesBackground from "./FloatingBG/floatingBG";
 import DistortedGallery from "../components/DistortedGallery";
-import FssaiLogo from "../assets/Img/fssailogo.png";
-import StartupIndiaLogo from "../assets/Img/startupindlogo.png";
-import NutrihubLogo from "../assets/Img/nutrihublogo.jpeg";
-import MSMELogo from "../assets/Img/MSME_Logo_India.png";
+import FssaiLogo from "../assets/Img/fssailogo.webp";
+import StartupIndiaLogo from "../assets/Img/startupindlogo.webp";
+import NutrihubLogo from "../assets/Img/nutrihublogo.webp";
+import MSMELogo from "../assets/Img/MSME_Logo_India.webp";
 import {
   ThreeDScrollTriggerContainer,
   ThreeDScrollTriggerRow,
@@ -748,9 +748,7 @@ export default function HomePage() {
                   {trendingProducts.map((product) => {
                     const fallbackImage = "/home/prod-carousel/MultiFlour.jpeg";
                     const mediaImage = Array.isArray(product.media)
-                      ? product.media
-                          .map((media) => media?.image)
-                          .find(Boolean)
+                      ? product.media.map((media) => media?.image).find(Boolean)
                       : null;
                     const coverImage = Array.isArray(product.cover_image)
                       ? product.cover_image[0]
