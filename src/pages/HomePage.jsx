@@ -70,6 +70,7 @@ export default function HomePage() {
 
   // Live API Data States
   const [heroImages, setHeroImages] = useState([]);
+  const [heroBannerLinks, setHeroBannerLinks] = useState([]);
   const [isCustomHeroBanner, setIsCustomHeroBanner] = useState(false);
   const [heroImageFailed, setHeroImageFailed] = useState(false);
   const [trendingProducts, setTrendingProducts] = useState([]);
@@ -200,20 +201,30 @@ export default function HomePage() {
         if (!isMounted) return;
 
         if (banners.length > 0) {
-          const bannerUrls = banners
-            .map((banner) => resolveProductImage(banner.image))
-            .filter(Boolean);
+          const validBanners = banners.filter((banner) => banner.image);
+
+          const bannerUrls = validBanners.map((banner) =>
+            resolveProductImage(banner.image),
+          );
+
+          const bannerLinks = validBanners.map(
+            (banner) => banner.click_url || null,
+          );
+
           setHeroImageFailed(false);
           setHeroImages(bannerUrls);
+          setHeroBannerLinks(bannerLinks);
           setCurrentHeroIndex(0);
           setIsCustomHeroBanner(true);
         } else {
+          setHeroBannerLinks([]);
           setHeroImages([]);
           setHeroImageFailed(false);
           setIsCustomHeroBanner(false);
         }
       } catch (error) {
         console.error("Failed to load featured homepage banners", error);
+        setHeroBannerLinks([]);
         setHeroImages([]);
         setHeroImageFailed(false);
         if (isMounted) setIsCustomHeroBanner(false);
@@ -321,20 +332,29 @@ export default function HomePage() {
 
         // 4. Map Featured Banners for Hero Carousel
         if (data.featured_banners && data.featured_banners.length > 0) {
-          const bannerUrls = data.featured_banners
+          const validBanners = [...data.featured_banners]
+            .filter((banner) => banner.image)
             .sort(
               (first, second) =>
                 Number(first.display_order || 0) -
                 Number(second.display_order || 0),
-            )
-            .map((banner) => resolveProductImage(banner.image))
-            .filter(Boolean);
+            );
+
+          const bannerUrls = validBanners.map((banner) =>
+            resolveProductImage(banner.image),
+          );
+
+          const bannerLinks = validBanners.map(
+            (banner) => banner.click_url || null,
+          );
+
           setHeroImages(bannerUrls);
+          setHeroBannerLinks(bannerLinks);
           setIsCustomHeroBanner(bannerUrls.length > 0);
         } else {
-          // Fallback if no banners are set in admin
           setIsCustomHeroBanner(false);
           setHeroImages([]);
+          setHeroBannerLinks([]);
           setHeroImageFailed(false);
         }
       } catch (err) {
@@ -428,9 +448,7 @@ export default function HomePage() {
   return (
     <div className="w-full relative min-h-screen bg-[#FAFAFA]">
       {/* Hero Section */}
-      <section
-        className="relative left-1/2 isolate h-[56.25vw] min-h-[220px] w-screen -translate-x-1/2 min-w-0 overflow-hidden bg-white md:h-[70vh] md:min-h-[520px]"
-      >
+      <section className="relative left-1/2 isolate h-[56.25vw] min-h-[220px] w-screen -translate-x-1/2 min-w-0 overflow-hidden bg-white md:h-[70vh] md:min-h-[520px]">
         <div className="absolute inset-x-0 top-0 z-20">
           <AnnouncementTicker />
         </div>
@@ -440,19 +458,45 @@ export default function HomePage() {
           </div>
         )}
         {heroImages[currentHeroIndex] && !heroImageFailed && (
-          <img
-            key={heroImages[currentHeroIndex]}
-            src={heroImages[currentHeroIndex]}
-            alt="EatPur featured banner"
-            className="absolute inset-0 z-[5] h-full w-full object-contain md:object-fill"
-            onError={(event) => {
-              setHeroImageFailed(true);
-              setHeroImages([]);
-              event.currentTarget.style.display = "none";
-            }}
-          />
-        )}
+          <div
+            className={`absolute inset-0 z-[5] ${
+              heroBannerLinks[currentHeroIndex]
+                ? "cursor-pointer"
+                : "cursor-default"
+            }`}
+            onClick={() => {
+              const clickUrl = heroBannerLinks[currentHeroIndex];
 
+              if (clickUrl) {
+                window.location.href = clickUrl;
+              }
+            }}
+            role={heroBannerLinks[currentHeroIndex] ? "link" : undefined}
+            tabIndex={heroBannerLinks[currentHeroIndex] ? 0 : undefined}
+            onKeyDown={(event) => {
+              if (
+                heroBannerLinks[currentHeroIndex] &&
+                (event.key === "Enter" || event.key === " ")
+              ) {
+                event.preventDefault();
+                window.location.href = heroBannerLinks[currentHeroIndex];
+              }
+            }}
+            aria-label="Open featured banner destination"
+          >
+            <img
+              key={heroImages[currentHeroIndex]}
+              src={heroImages[currentHeroIndex]}
+              alt="EatPur featured banner"
+              className="h-full w-full object-contain md:object-fill"
+              onError={() => {
+                setHeroImageFailed(true);
+                setHeroImages([]);
+                setHeroBannerLinks([]);
+              }}
+            />
+          </div>
+        )}
       </section>
 
       {/* Trusted & Certified */}
